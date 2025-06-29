@@ -16,9 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { recentTrips } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
+import { NewTripSheet } from '@/components/new-trip-sheet';
 
 export default function TripsPage() {
   const getStatusVariant = (status: string) => {
@@ -42,10 +43,7 @@ export default function TripsPage() {
         title="Trip Manager"
         description="Facilitate trip creation and track existing journeys."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Trip
-        </Button>
+        <NewTripSheet />
       </PageHeader>
       <Card>
         <CardContent className="pt-6">

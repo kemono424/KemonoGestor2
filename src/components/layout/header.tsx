@@ -14,9 +14,12 @@ import { LogOut, Settings, User, Car } from 'lucide-react';
 import { SidebarTrigger } from '../ui/sidebar';
 import RoleSwitcher from '../role-switcher';
 import { useAppContext } from '@/context/AppContext';
+import { NewTripSheet } from '../new-trip-sheet';
 
 export default function Header() {
   const { role } = useAppContext();
+  const canCreateTrips = ['Admin', 'Supervisor', 'Dispatcher'].includes(role);
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
       <div className="flex items-center gap-2">
@@ -26,6 +29,7 @@ export default function Header() {
       </div>
 
       <div className="ml-auto flex items-center gap-4">
+        {canCreateTrips && <NewTripSheet />}
         <div className="hidden md:block">
           <RoleSwitcher />
         </div>
