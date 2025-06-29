@@ -14,9 +14,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Car, Users, Activity, MapPin } from 'lucide-react';
-import Image from 'next/image';
+import { Car, Users, Activity } from 'lucide-react';
 import { recentTrips, vehicles } from '@/lib/mock-data';
+import VehicleMap from '@/components/vehicle-map';
 
 export default function DashboardPage() {
   const onlineVehicles = vehicles.filter(v => v.status === 'Online').length;
@@ -106,24 +106,8 @@ export default function DashboardPage() {
             <CardTitle>Live Vehicle Locations</CardTitle>
             <CardDescription>Real-time tracking of all online vehicles.</CardDescription>
           </CardHeader>
-          <CardContent className="relative h-80 w-full">
-            <Image
-              src="https://placehold.co/800x600.png"
-              alt="Map of vehicle locations"
-              layout="fill"
-              objectFit="cover"
-              className="rounded-lg"
-              data-ai-hint="city map"
-            />
-             <div className="absolute top-1/3 left-1/4">
-                <MapPin className="h-6 w-6 text-accent animate-pulse" />
-            </div>
-            <div className="absolute top-1/2 right-1/4">
-                <MapPin className="h-6 w-6 text-accent animate-pulse" />
-            </div>
-             <div className="absolute bottom-1/4 left-1/2">
-                <MapPin className="h-6 w-6 text-accent animate-pulse" />
-            </div>
+          <CardContent className="h-80 w-full p-0">
+             <VehicleMap vehicles={vehicles} />
           </CardContent>
         </Card>
       </div>

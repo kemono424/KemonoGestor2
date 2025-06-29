@@ -1,0 +1,42 @@
+'use client';
+
+import * as React from 'react';
+import Map, { Marker } from 'react-map-gl';
+import type { Vehicle } from '@/types';
+import { MapPin } from 'lucide-react';
+
+interface VehicleMapProps {
+  vehicles: Vehicle[];
+}
+
+export default function VehicleMap({ vehicles }: VehicleMapProps) {
+  const onlineVehicles = vehicles.filter(
+    (v) => v.status === 'Online' && v.latitude && v.longitude
+  );
+
+  return (
+    <div className="h-full w-full rounded-lg overflow-hidden">
+        <Map
+            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+            initialViewState={{
+                longitude: -122.4194,
+                latitude: 37.7749,
+                zoom: 12,
+            }}
+            style={{ width: '100%', height: '100%'}}
+            mapStyle="mapbox://styles/mapbox/streets-v12"
+            >
+            {onlineVehicles.map((vehicle) => (
+                <Marker
+                key={vehicle.id}
+                longitude={vehicle.longitude!}
+                latitude={vehicle.latitude!}
+                anchor="bottom"
+                >
+                <MapPin className="h-6 w-6 text-accent animate-pulse" />
+                </Marker>
+            ))}
+        </Map>
+    </div>
+  );
+}

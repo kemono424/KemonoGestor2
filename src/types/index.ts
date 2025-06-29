@@ -7,6 +7,8 @@ export interface Vehicle {
   operator: string;
   status: VehicleStatus;
   lastMaintenance: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export type OperatorStatus = 'Active' | 'On Leave' | 'Inactive';

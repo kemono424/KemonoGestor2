@@ -8,6 +8,8 @@ export const vehicles: Vehicle[] = [
     operator: 'John Doe',
     status: 'Online',
     lastMaintenance: '2024-05-10',
+    latitude: 37.7749,
+    longitude: -122.4194,
   },
   {
     id: 'V002',
@@ -16,6 +18,8 @@ export const vehicles: Vehicle[] = [
     operator: 'Jane Smith',
     status: 'Online',
     lastMaintenance: '2024-06-01',
+    latitude: 37.7880,
+    longitude: -122.4075,
   },
   {
     id: 'V003',
@@ -40,6 +44,8 @@ export const vehicles: Vehicle[] = [
     operator: 'Chris Green',
     status: 'Online',
     lastMaintenance: '2024-07-01',
+    latitude: 37.7950,
+    longitude: -122.4220,
   },
 ];
 
