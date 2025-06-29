@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User, Car } from 'lucide-react';
+import { LogOut, Settings, User, Car, PlusCircle } from 'lucide-react';
 import { SidebarTrigger } from '../ui/sidebar';
 import RoleSwitcher from '../role-switcher';
 import { useAppContext } from '@/context/AppContext';
-import { NewTripSheet } from '../new-trip-sheet';
+import Link from 'next/link';
 
 export default function Header() {
   const { role } = useAppContext();
@@ -29,7 +29,14 @@ export default function Header() {
       </div>
 
       <div className="ml-auto flex items-center gap-4">
-        {canCreateTrips && <NewTripSheet />}
+        {canCreateTrips && (
+          <Button asChild>
+            <Link href="/">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Trip
+            </Link>
+          </Button>
+        )}
         <div className="hidden md:block">
           <RoleSwitcher />
         </div>

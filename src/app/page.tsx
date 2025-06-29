@@ -5,18 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Car, Users, Activity, DollarSign } from 'lucide-react';
-import { recentTrips, vehicles, operators } from '@/lib/mock-data';
+import { vehicles, operators, recentTrips } from '@/lib/mock-data';
 import VehicleMap from '@/components/vehicle-map';
+import { NewTripForm } from '@/components/new-trip-form';
 
 export default function DashboardPage() {
   const onlineVehicles = vehicles.filter(v => v.status === 'Available').length;
@@ -71,56 +63,25 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="col-span-1 lg:col-span-1">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Recent Trip Activity</CardTitle>
-            <CardDescription>An overview of the latest trips.</CardDescription>
+            <CardTitle>Create a New Trip</CardTitle>
+            <CardDescription>
+              The system can auto-assign the nearest vehicle.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTrips.slice(0, 5).map(trip => (
-                  <TableRow key={trip.id}>
-                    <TableCell>
-                      <div className="font-medium">{trip.customer.name}</div>
-                      <div className="text-sm text-muted-foreground">{trip.destination}</div>
-                    </TableCell>
-                    <TableCell>{trip.vehicle.name} ({trip.vehicle.licensePlate})</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          trip.status === 'Completed'
-                            ? 'default'
-                            : trip.status === 'In Progress'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                        className="capitalize"
-                      >
-                        {trip.status.toLowerCase()}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <NewTripForm />
           </CardContent>
         </Card>
         
-        <Card className="col-span-1 lg:col-span-1">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Live Vehicle Locations</CardTitle>
             <CardDescription>Real-time tracking of all available vehicles.</CardDescription>
           </CardHeader>
-          <CardContent className="h-80 w-full p-0">
+          <CardContent className="h-[480px] w-full p-0">
              <VehicleMap vehicles={vehicles} />
           </CardContent>
         </Card>
