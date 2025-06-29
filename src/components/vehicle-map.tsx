@@ -10,8 +10,8 @@ interface VehicleMapProps {
 }
 
 export default function VehicleMap({ vehicles }: VehicleMapProps) {
-  const onlineVehicles = vehicles.filter(
-    (v) => v.status === 'Online' && v.latitude && v.longitude
+  const availableVehicles = vehicles.filter(
+    (v) => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
   );
 
   return (
@@ -24,16 +24,16 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
                 zoom: 12,
             }}
             style={{ width: '100%', height: '100%'}}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle="mapbox://styles/mapbox/dark-v11"
             >
-            {onlineVehicles.map((vehicle) => (
+            {availableVehicles.map((vehicle) => (
                 <Marker
                 key={vehicle.id}
                 longitude={vehicle.longitude!}
                 latitude={vehicle.latitude!}
                 anchor="bottom"
                 >
-                <MapPin className="h-6 w-6 text-accent animate-pulse" />
+                <MapPin className="h-6 w-6 text-primary animate-pulse" />
                 </Marker>
             ))}
         </Map>

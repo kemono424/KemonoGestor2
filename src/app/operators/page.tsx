@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function OperatorsPage() {
   const { role } = useAppContext();
 
-  if (role !== 'Admin') {
+  if (!['Admin', 'Supervisor'].includes(role)) {
     return (
         <div className="flex items-center justify-center h-full">
             <Card className="w-full max-w-md">
@@ -57,8 +57,9 @@ export default function OperatorsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Shift</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Services (Today)</TableHead>
+                <TableHead>Active Services</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -69,15 +70,15 @@ export default function OperatorsPage() {
                 <TableRow key={operator.id}>
                   <TableCell className="font-medium">{operator.name}</TableCell>
                   <TableCell>{operator.role}</TableCell>
-                  <TableCell>{operator.shift}</TableCell>
-                  <TableCell>
+                   <TableCell>
                     <Badge
                       variant={operator.status === 'Active' ? 'secondary' : 'outline'}
-                      className={operator.status === 'Active' ? "text-green-700 border-green-200 bg-green-50" : ""}
                     >
                       {operator.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{operator.servicesToday}</TableCell>
+                  <TableCell>{operator.activeServices}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -87,8 +88,9 @@ export default function OperatorsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem>View Stats</DropdownMenuItem>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View Log</DropdownMenuItem>
+                        <DropdownMenuItem>View Action History</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           Delete
                         </DropdownMenuItem>

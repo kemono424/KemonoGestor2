@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { operators } from '@/lib/mock-data';
 import { SendHorizonal } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 export default function MessagesPage() {
   const activeOperator = operators[0];
@@ -28,7 +29,7 @@ export default function MessagesPage() {
                   }`}
                 >
                   <Avatar>
-                    <AvatarImage src={`https://placehold.co/100x100.png?text=${op.name.charAt(0)}`} />
+                    <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="person user" />
                     <AvatarFallback>{op.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -45,12 +46,12 @@ export default function MessagesPage() {
         <div className="md:col-span-2 lg:col-span-3 flex flex-col h-full">
           <div className="p-4 border-b flex items-center gap-3">
              <Avatar>
-                <AvatarImage src={`https://placehold.co/100x100.png?text=${activeOperator.name.charAt(0)}`} />
+                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="person user" />
                 <AvatarFallback>{activeOperator.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold">{activeOperator.name}</p>
-                <p className="text-sm text-green-500">Online</p>
+                <Badge variant="secondary">Online</Badge>
               </div>
           </div>
           <ScrollArea className="flex-1 p-4">
@@ -58,7 +59,7 @@ export default function MessagesPage() {
               {/* Chat messages */}
                <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png?text=D" />
+                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
                   <AvatarFallback>D</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">
@@ -70,13 +71,13 @@ export default function MessagesPage() {
                   <p className="text-sm">Copy that. On my way.</p>
                 </div>
                  <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png?text=J" />
+                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
                   <AvatarFallback>J</AvatarFallback>
                 </Avatar>
               </div>
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png?text=D" />
+                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
                   <AvatarFallback>D</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">

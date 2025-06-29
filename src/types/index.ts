@@ -1,34 +1,49 @@
-export type VehicleStatus = 'Online' | 'Offline' | 'Maintenance';
+export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
 
 export interface Vehicle {
   id: string;
+  name: string; // e.g. "Taxi 01"
+  unitNumber: string; // e.g. "101"
+  color: string;
   licensePlate: string;
   model: string;
   operator: string;
   status: VehicleStatus;
   lastMaintenance: string;
+  insuranceDueDate?: string;
   latitude?: number;
   longitude?: number;
 }
 
 export type OperatorStatus = 'Active' | 'On Leave' | 'Inactive';
+export type UserRole = 'Admin' | 'Supervisor' | 'Dispatcher';
 
 export interface Operator {
   id: string;
   name: string;
-  role: string;
+  role: UserRole;
   shift: 'Day' | 'Night' | 'Admin';
   status: OperatorStatus;
+  // stats
+  servicesToday: number;
+  avgAssignmentTime: number; // in minutes
+  maxIdleTime: number; // in minutes
+  activeServices: number;
 }
 
-export type TripStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
+export interface Customer {
+    id: string;
+    name: string;
+    phone: string;
+    isVip: boolean;
+    pendingDebt: number; // in currency
+}
+
+export type TripStatus = 'In Tray' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
 
 export interface Trip {
   id: string;
-  customer: {
-    name: string;
-    phone: string;
-  };
+  customer: Customer;
   vehicle: Vehicle;
   operator: Operator;
   status: TripStatus;
@@ -37,5 +52,3 @@ export interface Trip {
   origin: string;
   destination: string;
 }
-
-export type UserRole = 'Admin' | 'Dispatcher';

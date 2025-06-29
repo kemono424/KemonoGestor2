@@ -21,6 +21,19 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function VehiclesPage() {
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Available':
+        return 'secondary';
+      case 'Busy':
+        return 'default';
+      case 'Maintenance':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -37,11 +50,12 @@ export default function VehiclesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Unit</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>License Plate</TableHead>
-                <TableHead>Model</TableHead>
                 <TableHead>Operator</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Maintenance</TableHead>
+                <TableHead>Insurance Due</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -50,25 +64,17 @@ export default function VehiclesPage() {
             <TableBody>
               {vehicles.map(vehicle => (
                 <TableRow key={vehicle.id}>
-                  <TableCell className="font-mono">{vehicle.licensePlate}</TableCell>
-                  <TableCell>{vehicle.model}</TableCell>
+                  <TableCell className="font-mono">{vehicle.unitNumber}</TableCell>
+                  <TableCell className="font-medium">{vehicle.name}</TableCell>
+                  <TableCell>{vehicle.licensePlate}</TableCell>
                   <TableCell>{vehicle.operator}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        vehicle.status === 'Online'
-                          ? 'secondary'
-                          : vehicle.status === 'Maintenance'
-                          ? 'destructive'
-                          : 'outline'
-                      }
-                      className={vehicle.status === 'Online' ? 'text-green-700 border-green-200 bg-green-50' : ''}
-                    >
+                    <Badge variant={getStatusVariant(vehicle.status)}>
                       {vehicle.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(vehicle.lastMaintenance), 'MMM d, yyyy')}
+                    {vehicle.insuranceDueDate ? format(new Date(vehicle.insuranceDueDate), 'MMM d, yyyy') : 'N/A'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -81,6 +87,7 @@ export default function VehiclesPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>Edit</DropdownMenuItem>
                         <DropdownMenuItem>View on Map</DropdownMenuItem>
+                        <DropdownMenuItem>Schedule Maintenance</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           Delete
                         </DropdownMenuItem>

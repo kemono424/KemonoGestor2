@@ -21,6 +21,21 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function TripsPage() {
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return 'default';
+      case 'In Progress':
+        return 'secondary';
+      case 'Assigned':
+        return 'secondary';
+      case 'Cancelled':
+        return 'destructive';
+      default: // In Tray
+        return 'outline';
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -38,7 +53,7 @@ export default function TripsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
-                <TableHead>Operator</TableHead>
+                <TableHead>Origin / Destination</TableHead>
                 <TableHead>Vehicle</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Start Time</TableHead>
@@ -52,26 +67,22 @@ export default function TripsPage() {
                 <TableRow key={trip.id}>
                   <TableCell>
                     <div className="font-medium">{trip.customer.name}</div>
-                    <div className="text-sm text-muted-foreground">{trip.destination}</div>
                   </TableCell>
-                  <TableCell>{trip.operator.name}</TableCell>
-                  <TableCell>{trip.vehicle.licensePlate}</TableCell>
+                  <TableCell>
+                     <div className="font-medium">{trip.origin}</div>
+                     <div className="text-sm text-muted-foreground">{trip.destination}</div>
+                  </TableCell>
+                  <TableCell>{trip.vehicle.name} ({trip.vehicle.licensePlate})</TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        trip.status === 'Completed'
-                          ? 'default'
-                          : trip.status === 'In Progress'
-                          ? 'secondary'
-                          : trip.status === 'Cancelled' ? 'destructive' : 'outline'
-                      }
+                      variant={getStatusVariant(trip.status)}
                       className="capitalize"
                     >
                       {trip.status.toLowerCase()}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(trip.startTime), 'MMM d, yyyy h:mm a')}
+                    {format(new Date(trip.startTime), 'MMM d, h:mm a')}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -83,7 +94,8 @@ export default function TripsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Cancel Trip</DropdownMenuItem>
+                        <DropdownMenuItem>Track on Map</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">Cancel Trip</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

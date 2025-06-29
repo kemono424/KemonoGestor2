@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User, Truck } from 'lucide-react';
+import { LogOut, Settings, User, Car } from 'lucide-react';
 import { SidebarTrigger } from '../ui/sidebar';
 import RoleSwitcher from '../role-switcher';
 import { useAppContext } from '@/context/AppContext';
@@ -18,11 +18,11 @@ import { useAppContext } from '@/context/AppContext';
 export default function Header() {
   const { role } = useAppContext();
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
-        <Truck className="h-6 w-6" />
-        <h1 className="text-lg font-semibold">KemonoGestor</h1>
+        <Car className="h-6 w-6" />
+        <h1 className="text-lg font-semibold">Fleet Manager</h1>
       </div>
 
       <div className="ml-auto flex items-center gap-4">
@@ -33,7 +33,7 @@ export default function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
-                <AvatarImage src="https://placehold.co/100x100.png" alt="@user" />
+                <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="person user" />
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </Button>
@@ -41,7 +41,7 @@ export default function Header() {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Dispatcher</p>
+                <p className="text-sm font-medium leading-none">User</p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {role}
                 </p>

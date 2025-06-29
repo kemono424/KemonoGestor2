@@ -6,8 +6,8 @@ import { AppProvider } from '@/context/AppContext';
 import MainLayout from '@/components/layout/main-layout';
 
 export const metadata: Metadata = {
-  title: 'KemonoGestor',
-  description: 'Advanced Fleet Management System',
+  title: 'Fleet Manager',
+  description: 'Advanced Taxi Fleet Management System',
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

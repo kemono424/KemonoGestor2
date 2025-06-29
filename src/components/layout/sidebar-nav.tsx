@@ -14,7 +14,7 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  Truck,
+  UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,21 +25,37 @@ const links = [
     href: '/',
     icon: LayoutDashboard,
     label: 'Dashboard',
-    roles: ['Admin', 'Dispatcher'],
+    roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
-  { href: '/trips', icon: Map, label: 'Trips', roles: ['Admin', 'Dispatcher'] },
+  {
+    href: '/trips',
+    icon: Map,
+    label: 'Trips',
+    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+  },
   {
     href: '/vehicles',
     icon: Car,
     label: 'Vehicles',
-    roles: ['Admin', 'Dispatcher'],
+    roles: ['Admin', 'Supervisor'],
   },
-  { href: '/operators', icon: Users, label: 'Operators', roles: ['Admin'] },
+  {
+    href: '/operators',
+    icon: Users,
+    label: 'Operators',
+    roles: ['Admin', 'Supervisor'],
+  },
+  {
+    href: '/customers',
+    icon: UserCheck,
+    label: 'Customers',
+    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+  },
   {
     href: '/messages',
     icon: MessageSquare,
     label: 'Messages',
-    roles: ['Admin', 'Dispatcher'],
+    roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
 ];
 
@@ -52,9 +68,9 @@ export default function SidebarNav() {
   return (
     <>
       <SidebarHeader className="flex items-center gap-2 p-4">
-        <Truck className="h-6 w-6 text-sidebar-foreground" />
+        <Car className="h-6 w-6 text-sidebar-foreground" />
         <span className="text-lg font-semibold text-sidebar-foreground">
-          KemonoGestor
+          Fleet Manager
         </span>
       </SidebarHeader>
       <SidebarMenu className="flex-1 p-2">
