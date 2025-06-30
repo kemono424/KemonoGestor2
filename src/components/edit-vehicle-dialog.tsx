@@ -29,14 +29,10 @@ interface EditVehicleDialogProps {
   onSave: (vehicle: Partial<Vehicle>) => void;
 }
 
-const vehicleStatuses: VehicleStatus[] = [
-  'Libre',
-  'En descanso',
-  'Ocupado',
-  'En camino',
-  'En espera',
-  'Mantenimiento',
-  'Fuera de servicio',
+const adminSelectableStatuses: { label: string; value: VehicleStatus }[] = [
+  { label: 'Habilitado', value: 'En descanso' },
+  { label: 'Bloqueado (Fuera de servicio)', value: 'Fuera de servicio' },
+  { label: 'En Mantenimiento', value: 'Mantenimiento' },
 ];
 
 export function EditVehicleDialog({
@@ -91,6 +87,15 @@ export function EditVehicleDialog({
   };
 
   if (!isOpen || !editableVehicle) return null;
+
+  // Determine what value the Select should show. If the status is anything
+  // other than 'Fuera de servicio' or 'Mantenimiento', it's considered 'Habilitado' (Enabled).
+  const currentStatus = editableVehicle.status;
+  let selectValue: VehicleStatus = 'En descanso'; // Default to 'Habilitado'
+  if (currentStatus === 'Fuera de servicio' || currentStatus === 'Mantenimiento') {
+      selectValue = currentStatus;
+  }
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -161,7 +166,7 @@ export function EditVehicleDialog({
             <div className="space-y-2 col-span-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={editableVehicle.status}
+                value={selectValue}
                 onValueChange={(value: VehicleStatus) =>
                   handleValueChange('status', value)
                 }
@@ -170,9 +175,9 @@ export function EditVehicleDialog({
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {vehicleStatuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
+                  {adminSelectableStatuses.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
