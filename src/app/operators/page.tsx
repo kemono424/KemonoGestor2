@@ -25,14 +25,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditOperatorDialog } from '@/components/edit-operator-dialog';
 import type { Operator } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function OperatorsPage() {
-  const { role } = useAppContext();
+  const { currentUser, logout } = useAppContext();
   const { toast } = useToast();
   const [operatorsData, setOperatorsData] = useState<Operator[]>(operators);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOperator, setEditingOperator] =
     useState<Partial<Operator> | null>(null);
+  const [operatorToDelete, setOperatorToDelete] = useState<Operator | null>(
+    null
+  );
 
   const handleAddOperator = () => {
     setEditingOperator(null);
@@ -42,6 +55,41 @@ export default function OperatorsPage() {
   const handleEditOperator = (operator: Operator) => {
     setEditingOperator(operator);
     setIsDialogOpen(true);
+  };
+
+  const handleDeleteOperator = (operator: Operator) => {
+    setOperatorToDelete(operator);
+  };
+
+  const confirmDelete = () => {
+    if (!operatorToDelete || !currentUser) return;
+
+    const operatorIndex = operators.findIndex(
+      (op) => op.id === operatorToDelete.id
+    );
+    if (operatorIndex > -1) {
+      operators.splice(operatorIndex, 1);
+    }
+
+    setOperatorsData((prev) => prev.filter((op) => op.id !== operatorToDelete.id));
+
+    toast({
+      title: 'Operator Deleted',
+      description: `Operator "${operatorToDelete.name}" has been permanently removed.`,
+    });
+
+    if (currentUser.id === operatorToDelete.id) {
+      toast({
+        variant: 'destructive',
+        title: 'Self-Destruct!',
+        description: 'You have deleted your own account and will be logged out.',
+      });
+      setTimeout(() => {
+        logout();
+      }, 1500);
+    }
+
+    setOperatorToDelete(null);
   };
 
   const handleSaveOperator = (savedOperator: Partial<Operator>) => {
@@ -96,7 +144,7 @@ export default function OperatorsPage() {
     setEditingOperator(null);
   };
 
-  if (!['Admin', 'Supervisor'].includes(role)) {
+  if (!currentUser || !['Admin', 'Supervisor'].includes(currentUser.role)) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="w-full max-w-md">
@@ -172,7 +220,10 @@ export default function OperatorsPage() {
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem>View Action History</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          onClick={() => handleDeleteOperator(operator)}
+                        >
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -193,6 +244,30 @@ export default function OperatorsPage() {
         }}
         onSave={handleSaveOperator}
       />
+      <AlertDialog
+        open={!!operatorToDelete}
+        onOpenChange={(open) => !open && setOperatorToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is permanent. This will delete operator "
+              {operatorToDelete?.name}" and they will no longer be able to log
+              in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

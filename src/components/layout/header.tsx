@@ -17,7 +17,11 @@ import { useAppContext } from '@/context/AppContext';
 import Link from 'next/link';
 
 export default function Header() {
-  const { role } = useAppContext();
+  const { currentUser, logout } = useAppContext();
+
+  if (!currentUser) return null;
+
+  const { role, name } = currentUser;
   const canCreateTrips = ['Admin', 'Supervisor', 'Dispatcher'].includes(role);
 
   return (
@@ -45,14 +49,14 @@ export default function Header() {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarImage src="https://placehold.co/100x100.png" alt="@user" data-ai-hint="person user" />
-                <AvatarFallback>U</AvatarFallback>
+                <AvatarFallback>{name.charAt(0)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">User</p>
+                <p className="text-sm font-medium leading-none">{name}</p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {role}
                 </p>
@@ -63,12 +67,14 @@ export default function Header() {
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <DropdownMenuItem asChild>
+                <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>

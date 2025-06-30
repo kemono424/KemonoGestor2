@@ -66,24 +66,28 @@ const links = [
     label: 'Messages',
     roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
-  {
-    href: '/settings',
-    icon: Settings,
-    label: 'Settings',
-    roles: ['Admin'],
-  },
 ];
 
 export default function SidebarNav() {
   const pathname = usePathname();
-  const { role } = useAppContext();
+  const { currentUser, logout } = useAppContext();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  if (!currentUser) return null;
+
+  const { role } = currentUser;
   const filteredLinks = links.filter(link => link.roles.includes(role));
+
+  const settingsLink = {
+    href: '/settings',
+    icon: Settings,
+    label: 'Settings',
+    roles: ['Admin'],
+  }
 
   return (
     <>
@@ -111,14 +115,18 @@ export default function SidebarNav() {
       </SidebarMenu>
       <SidebarFooter className="p-2">
         <SidebarMenu>
+          {settingsLink.roles.includes(role) && (
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Settings" isActive={mounted ? pathname === settingsLink.href : false}>
+                    <Link href={settingsLink.href}>
+                        <Settings />
+                        <span>Settings</span>
+                    </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Settings">
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Logout">
+            <SidebarMenuButton tooltip="Logout" onClick={logout}>
               <LogOut />
               <span>Logout</span>
             </SidebarMenuButton>

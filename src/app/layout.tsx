@@ -3,7 +3,7 @@ import './globals.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/context/AppContext';
-import MainLayout from '@/components/layout/main-layout';
+import { AuthWrapper } from '@/components/auth-wrapper';
 
 export const metadata: Metadata = {
   title: 'Fleet Manager',
@@ -27,7 +27,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AppProvider>
-          <MainLayout>{children}</MainLayout>
+          <AuthWrapper>{children}</AuthWrapper>
           <Toaster />
         </AppProvider>
       </body>

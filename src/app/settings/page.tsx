@@ -38,7 +38,7 @@ const defaultValues: Partial<PricingFormValues> = {
 };
 
 export default function SettingsPage() {
-  const { role } = useAppContext();
+  const { currentUser } = useAppContext();
   const { toast } = useToast();
   const [isMounted, setIsMounted] = React.useState(false);
 
@@ -82,7 +82,7 @@ export default function SettingsPage() {
     return null; 
   }
 
-  if (role !== 'Admin') {
+  if (!currentUser || currentUser.role !== 'Admin') {
     return (
         <div className="flex items-center justify-center h-full">
             <Card className="w-full max-w-md">

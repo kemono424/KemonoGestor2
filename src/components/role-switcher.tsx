@@ -10,17 +10,21 @@ import { useAppContext } from '@/context/AppContext';
 import type { UserRole } from '@/types';
 
 export default function RoleSwitcher() {
-  const { role, setRole } = useAppContext();
+  const { currentUser, setCurrentUserRole } = useAppContext();
+  
+  if (!currentUser || currentUser.role !== 'Admin') {
+    return null;
+  }
 
   return (
-    <Select value={role} onValueChange={value => setRole(value as UserRole)}>
+    <Select value={currentUser.role} onValueChange={value => setCurrentUserRole(value as UserRole)}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select a role" />
+        <SelectValue placeholder="Impersonate Role" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="Admin">Admin</SelectItem>
-        <SelectItem value="Supervisor">Supervisor</SelectItem>
-        <SelectItem value="Dispatcher">Dispatcher</SelectItem>
+        <SelectItem value="Supervisor">Impersonate Supervisor</SelectItem>
+        <SelectItem value="Dispatcher">Impersonate Dispatcher</SelectItem>
       </SelectContent>
     </Select>
   );
