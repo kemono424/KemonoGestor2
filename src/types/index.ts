@@ -26,6 +26,8 @@ export interface Operator {
   id: string;
   name: string;
   role: UserRole;
+  username: string;
+  password: string;
   shift: 'Day' | 'Night' | 'Admin';
   status: OperatorStatus;
   // stats
@@ -81,6 +83,6 @@ export interface ZoneDefinition {
 
 export interface PricingConfig {
   baseFare: number;
-  perKilometer: number;
+  perKilkilometer: number;
   perStop: number;
 }
