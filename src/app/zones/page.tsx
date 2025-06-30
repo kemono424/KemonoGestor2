@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,184 +11,112 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
-import { zones as mockZones, type Zone } from '@/lib/mock-data';
-import ZoneMapEditor from '@/components/zone-map-editor';
-import type { Feature, Polygon } from 'geojson';
+import { PlusCircle, Trash2, Edit, CheckCircle } from 'lucide-react';
+import { type Zone } from '@/types';
+import { predefinedAreas } from '@/lib/mock-data';
 import { EditZoneDialog } from '@/components/edit-zone-dialog';
 import { useAppContext } from '@/context/AppContext';
-
-const getRandomColor = () => {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
+import Map, { Source, Layer, Popup } from 'react-map-gl';
+import type { FeatureCollection } from 'geojson';
 
 export default function ZonesPage() {
   const { role } = useAppContext();
-  const [zones, setZones] = useState<Zone[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [activeZones, setActiveZones] = useState<Zone[]>([]);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
-  const [drawInstance, setDrawInstance] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [hoveredZone, setHoveredZone] = useState<{name: string, lng: number, lat: number} | null>(null);
 
   const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
-  // Load zones from localStorage on mount, or initialize with mock data
   useEffect(() => {
     setIsMounted(true);
     try {
       const savedZones = localStorage.getItem('fleet-manager-zones');
       if (savedZones) {
-        setZones(JSON.parse(savedZones));
-      } else {
-        // If no zones are saved, you can initialize with an empty array or mocks
-        setZones([]);
+        setActiveZones(JSON.parse(savedZones));
       }
     } catch (error) {
-      console.error("Failed to access localStorage. Using mock data.", error);
-      setZones(mockZones);
+      console.error('Failed to load zones from localStorage.', error);
     }
   }, []);
 
-  // Save zones to localStorage whenever they change, after initial mount
   useEffect(() => {
     if (isMounted) {
       try {
-        localStorage.setItem('fleet-manager-zones', JSON.stringify(zones));
+        localStorage.setItem('fleet-manager-zones', JSON.stringify(activeZones));
       } catch (error) {
-        console.error("Failed to save zones to localStorage.", error);
+        console.error('Failed to save zones to localStorage.', error);
       }
     }
-  }, [zones, isMounted]);
+  }, [activeZones, isMounted]);
 
-  // Effect to sync zones state with the map features
-  useEffect(() => {
-    if (drawInstance && isMounted) {
-      const featureIdsOnMap = drawInstance.getAll().features.map((f: Feature) => f.id);
-      
-      // Full sync: Delete all and add from state. This is the most reliable way.
-      drawInstance.deleteAll();
-      if (zones.length > 0) {
-        const features = zones.map(z => ({
-          id: z.id,
-          type: 'Feature' as const,
-          properties: { name: z.name, color: z.color },
-          geometry: z.geometry,
-        }));
-        drawInstance.add({ type: 'FeatureCollection', features });
-      }
-    }
-  }, [zones, drawInstance, isMounted]);
+  const handleActivate = (area: { id: string; name: string; }) => {
+    const predefined = predefinedAreas.find(p => p.id === area.id);
+    if (!predefined) return;
 
-
-  const handleMapUpdate = useCallback(
-    (event: { type: string; features: Feature<Polygon>[] }) => {
-      if (!drawInstance) return;
-
-      const { type, features } = event;
-
-      if (type === 'draw.create') {
-        const newFeature = features[0];
-        // This is a temporary zone object. It will be finalized when saved from the dialog.
-        const newZone: Zone = {
-          id: newFeature.id as string,
-          name: '', // Start with an empty name
-          color: getRandomColor(),
-          geometry: newFeature.geometry,
-        };
-        setEditingZone(newZone); // Open the dialog to finalize creation
-      } else if (type === 'draw.update') {
-        setZones((currentZones) =>
-          currentZones.map((zone) => {
-            const updatedFeature = features.find((f) => f.id === zone.id);
-            // Update geometry if a feature was moved/resized
-            if (updatedFeature) {
-              return { ...zone, geometry: updatedFeature.geometry };
-            }
-            return zone;
-          })
-        );
-      } else if (type === 'draw.delete') {
-        const deletedIds = new Set(features.map((f) => f.id as string));
-        // Remove zones from state that were deleted on the map
-        setZones((currentZones) =>
-          currentZones.filter((z) => !deletedIds.has(z.id))
-        );
-      } else if (type === 'draw.selectionchange') {
-         const selectedIds = drawInstance.getSelectedIds();
-         if (selectedIds.length > 0) {
-            setSelectedZoneId(selectedIds[0]);
-         } else {
-            setSelectedZoneId(null);
-         }
-      }
-    },
-    [drawInstance]
-  );
-
-  const handleCreateZone = () => {
-    if (drawInstance) {
-      // Enter polygon drawing mode
-      drawInstance.changeMode('draw_polygon');
-    }
+    const newZone: Zone = {
+      id: predefined.id,
+      name: predefined.name,
+      geometry: predefined.geometry,
+      color: '#3b82f6', // Default color
+    };
+    setEditingZone(newZone);
   };
 
-  const handleDeleteZone = (zoneId: string) => {
-    if (drawInstance) {
-       // This will trigger the 'draw.delete' event, which updates the state.
-      drawInstance.delete([zoneId]);
-    }
+  const handleDeactivate = (zoneId: string) => {
+    setActiveZones((current) => current.filter((z) => z.id !== zoneId));
   };
 
-  const handleSaveZone = (updatedZone: Zone) => {
-    const isNew = !zones.some(z => z.id === updatedZone.id);
-    
+  const handleEdit = (zone: Zone) => {
+    setEditingZone(zone);
+  };
+
+  const handleSave = (updatedZone: Zone) => {
+    const isNew = !activeZones.some((z) => z.id === updatedZone.id);
     if (isNew) {
-      // Add the finalized new zone to the state
-      setZones(current => [...current, updatedZone]);
+      setActiveZones((current) => [...current, updatedZone]);
     } else {
-      // Update the existing zone in the state
-      setZones(currentZones =>
-        currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
+      setActiveZones((current) =>
+        current.map((z) => (z.id === updatedZone.id ? updatedZone : z))
       );
     }
-    
-    // Explicitly update the feature properties on the map to reflect name/color changes
-    if (drawInstance) {
-        drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
-        drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
-    }
-    
-    setEditingZone(null); // Close the dialog
+    setEditingZone(null);
   };
-  
+
   const onDialogChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // If the dialog is closed for a new, unsaved zone, remove its feature from the map.
-      const isNewUnsaved = editingZone && !zones.some(z => z.id === editingZone.id);
-      if (isNewUnsaved && drawInstance && editingZone) {
-        // Use a timeout to prevent an error where drawInstance is not ready
-        setTimeout(() => drawInstance.delete([editingZone.id]), 0);
-      }
-      setEditingZone(null); // Clear the editing state
+      setEditingZone(null);
     }
-  }
+  };
+
+  const availableAreas = isMounted
+    ? predefinedAreas.filter(
+        (area) => !activeZones.some((zone) => zone.id === area.id)
+      )
+    : [];
+
+  const allAreasFc: FeatureCollection | null = isMounted ? {
+    type: 'FeatureCollection',
+    features: predefinedAreas.map((area) => ({
+      id: area.id,
+      type: 'Feature',
+      properties: {
+        name: activeZones.find(z => z.id === area.id)?.name || area.name,
+        color: activeZones.find(z => z.id === area.id)?.color || '#888888',
+        opacity: activeZones.some(z => z.id === area.id) ? 0.3 : 0.1
+      },
+      geometry: area.geometry,
+    })),
+  } : null;
 
   if (!canEditZones) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Access Denied</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-center">Access Denied</CardTitle></CardHeader>
           <CardContent>
             <p className="text-center text-muted-foreground">
-              You do not have permission to manage zones. Please contact an
-              administrator.
+              You do not have permission to manage zones. Please contact an administrator.
             </p>
           </CardContent>
         </Card>
@@ -200,98 +128,95 @@ export default function ZonesPage() {
     <>
       <PageHeader
         title="Zone Management"
-        description="Draw and manage geographical zones for vehicle assignment."
-      >
-        <Button onClick={handleCreateZone}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Zone
-        </Button>
-      </PageHeader>
+        description="Activate and configure predefined geographical areas."
+      />
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>All Zones</CardTitle>
-            <CardDescription>
-              Select a zone to view details or click a shape on the map.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {zones.map(zone => (
-                <div
-                  key={zone.id}
-                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedZoneId === zone.id
-                      ? 'bg-muted'
-                      : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => {
-                    setSelectedZoneId(zone.id)
-                    if (drawInstance) {
-                      try {
-                        drawInstance.changeMode('simple_select', { featureIds: [zone.id] });
-                      } catch (error) {
-                        console.error("Error changing mode:", error)
-                      }
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-4 w-4 rounded-sm border"
-                      style={{ backgroundColor: `${zone.color}80`, borderColor: zone.color }}
-                    />
-                    <span className="font-medium">{zone.name}</span>
+        <div className="lg:col-span-1 flex flex-col gap-6">
+           <Card>
+            <CardHeader>
+              <CardTitle>Active Zones</CardTitle>
+              <CardDescription>
+                These are the zones currently used for dispatching.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {activeZones.map((zone) => (
+                  <div key={zone.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-4 w-4 rounded-sm border" style={{ backgroundColor: `${zone.color}80`, borderColor: zone.color }} />
+                      <span className="font-medium">{zone.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(zone)}><Edit className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeactivate(zone.id)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={e => {
-                        e.stopPropagation();
-                        const zoneToEdit = zones.find(z => z.id === zone.id);
-                        if (zoneToEdit) {
-                            setEditingZone(zoneToEdit);
-                        }
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDeleteZone(zone.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                ))}
+                {activeZones.length === 0 && <p className="text-center text-muted-foreground py-4">No active zones.</p>}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Areas</CardTitle>
+              <CardDescription>
+                Predefined areas that can be activated as zones.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {availableAreas.map((area) => (
+                  <div key={area.id} className="flex items-center justify-between p-3 rounded-lg">
+                    <span className="font-medium text-muted-foreground">{area.name}</span>
+                    <Button variant="outline" size="sm" onClick={() => handleActivate(area)}><CheckCircle className="mr-2 h-4 w-4" />Activate</Button>
                   </div>
-                </div>
-              ))}
-              {zones.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No zones created. Click "New Zone" to start drawing.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+                {availableAreas.length === 0 && <p className="text-center text-muted-foreground py-4">All areas are active.</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         <div className="lg:col-span-2">
-          <ZoneMapEditor
-            onUpdate={handleMapUpdate}
-            setDrawInstance={setDrawInstance}
-          />
+           <Card className="h-[calc(100vh-14rem)] min-h-[500px] w-full">
+             <Map
+                mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                initialViewState={{ longitude: -65.4117, latitude: -24.7859, zoom: 12 }}
+                style={{ width: '100%', height: '100%', borderRadius: 'var(--radius)' }}
+                mapStyle="mapbox://styles/mapbox/dark-v11"
+                interactiveLayerIds={allAreasFc ? ['zone-fills'] : []}
+                onMouseMove={(e) => {
+                    if (e.features && e.features.length > 0) {
+                        const feature = e.features[0];
+                        setHoveredZone({
+                            name: feature.properties?.name,
+                            lng: e.lngLat.lng,
+                            lat: e.lngLat.lat
+                        });
+                    }
+                }}
+                onMouseLeave={() => setHoveredZone(null)}
+              >
+                {allAreasFc && (
+                  <Source id="zones" type="geojson" data={allAreasFc}>
+                    <Layer id="zone-fills" type="fill" source="zones" paint={{ 'fill-color': ['get', 'color'], 'fill-opacity': ['get', 'opacity'] }} />
+                    <Layer id="zone-borders" type="line" source="zones" paint={{ 'line-color': ['get', 'color'], 'line-width': 2 }} />
+                  </Source>
+                )}
+                {hoveredZone && (
+                  <Popup longitude={hoveredZone.lng} latitude={hoveredZone.lat} offset={24} closeButton={false} className="font-sans">
+                    <div className="font-medium">{hoveredZone.name}</div>
+                  </Popup>
+                )}
+             </Map>
+           </Card>
         </div>
       </div>
       <EditZoneDialog
         zone={editingZone}
         isOpen={!!editingZone}
         onOpenChange={onDialogChange}
-        onSave={handleSaveZone}
+        onSave={handleSave}
       />
     </>
   );

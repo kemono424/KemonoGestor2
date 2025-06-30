@@ -60,3 +60,9 @@ export interface Zone {
   geometry: Polygon;
   color: string;
 }
+
+export interface PredefinedArea {
+  id: string;
+  name: string;
+  geometry: Polygon;
+}

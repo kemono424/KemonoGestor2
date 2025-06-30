@@ -33,7 +33,7 @@ export function EditZoneDialog({
 
   useEffect(() => {
     if (zone) {
-      setName(zone.name); // No longer checking for 'New Zone'
+      setName(zone.name);
       setColor(zone.color);
     }
   }, [zone]);
@@ -47,21 +47,14 @@ export function EditZoneDialog({
 
   if (!zone) return null;
 
-  // Use the zone's initial name state to determine if it's a new creation
-  const isCreating = zone.name === '';
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSave}>
           <DialogHeader>
-            <DialogTitle>
-              {isCreating ? 'Create New Zone' : 'Edit Zone'}
-            </DialogTitle>
+            <DialogTitle>Configure Zone</DialogTitle>
             <DialogDescription>
-              {isCreating
-                ? 'Set the name and color for the new zone you drew.'
-                : 'Change the name and color for this zone.'}
+              Set the display name and color for this operational zone.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
