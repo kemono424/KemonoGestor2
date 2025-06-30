@@ -1,31 +1,37 @@
 'use client';
 
 import * as React from 'react';
-import Map, { useControl } from 'react-map-gl';
+import Map, { useControl, ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Zone } from '@/types';
 import type { Feature, Polygon } from 'geojson';
-import type { ControlPosition } from 'react-map-gl';
 
-function DrawControl({
-  onUpdate,
-  onSelect,
-  zones,
-}: {
+const DrawControl = (props: {
   onUpdate: (features: Feature[]) => void;
   onSelect: (id: string | null) => void;
   zones: Zone[];
-}) {
+}) => {
+  const { onUpdate, onSelect, zones } = props;
   const drawRef = React.useRef<MapboxDraw | null>(null);
 
-  const onAdd = React.useCallback(
-    ({ map }: { map: mapboxgl.Map }) => {
+  const handleDrawEvent = React.useCallback(
+    (e: { type: string; features: Feature[] }) => {
+      const draw = drawRef.current;
+      if (!draw) return;
+      if (e.type === 'draw.selectionchange') {
+        onSelect(e.features.length > 0 ? (e.features[0].id as string) : null);
+      } else {
+        onUpdate(draw.getAll().features);
+      }
+    },
+    [onUpdate, onSelect]
+  );
+
+  useControl<MapboxDraw>(
+    () => {
       const draw = new MapboxDraw({
         displayControlsDefault: false,
-        controls: {
-          polygon: true,
-          trash: true,
-        },
+        controls: { polygon: true, trash: true },
         userProperties: true,
         styles: [
           {
@@ -56,51 +62,42 @@ function DrawControl({
           },
         ],
       });
-      
       drawRef.current = draw;
-
-      const handleEvents = (e: { type: string; features: Feature[] }) => {
-        if (e.type === 'draw.selectionchange') {
-          onSelect(e.features.length > 0 ? (e.features[0].id as string) : null);
-        } else {
-          onUpdate(draw.getAll().features);
-        }
-      };
-
-      map.on('draw.create', handleEvents);
-      map.on('draw.update', handleEvents);
-      map.on('draw.delete', handleEvents);
-      map.on('draw.selectionchange', handleEvents);
-      
       return draw;
     },
-    [onSelect, onUpdate]
-  );
-
-  const onRemove = React.useCallback(
-    ({ map }: { map: mapboxgl.Map }) => {
-      // Cleanup logic if needed when control is removed
+    ({ map }) => { // onAdd
+      map.on('draw.create', handleDrawEvent);
+      map.on('draw.update', handleDrawEvent);
+      map.on('draw.delete', handleDrawEvent);
+      map.on('draw.selectionchange', handleDrawEvent);
     },
-    []
+    ({ map }) => { // onRemove
+      map.off('draw.create', handleDrawEvent);
+      map.off('draw.update', handleDrawEvent);
+      map.off('draw.delete', handleDrawEvent);
+      map.off('draw.selectionchange', handleDrawEvent);
+    },
+    { position: 'top-left' as ControlPosition }
   );
-
-  useControl(onAdd, onRemove, { position: 'top-left' as ControlPosition });
 
   React.useEffect(() => {
     const draw = drawRef.current;
-    if (!draw) return;
+    // This is the key fix: ensure the draw instance and its methods are ready.
+    if (!draw || typeof draw.getAll !== 'function') {
+      return;
+    }
 
     const existingFeatures = draw.getAll().features;
     if (existingFeatures.length === zones.length) {
-        let propertiesChanged = false;
-        for(const zone of zones) {
-            const feature = existingFeatures.find(f => f.id === zone.id);
-            if(feature && (feature.properties.color !== zone.color || feature.properties.name !== zone.name)) {
-                propertiesChanged = true;
-                break;
-            }
+      let propertiesChanged = false;
+      for (const zone of zones) {
+        const feature = existingFeatures.find((f) => f.id === zone.id);
+        if (feature && (feature.properties?.color !== zone.color || feature.properties?.name !== zone.name)) {
+          propertiesChanged = true;
+          break;
         }
-        if(!propertiesChanged) return;
+      }
+      if (!propertiesChanged) return;
     }
 
     const features = zones.map((z) => ({
@@ -109,13 +106,11 @@ function DrawControl({
       properties: { name: z.name, color: z.color },
       geometry: z.geometry,
     }));
-    
     draw.set({ type: 'FeatureCollection', features });
-
   }, [zones]);
 
   return null;
-}
+};
 
 interface ZoneMapEditorProps {
   zones: Zone[];
@@ -142,7 +137,11 @@ export default function ZoneMapEditor({
         style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
       >
-        <DrawControl onUpdate={onUpdate} onSelect={onSelect} zones={zones} />
+        <DrawControl
+          onUpdate={onUpdate}
+          onSelect={onSelect}
+          zones={zones}
+        />
       </Map>
     </div>
   );
