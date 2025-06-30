@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,21 @@ export default function ZonesPage() {
 
   const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
+  // Effect to load initial zones onto the map once the draw instance is ready
+  useEffect(() => {
+    if (drawInstance && zones.length > 0) {
+      const features = zones.map(z => ({
+        id: z.id,
+        type: 'Feature' as const,
+        properties: { name: z.name, color: z.color },
+        geometry: z.geometry,
+      }));
+      drawInstance.add({ type: 'FeatureCollection', features });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawInstance]);
+
+
   const handleMapUpdate = useCallback(
     (event: { type: string; features: Feature<Polygon>[] }) => {
       const { type, features } = event;
@@ -49,6 +64,9 @@ export default function ZonesPage() {
         };
         setZones((currentZones) => [...currentZones, newZone]);
         setEditingZone(newZone);
+        if (drawInstance) {
+           drawInstance.setFeatureProperty(newFeature.id, 'color', newZone.color);
+        }
       } else if (type === 'draw.update') {
         setZones((currentZones) =>
           currentZones.map((zone) => {
@@ -92,6 +110,10 @@ export default function ZonesPage() {
     setZones(currentZones =>
       currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
     );
+    if (drawInstance) {
+        drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
+        drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
+    }
     setEditingZone(null);
   };
 
@@ -187,7 +209,6 @@ export default function ZonesPage() {
         </Card>
         <div className="lg:col-span-2">
           <ZoneMapEditor
-            zones={zones}
             onUpdate={handleMapUpdate}
             setDrawInstance={setDrawInstance}
           />
@@ -199,7 +220,7 @@ export default function ZonesPage() {
         onOpenChange={isOpen => {
           if (!isOpen) {
             const isNewUnsaved = editingZone?.name === 'New Zone';
-            if (isNewUnsaved) {
+            if (isNewUnsaved && drawInstance) {
               handleDeleteZone(editingZone.id);
             }
             setEditingZone(null);
