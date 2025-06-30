@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type ChangeEvent, type KeyboardEvent, useEffect } from 'react';
+import { useState, type ChangeEvent, type KeyboardEvent, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -63,6 +63,9 @@ export function NewTripForm({
   const [originSuggestions, setOriginSuggestions] = useState<any[]>([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState<any[]>([]);
 
+  const originSelectionRef = useRef(false);
+  const destinationSelectionRef = useRef(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -116,6 +119,10 @@ export function NewTripForm({
   };
 
   useEffect(() => {
+    if (originSelectionRef.current) {
+        originSelectionRef.current = false;
+        return;
+    }
     const handler = setTimeout(() => {
       searchAddresses(originQuery, setOriginSuggestions);
     }, 300);
@@ -124,6 +131,10 @@ export function NewTripForm({
   }, [originQuery]);
 
   useEffect(() => {
+    if (destinationSelectionRef.current) {
+        destinationSelectionRef.current = false;
+        return;
+    }
     const handler = setTimeout(() => {
       searchAddresses(destinationQuery, setDestinationSuggestions);
     }, 300);
@@ -132,6 +143,7 @@ export function NewTripForm({
   }, [destinationQuery]);
 
   const handleSelectOrigin = (suggestion: any) => {
+    originSelectionRef.current = true;
     const placeName = suggestion.place_name;
     setOriginQuery(placeName);
     onOriginSelect(suggestion.center);
@@ -139,6 +151,7 @@ export function NewTripForm({
   };
 
   const handleSelectDestination = (suggestion: any) => {
+    destinationSelectionRef.current = true;
     const placeName = suggestion.place_name;
     setDestinationQuery(placeName);
     onDestinationSelect(suggestion.center);

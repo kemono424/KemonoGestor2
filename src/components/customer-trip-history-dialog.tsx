@@ -121,8 +121,17 @@ export function CustomerTripHistoryDialog({
             </Card>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        <DialogFooter className="sm:justify-between">
+          <div>
+            {activeCustomer && (
+              <Button variant="ghost" onClick={() => setActiveCustomer(null)}>
+                Back
+              </Button>
+            )}
+          </div>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
