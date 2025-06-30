@@ -35,14 +35,14 @@ export function generateGridLayer(
 
       const assignedZoneId = cellAssignments[cellId];
       let color = '#888888'; // Default color for unassigned cells
-      let opacity = 0.2;
 
-      if (selectedCells.has(cellId)) {
-        color = '#3b82f6'; // Highlight color for selected cells
-        opacity = 0.6;
-      } else if (assignedZoneId && zoneColorMap[assignedZoneId]) {
+      if (assignedZoneId && zoneColorMap[assignedZoneId]) {
         color = zoneColorMap[assignedZoneId];
-        opacity = 0.5;
+      }
+      
+      // Selected cells are always highlighted, overriding any zone color
+      if (selectedCells.has(cellId)) {
+        color = '#3b82f6'; 
       }
 
       features.push({
@@ -50,7 +50,6 @@ export function generateGridLayer(
         properties: {
           id: cellId,
           color: color,
-          opacity: opacity,
         },
         geometry: {
           type: 'Polygon',
