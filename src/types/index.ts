@@ -41,18 +41,21 @@ export interface Customer {
     pendingDebt: number; // in currency
 }
 
-export type TripStatus = 'In Tray' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
+export type TripStatus = 'In Tray' | 'Scheduled' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
 
 export interface Trip {
   id: string;
   customer: Customer;
-  vehicle: Vehicle;
-  operator: Operator;
+  vehicle: Vehicle | null;
+  operator: Operator | null;
   status: TripStatus;
-  startTime: string;
+  requestTime: string; // The time the trip was created
+  scheduledTime: string | null; // The time the trip is scheduled for, if applicable
   endTime: string | null;
   origin: string;
   destination: string;
+  isRecurring?: boolean;
+  recurringDays?: number;
 }
 
 export interface GridConfig {
@@ -65,7 +68,7 @@ export interface GridConfig {
 
 export interface ZoneDefinition {
   id: string;
-  name: string;
+  name:string;
   color: string;
   cellIds: string[];
 }

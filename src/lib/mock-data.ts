@@ -68,6 +68,8 @@ export const operators: Operator[] = [
   },
 ];
 
+export let assignmentQueue: string[] = ['O001', 'O002']; // Operator IDs
+
 export const vehicles: Vehicle[] = [
   {
     id: 'V001',
@@ -144,7 +146,8 @@ export const recentTrips: Trip[] = [
     vehicle: vehicles[0],
     operator: operators[0],
     status: 'Completed',
-    startTime: '2024-07-20T09:00:00Z',
+    requestTime: '2024-07-20T09:00:00Z',
+    scheduledTime: null,
     endTime: '2024-07-20T09:25:00Z',
     origin: '123 Main St',
     destination: '456 Oak Ave',
@@ -155,7 +158,8 @@ export const recentTrips: Trip[] = [
     vehicle: vehicles[1],
     operator: operators[1],
     status: 'In Progress',
-    startTime: '2024-07-20T10:15:00Z',
+    requestTime: '2024-07-20T10:15:00Z',
+    scheduledTime: null,
     endTime: null,
     origin: '789 Pine Ln',
     destination: '101 Maple Dr',
@@ -166,7 +170,8 @@ export const recentTrips: Trip[] = [
     vehicle: vehicles[4],
     operator: operators[0],
     status: 'Assigned',
-    startTime: '2024-07-20T11:00:00Z',
+    requestTime: '2024-07-20T11:00:00Z',
+    scheduledTime: null,
     endTime: null,
     origin: '212 Birch Rd',
     destination: '333 Cedar Blvd',
@@ -177,7 +182,8 @@ export const recentTrips: Trip[] = [
     vehicle: vehicles[0],
     operator: operators[0],
     status: 'Completed',
-    startTime: '2024-07-20T11:30:00Z',
+    requestTime: '2024-07-20T11:30:00Z',
+    scheduledTime: null,
     endTime: '2024-07-20T11:50:00Z',
     origin: '555 Elm St',
     destination: '666 Willow Way',
@@ -185,10 +191,11 @@ export const recentTrips: Trip[] = [
   {
     id: 'T005',
     customer: customers[4],
-    vehicle: vehicles[1],
-    operator: operators[1],
-    status: 'In Progress',
-    startTime: '2024-07-20T12:05:00Z',
+    vehicle: null,
+    operator: null,
+    status: 'Scheduled',
+    requestTime: '2024-07-21T12:00:00Z',
+    scheduledTime: '2024-07-22T09:00:00Z',
     endTime: null,
     origin: '777 Spruce Ave',
     destination: '888 Poplar Ct',
@@ -199,7 +206,8 @@ export const recentTrips: Trip[] = [
     vehicle: vehicles[4],
     operator: operators[0],
     status: 'Cancelled',
-    startTime: '2024-07-20T13:00:00Z',
+    requestTime: '2024-07-20T13:00:00Z',
+    scheduledTime: null,
     endTime: null,
     origin: '999 Aspen Dr',
     destination: '111 Redwood Pkwy',
@@ -207,14 +215,13 @@ export const recentTrips: Trip[] = [
   {
     id: 'T007',
     customer: customers[0],
-    vehicle: vehicles[0],
-    operator: operators[0],
+    vehicle: null,
+    operator: null,
     status: 'In Tray',
-    startTime: '2024-07-21T14:00:00Z',
+    requestTime: '2024-07-21T14:00:00Z',
+    scheduledTime: null,
     endTime: null,
     origin: '1 Market St',
     destination: '200 Embarcadero',
   }
 ];
-
-    
