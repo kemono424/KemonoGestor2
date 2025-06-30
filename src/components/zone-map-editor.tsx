@@ -38,7 +38,7 @@ const DrawControl = (props: {
     {
       position: 'top-left' as ControlPosition,
       // `onAdd` is the official lifecycle hook to set up event listeners.
-      onAdd: (map, ctrl) => {
+      onAdd: (map) => {
         const eventHandler = (e: any) => onUpdateRef.current(e);
         map.on('draw.create', eventHandler);
         map.on('draw.update', eventHandler);
@@ -46,10 +46,12 @@ const DrawControl = (props: {
         map.on('draw.selectionchange', eventHandler);
       },
       // `onRemove` is for cleanup.
-      onRemove: (map, ctrl) => {
-        // This is intentionally left simplified as re-creating the control on prop changes
-        // is handled by react-map-gl's `useControl`. Unsubscribing can be complex to get right
-        // and is often not necessary for the lifecycle of a component like this.
+      onRemove: (map) => {
+        // Unsubscribe from events to prevent memory leaks
+        map.off('draw.create', onUpdateRef.current);
+        map.off('draw.update', onUpdateRef.current);
+        map.off('draw.delete', onUpdateRef.current);
+        map.off('draw.selectionchange', onUpdateRef.current);
       },
     }
   );

@@ -6,6 +6,7 @@ import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { Vehicle, Zone } from '@/types';
 import { MapPin } from 'lucide-react';
 import type { FeatureCollection } from 'geojson';
+import { zones as mockZones } from '@/lib/mock-data';
 
 interface VehicleMapProps {
   vehicles: Vehicle[];
@@ -13,17 +14,22 @@ interface VehicleMapProps {
 
 export default function VehicleMap({ vehicles }: VehicleMapProps) {
   const [zones, setZones] = React.useState<Zone[]>([]);
+  const [isMounted, setIsMounted] = React.useState(false);
 
   // On component mount, load zones from localStorage.
   // This makes the map self-sufficient and ensures it displays the user's saved zones.
   React.useEffect(() => {
+    setIsMounted(true);
     try {
       const savedZones = localStorage.getItem('fleet-manager-zones');
       if (savedZones) {
         setZones(JSON.parse(savedZones));
+      } else {
+        setZones(mockZones); // Fallback to mocks if nothing is in storage
       }
     } catch (error) {
       console.error("Failed to load zones from localStorage for map display.", error);
+      setZones(mockZones);
     }
   }, []);
 
@@ -31,7 +37,7 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
     (v) => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
   );
 
-  const zonesFc: FeatureCollection | null = zones.length > 0 ? {
+  const zonesFc: FeatureCollection | null = isMounted && zones.length > 0 ? {
     type: 'FeatureCollection',
     features: zones.map(zone => ({
       type: 'Feature',

@@ -45,8 +45,8 @@ export default function ZonesPage() {
       if (savedZones) {
         setZones(JSON.parse(savedZones));
       } else {
-        // If no zones are saved, you can initialize with mocks or an empty array
-        setZones(mockZones);
+        // If no zones are saved, you can initialize with an empty array or mocks
+        setZones([]);
       }
     } catch (error) {
       console.error("Failed to access localStorage. Using mock data.", error);
