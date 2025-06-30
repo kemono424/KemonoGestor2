@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -149,7 +149,10 @@ export default function ZonesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card>
-            <CardHeader><CardTitle>Grid Configuration</CardTitle></CardHeader>
+            <CardHeader>
+                <CardTitle>Grid Configuration</CardTitle>
+                <CardDescription>Define the grid's dimensions, position, and scale.</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -160,6 +163,19 @@ export default function ZonesPage() {
                   <Label htmlFor="cols">Columns</Label>
                   <Input id="cols" type="number" value={tempConfig.cols} onChange={e => setTempConfig(c => ({ ...c, cols: parseInt(e.target.value) || 0 }))} />
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="lat">Center Latitude</Label>
+                    <Input id="lat" type="number" step="0.0001" value={tempConfig.center.lat} onChange={e => setTempConfig(c => ({ ...c, center: { ...c.center, lat: parseFloat(e.target.value) || 0 } }))} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="lng">Center Longitude</Label>
+                    <Input id="lng" type="number" step="0.0001" value={tempConfig.center.lng} onChange={e => setTempConfig(c => ({ ...c, center: { ...c.center, lng: parseFloat(e.target.value) || 0 } }))} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cell-size">Cell Size (degrees)</Label>
+                <Input id="cell-size" type="number" step="0.0001" value={tempConfig.cellSize} onChange={e => setTempConfig(c => ({ ...c, cellSize: parseFloat(e.target.value) || 0 }))} />
+                <p className="text-xs text-muted-foreground">Approx. 0.001° is 111 meters.</p>
               </div>
                <Button onClick={handleUpdateGrid} className="w-full">Update Grid</Button>
             </CardContent>
