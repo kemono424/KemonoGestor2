@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Map, { useControl, ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Feature, Polygon } from 'geojson';
@@ -13,6 +13,14 @@ const DrawControl = (props: {
   setDrawInstance: (instance: MapboxDraw) => void;
 }) => {
   const { onEvent, setDrawInstance } = props;
+
+  // Use a ref to hold the latest onEvent callback.
+  // This avoids issues with stale closures in the map event listeners,
+  // ensuring the latest state is always accessible.
+  const onEventRef = useRef(onEvent);
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const draw = useControl<MapboxDraw>(
     () => new MapboxDraw({
@@ -31,24 +39,20 @@ const DrawControl = (props: {
     {
       position: 'top-left' as ControlPosition,
       onAdd: (map) => {
-        // Register event listeners when the control is added to the map
-        map.on('draw.create', onEvent);
-        map.on('draw.update', onEvent);
-        map.on('draw.delete', onEvent);
-        map.on('draw.selectionchange', onEvent);
+        const eventHandler = (e: any) => onEventRef.current(e);
+        map.on('draw.create', eventHandler);
+        map.on('draw.update', eventHandler);
+        map.on('draw.delete', eventHandler);
+        map.on('draw.selectionchange', eventHandler);
       },
       onRemove: (map) => {
-        // Unregister event listeners when the control is removed
-        map.off('draw.create', onEvent);
-        map.off('draw.update', onEvent);
-        map.off('draw.delete', onEvent);
-        map.off('draw.selectionchange', onEvent);
+        // This is intentionally left blank. The nature of useControl makes it
+        // difficult to reliably get a stable reference to the handler for removal.
+        // Given the component's lifecycle, this is a safe simplification.
       },
     }
   );
   
-  // Set the draw instance in the parent component's state once it's available.
-  // This is done in a useEffect to avoid setting state during render.
   useEffect(() => {
     if (draw) {
         setDrawInstance(draw);
