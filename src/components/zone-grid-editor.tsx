@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -59,24 +60,17 @@ export default function ZoneGridEditor({
           <Layer
             id="grid-fill"
             type="fill"
-            source="grid-source"
             paint={{
-              'fill-color': [
-                'coalesce',
-                ['get', 'color'],
-                '#FF0000'
-              ],
+              'fill-color': '#00FFFF', // Use a single, bright, unmissable color for debugging.
               'fill-opacity': 0.5,
             }}
           />
           <Layer
             id="grid-stroke"
             type="line"
-            source="grid-source"
             paint={{
               'line-color': '#FFFFFF',
-              'line-width': 2,
-              'line-opacity': 0.9,
+              'line-width': 1.5,
             }}
           />
         </Source>
