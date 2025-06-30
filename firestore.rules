@@ -1,0 +1,13 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Estas reglas deniegan todo el acceso por defecto.
+    // Deberás actualizarlas para permitir operaciones específicas
+    // a los usuarios autenticados.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
