@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -47,36 +46,26 @@ export function CustomerTripHistoryDialog({
 
   // When a trip is selected from the list
   const handleSelectTrip = (trip: Trip) => {
-    setActiveCustomer(trip.customer); // Show this customer's details in the right panel
     onTripSelect(trip); // Tell the parent form to clone the trip data
+    setActiveCustomer(trip.customer); // Show this customer's details in the right panel
   };
 
   // When the "Back" button is clicked
   const handleBack = () => {
-    setActiveCustomer(null); // Clear the customer details panel
     onBackClick(); // Tell the parent form to clear the cloned data
+    setActiveCustomer(null); // Clear the customer details panel
   };
   
-  // When the dialog is opened, we should reset its internal state
+  // When the dialog is opened or closed, we should reset its internal state
   // to ensure it doesn't show stale data from a previous interaction.
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
       setActiveCustomer(null);
     }
   }, [isOpen]);
 
-  // When the dialog's open state changes (e.g., closed via 'X', ESC or 'Close' button)
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      // When closing, reset the dialog's internal state to be clean for next time.
-      // We don't call onBackClick() here, because the user might want to keep the cloned data in the form.
-      setActiveCustomer(null);
-    }
-    onOpenChange(open); // Inform the parent component of the state change
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[70vh]">
         <DialogHeader>
           <DialogTitle>Customer & Trip History</DialogTitle>
@@ -109,8 +98,8 @@ export function CustomerTripHistoryDialog({
                     </button>
                   ))
                 ) : (
-                  <div className="flex items-center justify-center h-48">
-                    <p className="text-center text-muted-foreground">
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-center text-muted-foreground p-4">
                       No trips found for "{phoneQuery}".
                     </p>
                   </div>
@@ -121,7 +110,7 @@ export function CustomerTripHistoryDialog({
           {/* Right Panel: Customer Details */}
           <div className="md:col-span-2 h-full flex flex-col">
              <h3 className="text-lg font-semibold mb-2 shrink-0">Customer Details</h3>
-            <Card className="h-full grow">
+            <Card className="h-full grow flex flex-col">
               {activeCustomer ? (
                 <>
                   <CardHeader>
@@ -144,7 +133,7 @@ export function CustomerTripHistoryDialog({
               ) : (
                  <div className="flex items-center justify-center h-full">
                     <p className="text-center text-muted-foreground p-4">
-                        Select a trip from the list to view customer details and clone the trip.
+                        Select a trip from the list to view customer details and clone the trip information.
                     </p>
                 </div>
               )}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type ChangeEvent, type KeyboardEvent, useEffect, useRef } from 'react';
@@ -169,13 +168,12 @@ export function NewTripForm({
 
   const handleTripSelectFromHistory = (trip: Trip) => {
     setSelectedCustomer(trip.customer);
-    form.setValue('customerPhone', trip.customer.phone);
     setOriginQuery(trip.origin);
     setDestinationQuery(trip.destination || '');
     onOriginSelect(trip.originCoords || null);
     onDestinationSelect(trip.destinationCoords || null);
+    // Note: We don't set customerPhone here, it's already in the form
     form.clearErrors('customerPhone');
-    // We don't close the dialog here, user can select another one.
   };
 
   const handleBackFromHistory = () => {
@@ -184,16 +182,15 @@ export function NewTripForm({
     setDestinationQuery('');
     onOriginSelect(null);
     onDestinationSelect(null);
-    form.setValue('origin', '');
-    form.setValue('destination', '');
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    // Check if a customer was selected via the history search
     if (!selectedCustomer && values.customerPhone) {
         toast({
             variant: "destructive",
             title: "Customer Not Selected",
-            description: "Please search and select a customer from history before creating a trip.",
+            description: "Please search and select a customer or a past trip from history before creating a trip.",
         });
         form.setError('customerPhone', {
             type: 'manual',
