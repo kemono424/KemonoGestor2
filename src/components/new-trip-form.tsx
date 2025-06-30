@@ -9,30 +9,25 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-import { customers, vehicles } from '@/lib/mock-data';
+import { customers } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
-import { MapPin, User, Car } from 'lucide-react';
+import { MapPin, User } from 'lucide-react';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
   origin: z.string().min(1, { message: 'Origin is required.' }),
   destination: z.string().min(1, { message: 'Destination is required.' }),
-  vehicleId: z.string().optional(),
+  inTray: z.boolean().default(false).optional(),
 });
 
 export function NewTripForm() {
@@ -46,7 +41,7 @@ export function NewTripForm() {
       customerPhone: '',
       origin: '',
       destination: '',
-      vehicleId: 'auto',
+      inTray: false,
     },
   });
 
@@ -98,7 +93,10 @@ export function NewTripForm() {
       customer: selectedCustomer,
     };
     console.log(submissionData);
-    alert(`New trip created for ${selectedCustomer.name}! Check the console for details.`);
+    const message = values.inTray
+      ? `Trip for ${selectedCustomer.name} sent to tray!`
+      : `New trip created for ${selectedCustomer.name}! Auto-assigning vehicle.`;
+    alert(message);
     form.reset();
     setSelectedCustomer(null);
   }
@@ -192,29 +190,24 @@ export function NewTripForm() {
 
           <FormField
             control={form.control}
-            name="vehicleId"
+            name="inTray"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Assign Vehicle (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <Car className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Auto-assign nearest vehicle" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="auto">Auto-assign nearest vehicle</SelectItem>
-                    {vehicles
-                      .filter((v) => v.status === 'Available')
-                      .map((vehicle) => (
-                        <SelectItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.name} ({vehicle.licensePlate})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4 shadow-sm bg-muted/20">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    id="in-tray"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel htmlFor="in-tray">
+                    Send to Manual Assignment Tray
+                  </FormLabel>
+                  <FormDescription>
+                    If checked, trip requires manual assignment.
+                  </FormDescription>
+                </div>
               </FormItem>
             )}
           />

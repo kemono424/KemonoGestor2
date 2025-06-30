@@ -19,9 +19,9 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
         <Map
             mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
             initialViewState={{
-                longitude: -122.4194,
-                latitude: 37.7749,
-                zoom: 12,
+                longitude: -65.4117,
+                latitude: -24.7859,
+                zoom: 13,
             }}
             style={{ width: '100%', height: '100%'}}
             mapStyle="mapbox://styles/mapbox/dark-v11"
