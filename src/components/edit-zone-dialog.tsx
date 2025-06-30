@@ -37,10 +37,6 @@ export function EditZoneDialog({ zone, isOpen, onOpenChange, onSave }: EditZoneD
       onSave({ ...zone, name, color });
     }
   };
-  
-  const handleCancel = () => {
-    onOpenChange(false);
-  }
 
   if (!zone) return null;
 
@@ -85,7 +81,7 @@ export function EditZoneDialog({ zone, isOpen, onOpenChange, onSave }: EditZoneD
           <Button
             type="button"
             variant="secondary"
-            onClick={handleCancel}
+            onClick={() => onOpenChange(false)}
           >
             Cancel
           </Button>

@@ -52,6 +52,8 @@ export default function ZonesPage() {
 
   const handleMapUpdate = useCallback(
     (event: { type: string; features: Feature<Polygon>[] }) => {
+      if (!drawInstance) return;
+
       const { type, features } = event;
 
       if (type === 'draw.create') {
@@ -62,11 +64,8 @@ export default function ZonesPage() {
           color: getRandomColor(),
           geometry: newFeature.geometry,
         };
-        setZones((currentZones) => [...currentZones, newZone]);
+        drawInstance.setFeatureProperty(newZone.id, 'color', newZone.color);
         setEditingZone(newZone);
-        if (drawInstance) {
-           drawInstance.setFeatureProperty(newFeature.id, 'color', newZone.color);
-        }
       } else if (type === 'draw.update') {
         setZones((currentZones) =>
           currentZones.map((zone) => {
@@ -78,7 +77,7 @@ export default function ZonesPage() {
           })
         );
       } else if (type === 'draw.delete') {
-        const deletedIds = new Set(features.map((f) => f.id));
+        const deletedIds = new Set(features.map((f) => f.id as string));
         setZones((currentZones) =>
           currentZones.filter((z) => !deletedIds.has(z.id))
         );
@@ -107,15 +106,31 @@ export default function ZonesPage() {
   };
 
   const handleSaveZone = (updatedZone: Zone) => {
-    setZones(currentZones =>
-      currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
-    );
+    const isNew = !zones.some(z => z.id === updatedZone.id);
+    if(isNew) {
+      setZones(current => [...current, updatedZone]);
+    } else {
+      setZones(currentZones =>
+        currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
+      );
+    }
+    
     if (drawInstance) {
         drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
         drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
     }
     setEditingZone(null);
   };
+  
+  const onDialogChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      const isNewUnsaved = editingZone?.name === 'New Zone';
+      if (isNewUnsaved && drawInstance && editingZone) {
+        handleDeleteZone(editingZone.id);
+      }
+      setEditingZone(null);
+    }
+  }
 
   if (!canEditZones) {
     return (
@@ -167,7 +182,11 @@ export default function ZonesPage() {
                   onClick={() => {
                     setSelectedZoneId(zone.id)
                     if (drawInstance) {
-                      drawInstance.changeMode('simple_select', { featureIds: [zone.id] });
+                      try {
+                        drawInstance.changeMode('simple_select', { featureIds: [zone.id] });
+                      } catch (error) {
+                        console.error("Error changing mode:", error)
+                      }
                     }
                   }}
                 >
@@ -217,15 +236,7 @@ export default function ZonesPage() {
       <EditZoneDialog
         zone={editingZone}
         isOpen={!!editingZone}
-        onOpenChange={isOpen => {
-          if (!isOpen) {
-            const isNewUnsaved = editingZone?.name === 'New Zone';
-            if (isNewUnsaved && drawInstance) {
-              handleDeleteZone(editingZone.id);
-            }
-            setEditingZone(null);
-          }
-        }}
+        onOpenChange={onDialogChange}
         onSave={handleSaveZone}
       />
     </>
