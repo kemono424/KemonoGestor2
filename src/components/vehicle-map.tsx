@@ -120,7 +120,14 @@ export default function VehicleMap({
             latitude={vehicle.latitude!}
             anchor="bottom"
           >
-            <Car className="h-6 w-6 text-yellow-400" />
+            <div className="relative">
+                <Car className="h-8 w-8 text-yellow-400 drop-shadow-md" />
+                <div className="absolute inset-0 flex items-center justify-center -mt-1">
+                    <span className="text-[10px] font-bold text-black">
+                        {vehicle.unitNumber}
+                    </span>
+                </div>
+            </div>
           </Marker>
         ))}
 
