@@ -70,10 +70,10 @@ const links = [
 export default function SidebarNav() {
   const pathname = usePathname();
   const { role } = useAppContext();
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
   }, []);
 
   const filteredLinks = links.filter(link => link.roles.includes(role));
@@ -91,7 +91,7 @@ export default function SidebarNav() {
           <SidebarMenuItem key={link.href}>
             <SidebarMenuButton
               asChild
-              isActive={isClient ? pathname === link.href : false}
+              isActive={mounted ? pathname === link.href : false}
               tooltip={link.label}
             >
               <Link href={link.href}>
