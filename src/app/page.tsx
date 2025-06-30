@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Car, Users, Activity, DollarSign } from 'lucide-react';
+import { Car, Users, Activity } from 'lucide-react';
 import { vehicles, operators, recentTrips } from '@/lib/mock-data';
 import VehicleMap from '@/components/vehicle-map';
 import { NewTripForm } from '@/components/new-trip-form';
@@ -30,10 +30,8 @@ export default function DashboardPage() {
   const activeTrips = vehicles.filter(v =>
     ['En camino', 'Ocupado', 'En espera'].includes(v.status)
   ).length;
-  const totalRevenue = recentTrips
-    .filter(t => t.status === 'Completado')
-    .reduce((sum, trip) => sum + 25, 0); // Mock revenue
   const availableOperators = operators.filter(o => o.status === 'Activo').length;
+  const totalTripsToday = recentTrips.length;
 
   const reverseGeocode = React.useCallback(async (coords: [number, number]) => {
     try {
@@ -104,7 +102,7 @@ export default function DashboardPage() {
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{onlineVehicles}</div>
+            <div className="text-2xl font-bold text-destructive">{onlineVehicles}</div>
             <p className="text-xs text-muted-foreground">
               de {vehicles.length} vehículos totales
             </p>
@@ -116,7 +114,7 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{activeTrips}</div>
+            <div className="text-2xl font-bold text-destructive">+{activeTrips}</div>
             <p className="text-xs text-muted-foreground">
               actualmente en progreso
             </p>
@@ -130,21 +128,21 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{availableOperators}</div>
+            <div className="text-2xl font-bold text-destructive">+{availableOperators}</div>
             <p className="text-xs text-muted-foreground">listos para asignación</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Ingresos de Hoy
+              Viajes del Día
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-destructive">{totalTripsToday}</div>
             <p className="text-xs text-muted-foreground">
-              basado en viajes completados
+              viajes totales registrados hoy
             </p>
           </CardContent>
         </Card>
