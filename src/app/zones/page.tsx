@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import { zones as mockZones, type Zone } from '@/lib/mock-data';
 import ZoneMapEditor from '@/components/zone-map-editor';
 import type { Feature, Polygon } from 'geojson';
 import { EditZoneDialog } from '@/components/edit-zone-dialog';
+import { useAppContext } from '@/context/AppContext';
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
@@ -26,54 +27,34 @@ const getRandomColor = () => {
 };
 
 export default function ZonesPage() {
-  const [zones, setZones] = useState<Zone[]>(() => {
-    if (typeof window === 'undefined') {
-      return mockZones;
-    }
-    try {
-      const savedZones = localStorage.getItem('fleet-manager-zones');
-      return savedZones ? JSON.parse(savedZones) : mockZones;
-    } catch (error) {
-      console.error('Error parsing zones from localStorage', error);
-      return mockZones;
-    }
-  });
-
+  const { role } = useAppContext();
+  const [zones, setZones] = useState<Zone[]>(mockZones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('fleet-manager-zones', JSON.stringify(zones));
-    }
-  }, [zones]);
+  const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
   const handleFeaturesUpdate = useCallback(
     (updatedFeatures: Feature<Polygon>[]) => {
       setZones(currentZones => {
-        const newZones: Zone[] = updatedFeatures.map(feature => {
+        const updatedIds = new Set(updatedFeatures.map(f => f.id));
+        
+        // Update existing zones or add new ones
+        const newZones = updatedFeatures.map(feature => {
           const existingZone = currentZones.find(z => z.id === feature.id);
           if (existingZone) {
             return { ...existingZone, geometry: feature.geometry };
-          } else {
-            return {
-              id: feature.id as string,
-              name: `New Zone ${feature.id?.substring(0, 4)}`,
-              color: getRandomColor(),
-              geometry: feature.geometry,
-            };
           }
+          return {
+            id: feature.id as string,
+            name: `New Zone ${feature.id?.substring(0, 4)}`,
+            color: getRandomColor(),
+            geometry: feature.geometry,
+          };
         });
-        
-        // Handle deletions
-        const updatedIds = new Set(updatedFeatures.map(f => f.id));
-        const finalZones = newZones.filter(z => updatedIds.has(z.id));
-        const deletedZones = currentZones.filter(z => !updatedIds.has(z.id));
-        if(deletedZones.length > 0) {
-            return currentZones.filter(z => updatedIds.has(z.id));
-        }
 
-        return finalZones;
+        // Filter out deleted zones
+        return newZones.filter(z => updatedIds.has(z.id));
       });
     },
     []
@@ -93,6 +74,21 @@ export default function ZonesPage() {
     );
     setEditingZone(null);
   };
+  
+  if (!canEditZones) {
+    return (
+        <div className="flex items-center justify-center h-full">
+            <Card className="w-full max-w-md">
+                <CardHeader>
+                    <CardTitle className="text-center">Access Denied</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-center text-muted-foreground">You do not have permission to manage zones. Please contact an administrator.</p>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
   return (
     <>

@@ -1,18 +1,32 @@
 'use client';
 
 import * as React from 'react';
-import Map, { Marker } from 'react-map-gl';
-import type { Vehicle } from '@/types';
+import Map, { Marker, Source, Layer } from 'react-map-gl';
+import type { Vehicle, Zone } from '@/types';
 import { MapPin } from 'lucide-react';
+import type { FeatureCollection } from 'geojson';
 
 interface VehicleMapProps {
   vehicles: Vehicle[];
+  zones?: Zone[];
 }
 
-export default function VehicleMap({ vehicles }: VehicleMapProps) {
+export default function VehicleMap({ vehicles, zones = [] }: VehicleMapProps) {
   const availableVehicles = vehicles.filter(
     (v) => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
   );
+
+  const zonesFc: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: zones.map(zone => ({
+      type: 'Feature',
+      properties: {
+        color: zone.color,
+        name: zone.name,
+      },
+      geometry: zone.geometry,
+    })),
+  };
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
@@ -26,6 +40,28 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
             style={{ width: '100%', height: '100%'}}
             mapStyle="mapbox://styles/mapbox/dark-v11"
             >
+            {zones.length > 0 && (
+                <Source id="zones" type="geojson" data={zonesFc}>
+                    <Layer
+                        id="zone-fills"
+                        type="fill"
+                        source="zones"
+                        paint={{
+                            'fill-color': ['get', 'color'],
+                            'fill-opacity': 0.2,
+                        }}
+                    />
+                    <Layer
+                        id="zone-borders"
+                        type="line"
+                        source="zones"
+                        paint={{
+                            'line-color': ['get', 'color'],
+                            'line-width': 2,
+                        }}
+                    />
+                </Source>
+            )}
             {availableVehicles.map((vehicle) => (
                 <Marker
                 key={vehicle.id}

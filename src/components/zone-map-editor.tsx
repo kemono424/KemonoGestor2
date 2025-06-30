@@ -20,7 +20,8 @@ const DrawControl = (props: {
       const draw = drawRef.current;
       if (!draw) return;
       if (e.type === 'draw.selectionchange') {
-        onSelect(e.features.length > 0 ? (e.features[0].id as string) : null);
+        const selection = draw.getSelectedIds();
+        onSelect(selection.length > 0 ? selection[0] : null);
       } else {
         onUpdate(draw.getAll().features);
       }
@@ -35,19 +36,34 @@ const DrawControl = (props: {
         controls: { polygon: true, trash: true, combine_features: false, uncombine_features: false },
         userProperties: true,
         styles: [
+          // Active state styles
           {
             id: 'gl-draw-polygon-fill-active',
             type: 'fill',
-            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
-            paint: { 'fill-color': '#3498DB', 'fill-opacity': 0.1 },
+            filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
+            paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 },
           },
           {
             id: 'gl-draw-polygon-stroke-active',
             type: 'line',
-            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
+            filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
             layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#3498DB', 'line-dasharray': [0.2, 2], 'line-width': 2 },
+            paint: { 'line-color': '#3b82f6', 'line-width': 2 },
           },
+           {
+            'id': 'gl-draw-point-point-stroke-inactive',
+            'type': 'circle',
+            'filter': ['all',
+              ['==', 'active', 'false'],
+              ['==', '$type', 'Point'],
+              ['!=', 'mode', 'static']
+            ],
+            'paint': {
+              'circle-radius': 5,
+              'circle-opacity': 0,
+            }
+          },
+          // Inactive state styles
           {
             id: 'gl-draw-polygon-fill-inactive',
             type: 'fill',
@@ -80,32 +96,27 @@ const DrawControl = (props: {
         map.off('draw.update', handleDrawEvent);
         map.off('draw.delete', handleDrawEvent);
         map.off('draw.selectionchange', handleDrawEvent);
+        drawRef.current = null;
         setIsReady(false);
       },
     }
   );
 
   React.useEffect(() => {
-    if (!isReady) {
+    if (!isReady || !drawRef.current) {
       return;
     }
     
     const draw = drawRef.current;
-    if (!draw) {
-        return;
-    }
-
     const existingFeatures = draw.getAll().features;
+    
+    // Simple check to avoid unnecessary re-rendering
     if (existingFeatures.length === zones.length) {
-      let propertiesChanged = false;
-      for (const zone of zones) {
-        const feature = existingFeatures.find((f) => f.id === zone.id);
-        if (feature && (feature.properties?.color !== zone.color || feature.properties?.name !== zone.name)) {
-          propertiesChanged = true;
-          break;
-        }
-      }
-      if (!propertiesChanged) return;
+      const allMatch = zones.every(zone => {
+        const feature = existingFeatures.find(f => f.id === zone.id);
+        return feature && feature.properties?.name === zone.name && feature.properties?.color === zone.color;
+      });
+      if (allMatch) return;
     }
 
     const features = zones.map((z) => ({
@@ -131,7 +142,6 @@ export default function ZoneMapEditor({
   zones,
   onUpdate,
   onSelect,
-  selectedZoneId,
 }: ZoneMapEditorProps) {
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
