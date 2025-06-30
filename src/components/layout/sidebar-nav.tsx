@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   UserCheck,
+  Shapes,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -56,6 +57,12 @@ const links = [
     icon: MessageSquare,
     label: 'Messages',
     roles: ['Admin', 'Supervisor', 'Dispatcher'],
+  },
+  {
+    href: '/zones',
+    icon: Shapes,
+    label: 'Zones',
+    roles: ['Admin', 'Supervisor'],
   },
 ];
 

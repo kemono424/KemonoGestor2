@@ -1,4 +1,4 @@
-import type { Vehicle, Operator, Trip, Customer } from '@/types';
+import type { Vehicle, Operator, Trip, Customer, Zone } from '@/types';
 
 export const customers: Customer[] = [
     { id: 'C001', name: 'Alice Williams', phone: '555-0101', pendingDebt: 0 },
@@ -214,4 +214,41 @@ export const recentTrips: Trip[] = [
     origin: '1 Market St',
     destination: '200 Embarcadero',
   }
+];
+
+export const zones: Zone[] = [
+  {
+    id: 'zone-1',
+    name: 'Centro',
+    color: '#F44336', // Red
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-65.415, -24.795],
+          [-65.405, -24.795],
+          [-65.405, -24.785],
+          [-65.415, -24.785],
+          [-65.415, -24.795],
+        ],
+      ],
+    },
+  },
+  {
+    id: 'zone-2',
+    name: 'Norte',
+    color: '#2196F3', // Blue
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-65.415, -24.785],
+          [-65.405, -24.785],
+          [-65.408, -24.775],
+          [-65.418, -24.775],
+          [-65.415, -24.785],
+        ],
+      ],
+    },
+  },
 ];

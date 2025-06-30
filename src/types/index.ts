@@ -1,3 +1,5 @@
+import type { Polygon } from 'geojson';
+
 export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
 
 export interface Vehicle {
@@ -50,4 +52,11 @@ export interface Trip {
   endTime: string | null;
   origin: string;
   destination: string;
+}
+
+export interface Zone {
+  id: string;
+  name: string;
+  geometry: Polygon;
+  color: string;
 }
