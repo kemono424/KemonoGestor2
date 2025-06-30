@@ -12,12 +12,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useAppContext } from '@/context/AppContext';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
 const TOTAL_GRID_WIDTH = 0.2; // degrees longitude
 const TOTAL_GRID_HEIGHT = 0.2; // degrees latitude
 
 export default function ZonesPage() {
+  const { currentUser } = useAppContext();
   const [zones, setZones] = useState<ZoneDefinition[]>([]);
   const [cellAssignments, setCellAssignments] = useState<
     Record<string, string | null>
@@ -174,6 +176,24 @@ export default function ZonesPage() {
     });
     toast({ title: 'Zona Eliminada' });
   };
+
+  if (!currentUser || !['Admin', 'Supervisor'].includes(currentUser.role)) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Acceso Denegado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-muted-foreground">
+              No tienes permiso para ver esta página. Por favor, contacta a un
+              administrador si crees que esto es un error.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>

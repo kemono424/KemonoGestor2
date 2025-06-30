@@ -2,11 +2,42 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permite leer y escribir a cualquier usuario autenticado.
-    // Esto es bueno para el desarrollo, pero debe restringirse aún más
-    // con reglas más específicas antes de pasar a producción.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    
+    // Helper function to check for Admin role from custom claims
+    function isAdmin() {
+      return request.auth.token.role == 'Admin';
+    }
+    
+    // Helper function to check for Supervisor role
+    function isSupervisor() {
+      return request.auth.token.role == 'Supervisor';
+    }
+
+    // Helper function to check for Authenticated users
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Operators can only be managed by Admins
+    match /operators/{operatorId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Vehicles can be managed by Admins and Supervisors
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() || isSupervisor();
+    }
+    
+    // Customers can be managed by any authenticated user (Admin, Supervisor, Operator)
+    match /customers/{customerId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Trips can be managed by any authenticated user
+    match /trips/{tripId} {
+       allow read, write: if isAuthenticated();
     }
   }
 }

@@ -20,14 +20,16 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { getVehicles } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Vehicle, VehicleStatus } from '@/types';
 import { Input } from '@/components/ui/input';
 import { EditVehicleDialog } from '@/components/edit-vehicle-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { addVehicle, updateVehicle } from '@/lib/actions';
+import { useAppContext } from '@/context/AppContext';
 
 export default function VehiclesPage() {
+  const { currentUser } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [vehiclesData, setVehiclesData] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,6 +161,24 @@ export default function VehiclesPage() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+  
+  if (!currentUser || !['Admin', 'Supervisor'].includes(currentUser.role)) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Acceso Denegado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-muted-foreground">
+              No tienes permiso para ver esta página. Por favor, contacta a un
+              administrador si crees que esto es un error.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>
