@@ -124,7 +124,7 @@ export const vehicles: Vehicle[] = [
     operator: 'Emily White',
     username: 'user201',
     password: 'password123',
-    status: 'Mantenimiento',
+    status: 'Fuera de servicio',
     joinDate: '2023-04-05T09:00:00Z',
   },
   {

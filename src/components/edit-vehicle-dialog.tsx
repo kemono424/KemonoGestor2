@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -32,7 +33,6 @@ interface EditVehicleDialogProps {
 const adminSelectableStatuses: { label: string; value: VehicleStatus }[] = [
   { label: 'Habilitado', value: 'En descanso' },
   { label: 'Bloqueado (Fuera de servicio)', value: 'Fuera de servicio' },
-  { label: 'En Mantenimiento', value: 'Mantenimiento' },
 ];
 
 export function EditVehicleDialog({
@@ -89,10 +89,10 @@ export function EditVehicleDialog({
   if (!isOpen || !editableVehicle) return null;
 
   // Determine what value the Select should show. If the status is anything
-  // other than 'Fuera de servicio' or 'Mantenimiento', it's considered 'Habilitado' (Enabled).
+  // other than 'Fuera de servicio', it's considered 'Habilitado' (Enabled).
   const currentStatus = editableVehicle.status;
   let selectValue: VehicleStatus = 'En descanso'; // Default to 'Habilitado'
-  if (currentStatus === 'Fuera de servicio' || currentStatus === 'Mantenimiento') {
+  if (currentStatus === 'Fuera de servicio') {
       selectValue = currentStatus;
   }
   

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -125,8 +126,6 @@ export default function VehiclesPage() {
             {status}
           </Badge>
         );
-      case 'Mantenimiento':
-        return <Badge variant="destructive">{status}</Badge>;
       case 'Fuera de servicio':
         return <Badge variant="outline">{status}</Badge>;
       default:
