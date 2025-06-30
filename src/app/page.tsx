@@ -1,4 +1,7 @@
 
+'use client';
+
+import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -12,8 +15,17 @@ import VehicleMap from '@/components/vehicle-map';
 import { NewTripForm } from '@/components/new-trip-form';
 
 export default function DashboardPage() {
+  const [originPin, setOriginPin] = React.useState<[number, number] | null>(
+    null
+  );
+  const [destinationPin, setDestinationPin] = React.useState<
+    [number, number] | null
+  >(null);
+
   const onlineVehicles = vehicles.filter(v => v.status === 'Available').length;
-  const activeTrips = recentTrips.filter(t => t.status === 'In Progress').length;
+  const activeTrips = recentTrips.filter(
+    t => t.status === 'In Progress'
+  ).length;
   const totalRevenue = recentTrips
     .filter(t => t.status === 'Completed')
     .reduce((sum, trip) => sum + 25, 0); // Mock revenue
@@ -24,12 +36,16 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vehicles Available</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Vehicles Available
+            </CardTitle>
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{onlineVehicles}</div>
-            <p className="text-xs text-muted-foreground">out of {vehicles.length} total vehicles</p>
+            <p className="text-xs text-muted-foreground">
+              out of {vehicles.length} total vehicles
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -39,12 +55,16 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{activeTrips}</div>
-            <p className="text-xs text-muted-foreground">currently in progress</p>
+            <p className="text-xs text-muted-foreground">
+              currently in progress
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Operators</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Available Operators
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -54,12 +74,16 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Today's Revenue
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">based on completed trips</p>
+            <p className="text-xs text-muted-foreground">
+              based on completed trips
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -73,17 +97,26 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <NewTripForm />
+            <NewTripForm
+              onOriginSelect={setOriginPin}
+              onDestinationSelect={setDestinationPin}
+            />
           </CardContent>
         </Card>
-        
+
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Live Vehicle Locations</CardTitle>
-            <CardDescription>Real-time tracking of all available vehicles.</CardDescription>
+            <CardDescription>
+              Real-time tracking of all available vehicles.
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[480px] w-full p-0">
-             <VehicleMap vehicles={vehicles} />
+            <VehicleMap
+              vehicles={vehicles}
+              originPin={originPin}
+              destinationPin={destinationPin}
+            />
           </CardContent>
         </Card>
       </div>

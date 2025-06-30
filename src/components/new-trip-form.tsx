@@ -18,14 +18,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-import { customers } from '@/lib/mock-data';
+import { recentTrips } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
-import { MapPin, User } from 'lucide-react';
-import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
+import { ArrowRight, MapPin, User, History } from 'lucide-react';
 import { DateTimePicker } from './date-time-picker';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { addDays } from 'date-fns';
+import { Badge } from './ui/badge';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
@@ -38,12 +38,19 @@ const formSchema = z.object({
   recurringDays: z.coerce.number().min(1).optional(),
 });
 
-export function NewTripForm() {
+interface NewTripFormProps {
+  onOriginSelect: (coords: [number, number] | null) => void;
+  onDestinationSelect: (coords: [number, number] | null) => void;
+}
+
+export function NewTripForm({
+  onOriginSelect,
+  onDestinationSelect,
+}: NewTripFormProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
-  const [searchResults, setSearchResults] = useState<Customer[]>([]);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [tripHistory, setTripHistory] = useState<Trip[]>([]);
 
   // State for geocoding
   const [originQuery, setOriginQuery] = useState('');
@@ -116,6 +123,7 @@ export function NewTripForm() {
     form.setValue('origin', placeName, { shouldValidate: true });
     setOriginQuery(placeName);
     setOriginSuggestions([]);
+    onOriginSelect(suggestion.center);
   };
 
   const handleSelectDestination = (suggestion: any) => {
@@ -123,53 +131,44 @@ export function NewTripForm() {
     form.setValue('destination', placeName, { shouldValidate: true });
     setDestinationQuery(placeName);
     setDestinationSuggestions([]);
+    onDestinationSelect(suggestion.center);
   };
 
   const handlePhoneSearch = (e: ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     form.setValue('customerPhone', query);
+    setSelectedCustomer(null); // Clear selected customer on new search
+
     const sanitizedQuery = query.replace(/[^0-9]/g, '');
     if (sanitizedQuery.length >= 3) {
-      const results = customers.filter(c =>
-        c.phone.replace(/[^0-9]/g, '').includes(sanitizedQuery)
+      const results = recentTrips.filter(t =>
+        t.customer.phone.replace(/[^0-9]/g, '').includes(sanitizedQuery)
       );
-      setSearchResults(results);
+      setTripHistory(results);
     } else {
-      setSearchResults([]);
+      setTripHistory([]);
     }
-    if (selectedCustomer) {
-      setSelectedCustomer(null);
-    }
-  };
-
-  const handlePhoneKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchResults.length === 1) {
-      e.preventDefault();
-      handleCustomerSelect(searchResults[0]);
-    }
-  };
-
-  const handleCustomerSelect = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    form.setValue('customerPhone', customer.phone);
-    form.clearErrors('customerPhone');
-    setSearchResults([]);
-    setIsHistoryOpen(true);
   };
 
   const handleTripSelect = (trip: Trip) => {
+    setSelectedCustomer(trip.customer);
+    form.setValue('customerPhone', trip.customer.phone);
     form.setValue('origin', trip.origin);
-    setOriginQuery(trip.origin); // Sync query state
-    form.setValue('destination', trip.destination);
-    setDestinationQuery(trip.destination || ''); // Sync query state
-    setIsHistoryOpen(false);
+    setOriginQuery(trip.origin);
+    form.setValue('destination', trip.destination || '');
+    setDestinationQuery(trip.destination || '');
+    form.clearErrors('customerPhone');
+
+    // Clear pins when cloning old trip data
+    onOriginSelect(null);
+    onDestinationSelect(null);
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!selectedCustomer) {
       form.setError('customerPhone', {
         type: 'manual',
-        message: 'Please select a customer from the search results.',
+        message: 'Please select a customer by choosing a past trip.',
       });
       return;
     }
@@ -206,6 +205,9 @@ export function NewTripForm() {
     setOriginQuery('');
     setDestinationQuery('');
     setSelectedCustomer(null);
+    setTripHistory([]);
+    onOriginSelect(null);
+    onDestinationSelect(null);
   }
 
   const isScheduled = form.watch('isScheduled');
@@ -224,29 +226,34 @@ export function NewTripForm() {
                 <FormLabel>Customer Phone</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <History className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search by phone and press Enter"
+                      placeholder="Search trip history by phone..."
                       {...field}
                       onChange={handlePhoneSearch}
-                      onKeyDown={handlePhoneKeyDown}
                       autoComplete="off"
                       className="pl-10"
                     />
-                    {searchResults.length > 0 && (
+                    {tripHistory.length > 0 && (
                       <Card className="absolute z-10 w-full mt-1 border shadow-lg">
-                        <ul className="py-1">
-                          {searchResults.map(customer => (
+                        <ul className="py-1 max-h-60 overflow-y-auto">
+                          {tripHistory.map(trip => (
                             <li
-                              key={customer.id}
+                              key={trip.id}
                               className="px-3 py-2 cursor-pointer hover:bg-muted"
-                              onClick={() => handleCustomerSelect(customer)}
+                              onClick={() => handleTripSelect(trip)}
                               role="button"
                             >
-                              <p className="font-semibold">{customer.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {customer.phone}
+                              <p className="font-semibold truncate">
+                                {trip.customer.name}
                               </p>
+                              <div className="flex items-center text-sm text-muted-foreground truncate">
+                                <span className="truncate">{trip.origin}</span>
+                                <ArrowRight className="h-4 w-4 mx-1 shrink-0" />
+                                <span className="truncate">
+                                  {trip.destination}
+                                </span>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -260,10 +267,19 @@ export function NewTripForm() {
           />
           {selectedCustomer && (
             <Card className="p-3 bg-muted/50">
-              <p className="font-semibold">{selectedCustomer.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {selectedCustomer.phone}
-              </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-semibold">{selectedCustomer.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedCustomer.phone}
+                  </p>
+                </div>
+                {selectedCustomer.pendingDebt > 0 && (
+                  <Badge variant="destructive">
+                    Debt: ${selectedCustomer.pendingDebt.toFixed(2)}
+                  </Badge>
+                )}
+              </div>
             </Card>
           )}
 
@@ -280,6 +296,7 @@ export function NewTripForm() {
                     <Input
                       placeholder="Enter pickup location"
                       {...field}
+                      value={originQuery}
                       onChange={e => {
                         field.onChange(e);
                         setOriginQuery(e.target.value);
@@ -322,6 +339,7 @@ export function NewTripForm() {
                     <Input
                       placeholder="Enter drop-off location"
                       {...field}
+                      value={destinationQuery}
                       onChange={e => {
                         field.onChange(e);
                         setDestinationQuery(e.target.value);
@@ -455,14 +473,6 @@ export function NewTripForm() {
           </div>
         </form>
       </Form>
-      {selectedCustomer && (
-        <CustomerTripHistoryDialog
-          customer={selectedCustomer}
-          isOpen={isHistoryOpen}
-          onOpenChange={setIsHistoryOpen}
-          onTripSelect={handleTripSelect}
-        />
-      )}
     </>
   );
 }
