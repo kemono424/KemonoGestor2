@@ -59,12 +59,6 @@ const links = [
     label: 'Messages',
     roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
-  {
-    href: '/zones',
-    icon: Shapes,
-    label: 'Zones',
-    roles: ['Admin', 'Supervisor'],
-  },
 ];
 
 export default function SidebarNav() {

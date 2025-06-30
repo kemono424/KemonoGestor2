@@ -53,16 +53,3 @@ export interface Trip {
   origin: string;
   destination: string;
 }
-
-export interface Zone {
-  id: string;
-  name: string;
-  geometry: Polygon;
-  color: string;
-}
-
-export interface PredefinedArea {
-  id: string;
-  name: string;
-  geometry: Polygon;
-}

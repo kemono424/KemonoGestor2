@@ -20,10 +20,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { customers, vehicles } from '@/lib/mock-data';
-import type { Customer, Trip, Zone, Vehicle } from '@/types';
+import type { Customer, Trip, Vehicle } from '@/types';
 import { MapPin, User } from 'lucide-react';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
-import { isPointInPolygon, calculateDistanceSquared } from '@/lib/geo-utils';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
@@ -91,100 +90,13 @@ export function NewTripForm() {
       });
       return;
     }
-
-    if (values.inTray) {
-      console.log('Trip sent to tray:', { ...values, customer: selectedCustomer });
-      alert(`Trip for ${selectedCustomer.name} sent to assignment tray.`);
-      form.reset();
-      setSelectedCustomer(null);
-      return;
-    }
-
-    // --- Automatic Assignment Logic ---
-
-    // 1. Mock Geocoding for trip origin. In a real app, this would use a geocoding API.
-    // We'll use a point that falls inside the "Centro" mock zone for demonstration.
-    const originCoords: [number, number] = [-65.41, -24.79];
-
-    // 2. Load active zones from localStorage.
-    let allZones: Zone[] = [];
-    if (typeof window !== 'undefined') {
-      try {
-        const savedZones = localStorage.getItem('fleet-manager-zones');
-        if (savedZones) {
-          allZones = JSON.parse(savedZones);
-        }
-      } catch (error) {
-        console.error(
-          'Could not load zones from localStorage.',
-          error
-        );
-      }
-    }
-
-    // 3. Find which zone the origin is in.
-    const targetZone = allZones.find(zone =>
-      isPointInPolygon(originCoords, zone.geometry)
-    );
-
-    if (!targetZone) {
-      alert(
-        'Could not find an active zone for the trip origin. Please ask an administrator to configure zones, or send the trip to the manual assignment tray.'
-      );
-      return;
-    }
-
-    // 4. Find available vehicles within that zone.
-    const availableVehicles = vehicles.filter(
-      v => v.status === 'Available' && v.latitude && v.longitude
-    );
-    const vehiclesInZone = availableVehicles.filter(v =>
-      isPointInPolygon([v.longitude!, v.latitude!], targetZone.geometry)
-    );
-
-    if (vehiclesInZone.length === 0) {
-      alert(
-        `No available vehicles found in the "${targetZone.name}" zone. Sending trip to the manual assignment tray.`
-      );
-      console.log('Trip sent to tray (no vehicles in zone):', {
-        ...values,
-        customer: selectedCustomer,
-      });
-      form.reset();
-      setSelectedCustomer(null);
-      return;
-    }
-
-    // 5. Find the closest vehicle in the zone.
-    let closestVehicle: Vehicle | null = null;
-    let minDistance = Infinity;
-
-    for (const vehicle of vehiclesInZone) {
-      const distance = calculateDistanceSquared(originCoords, [
-        vehicle.longitude!,
-        vehicle.latitude!,
-      ]);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestVehicle = vehicle;
-      }
-    }
-
-    // 6. Assign the trip and notify.
-    const message = `New trip created for ${
-      selectedCustomer.name
-    }! Auto-assigned to ${closestVehicle!.name} (${
-      closestVehicle!.unitNumber
-    }) in the "${targetZone.name}" zone.`;
-    alert(message);
-
-    console.log('Trip auto-assigned:', {
+    
+    alert(`Trip for ${selectedCustomer.name} created!`);
+    console.log('New trip details:', {
       ...values,
       customer: selectedCustomer,
-      assignedVehicle: closestVehicle,
-      zone: targetZone,
     });
-
+    
     form.reset();
     setSelectedCustomer(null);
   }

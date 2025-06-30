@@ -1,6 +1,5 @@
 
-import type { Vehicle, Operator, Trip, Customer, Zone, PredefinedArea } from '@/types';
-import type { Polygon } from 'geojson';
+import type { Vehicle, Operator, Trip, Customer } from '@/types';
 
 export const customers: Customer[] = [
     { id: 'C001', name: 'Alice Williams', phone: '555-0101', pendingDebt: 0 },
@@ -81,7 +80,7 @@ export const vehicles: Vehicle[] = [
     status: 'Available',
     lastMaintenance: '2024-05-10',
     insuranceDueDate: '2025-01-15',
-    latitude: -24.791, // Inside Center zone
+    latitude: -24.791, 
     longitude: -65.412,
   },
   {
@@ -95,7 +94,7 @@ export const vehicles: Vehicle[] = [
     status: 'Busy',
     lastMaintenance: '2024-06-01',
     insuranceDueDate: '2025-03-20',
-    latitude: -24.780, // Inside North zone
+    latitude: -24.780, 
     longitude: -65.411,
   },
   {
@@ -133,7 +132,7 @@ export const vehicles: Vehicle[] = [
     status: 'Available',
     lastMaintenance: '2024-07-01',
     insuranceDueDate: '2025-02-28',
-    latitude: -24.796, // Inside South zone
+    latitude: -24.796, 
     longitude: -65.425,
   },
 ];
@@ -215,58 +214,5 @@ export const recentTrips: Trip[] = [
     endTime: null,
     origin: '1 Market St',
     destination: '200 Embarcadero',
-  }
-];
-
-
-// Predefined geographical areas that can be activated as zones.
-export const predefinedAreas: PredefinedArea[] = [
-  {
-    id: 'area-center',
-    name: 'Center',
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [-65.420, -24.785],
-          [-65.400, -24.785],
-          [-65.400, -24.800],
-          [-65.420, -24.800],
-          [-65.420, -24.785]
-        ]
-      ]
-    }
-  },
-  {
-    id: 'area-north',
-    name: 'North District',
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [-65.420, -24.770],
-          [-65.400, -24.770],
-          [-65.400, -24.785],
-          [-65.420, -24.785],
-          [-65.420, -24.770]
-        ]
-      ]
-    }
-  },
-  {
-    id: 'area-south',
-    name: 'South District',
-    geometry: {
-      type: 'Polygon',
-      coordinates: [
-        [
-          [-65.435, -24.800],
-          [-65.415, -24.800],
-          [-65.415, -24.815],
-          [-65.435, -24.815],
-          [-65.435, -24.800]
-        ]
-      ]
-    }
   }
 ];
