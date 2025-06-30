@@ -34,7 +34,7 @@ export function generateGridLayer(
       ];
 
       const assignedZoneId = cellAssignments[cellId];
-      let color = '#FFFF00'; // Default color for unassigned cells is now bright yellow
+      let color = '#FFFF00'; // Default color for unassigned cells is bright yellow
 
       if (assignedZoneId && zoneColorMap[assignedZoneId]) {
         color = zoneColorMap[assignedZoneId];
@@ -42,7 +42,7 @@ export function generateGridLayer(
       
       // Selected cells are always highlighted, overriding any zone color
       if (selectedCells.has(cellId)) {
-        color = '#3b82f6'; 
+        color = '#00FFFF'; // Bright cyan for selection
       }
 
       features.push({

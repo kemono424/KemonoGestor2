@@ -61,7 +61,11 @@ export default function ZoneGridEditor({
             type="fill"
             source="grid-source"
             paint={{
-              'fill-color': ['get', 'color'],
+              'fill-color': [
+                'coalesce',
+                ['get', 'color'],
+                '#FF0000'
+              ],
               'fill-opacity': 0.5,
             }}
           />
@@ -71,8 +75,8 @@ export default function ZoneGridEditor({
             source="grid-source"
             paint={{
               'line-color': '#FFFFFF',
-              'line-width': 1,
-              'line-opacity': 0.7,
+              'line-width': 2,
+              'line-opacity': 0.9,
             }}
           />
         </Source>
