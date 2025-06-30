@@ -20,6 +20,7 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
   const [labelLayer, setLabelLayer] = React.useState<FeatureCollection<Point> | null>(null);
 
   React.useEffect(() => {
+    setIsMounted(true);
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -33,7 +34,6 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
     } catch (error) {
       console.error("Failed to parse zones from localStorage", error);
     }
-    setIsMounted(true);
   }, []);
 
   const availableVehicles = vehicles.filter(
@@ -60,6 +60,7 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
                   paint={{
                     'fill-color': ['get', 'color'],
                     'fill-opacity': 0.3,
+                    'fill-outline-color': ['get', 'color'],
                   }}
                 />
               </Source>
