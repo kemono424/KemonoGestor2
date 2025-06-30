@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { recentTrips, type Trip } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
@@ -75,6 +75,12 @@ const TripsTable = ({
             <div className="text-sm text-muted-foreground">
               {trip.destination}
             </div>
+             {trip.notes && (
+              <div className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
+                <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span className="italic">{trip.notes}</span>
+              </div>
+            )}
           </TableCell>
           <TableCell>
             {trip.vehicle

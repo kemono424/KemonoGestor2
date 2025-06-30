@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type ChangeEvent, type KeyboardEvent, useEffect, useRef } from 'react';
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import type { Customer, Trip } from '@/types';
-import { MapPin, User, History } from 'lucide-react';
+import { MapPin, User, History, MessageSquare } from 'lucide-react';
 import { DateTimePicker } from './date-time-picker';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
@@ -26,11 +27,13 @@ import { addDays } from 'date-fns';
 import { Badge } from './ui/badge';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from './ui/textarea';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
   origin: z.string().min(1, { message: 'Origin is required.' }),
   destination: z.string().optional(),
+  notes: z.string().optional(),
   inTray: z.boolean().default(false).optional(),
   isScheduled: z.boolean().default(false),
   scheduledTime: z.date().optional(),
@@ -71,6 +74,7 @@ export function NewTripForm({
       customerPhone: '',
       origin: '',
       destination: '',
+      notes: '',
       inTray: false,
       isScheduled: false,
       scheduledTime: new Date(),
@@ -172,6 +176,7 @@ export function NewTripForm({
     setDestinationQuery(trip.destination || '');
     onOriginSelect(trip.originCoords || null);
     onDestinationSelect(trip.destinationCoords || null);
+    form.setValue('notes', trip.notes || '');
     // Note: We don't set customerPhone here, it's already in the form
     form.clearErrors('customerPhone');
   };
@@ -182,6 +187,7 @@ export function NewTripForm({
     setDestinationQuery('');
     onOriginSelect(null);
     onDestinationSelect(null);
+    form.setValue('notes', '');
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -342,6 +348,30 @@ export function NewTripForm({
                     )}
                   </div>
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Information (for driver)</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Textarea
+                      placeholder="e.g., green gate, call upon arrival..."
+                      {...field}
+                      className="pl-10"
+                    />
+                  </div>
+                </FormControl>
+                <FormDescription>
+                    This information will be visible to the assigned driver.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

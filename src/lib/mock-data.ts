@@ -153,6 +153,7 @@ export const recentTrips: Trip[] = [
     destination: 'Caseros 670, Salta',
     originCoords: [-65.4093, -24.7813],
     destinationCoords: [-65.4110, -24.7891],
+    notes: 'Pick up at the main entrance. The client is waiting with a blue suitcase.',
   },
   {
     id: 'T002',
@@ -181,6 +182,7 @@ export const recentTrips: Trip[] = [
     destination: 'Monumento a Güemes, Salta',
     originCoords: [-65.4190, -24.7788],
     destinationCoords: [-65.4077, -24.7946],
+    notes: 'The street is under construction, it is necessary to enter through the parallel one.',
   },
     {
     id: 'T004',
@@ -237,5 +239,6 @@ export const recentTrips: Trip[] = [
     destination: 'Aeropuerto Internacional de Salta',
     originCoords: [-65.4208, -24.7981],
     destinationCoords: [-65.4870, -24.8465],
+    notes: 'The customer has a lot of luggage, help is required.',
   }
 ];

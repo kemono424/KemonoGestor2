@@ -59,6 +59,7 @@ export interface Trip {
   recurringDays?: number;
   originCoords?: [number, number];
   destinationCoords?: [number, number];
+  notes?: string;
 }
 
 export interface GridConfig {

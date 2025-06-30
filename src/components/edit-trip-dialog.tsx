@@ -17,6 +17,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Input } from './ui/input';
 import { DateTimePicker } from './date-time-picker';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from './ui/textarea';
 
 interface EditTripDialogProps {
   trip: Trip | null;
@@ -102,6 +103,16 @@ export function EditTripDialog({
             <div className="space-y-2">
                 <Label htmlFor="destination">Destination</Label>
                 <Input id="destination" value={currentTrip.destination} onChange={(e) => setCurrentTrip({...currentTrip, destination: e.target.value})} />
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="notes">Additional Information</Label>
+                <Textarea 
+                    id="notes" 
+                    value={currentTrip.notes || ''} 
+                    onChange={(e) => setCurrentTrip({...currentTrip, notes: e.target.value})}
+                    placeholder="e.g., green gate, call upon arrival..."
+                />
             </div>
 
              {currentTrip.status === 'Scheduled' && (
