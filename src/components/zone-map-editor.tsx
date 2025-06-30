@@ -32,7 +32,7 @@ const DrawControl = (props: {
     () => {
       const draw = new MapboxDraw({
         displayControlsDefault: false,
-        controls: { polygon: true, trash: true },
+        controls: { polygon: true, trash: true, combine_features: false, uncombine_features: false },
         userProperties: true,
         styles: [
           {
@@ -66,21 +66,23 @@ const DrawControl = (props: {
       drawRef.current = draw;
       return draw;
     },
-    (map) => {
-      map.on('draw.create', handleDrawEvent);
-      map.on('draw.update', handleDrawEvent);
-      map.on('draw.delete', handleDrawEvent);
-      map.on('draw.selectionchange', handleDrawEvent);
-      setIsReady(true);
-    },
-    (map) => {
-      map.off('draw.create', handleDrawEvent);
-      map.off('draw.update', handleDrawEvent);
-      map.off('draw.delete', handleDrawEvent);
-      map.off('draw.selectionchange', handleDrawEvent);
-      setIsReady(false);
-    },
-    { position: 'top-left' as ControlPosition }
+    {
+      position: 'top-left' as ControlPosition,
+      onAdd: (map) => {
+        map.on('draw.create', handleDrawEvent);
+        map.on('draw.update', handleDrawEvent);
+        map.on('draw.delete', handleDrawEvent);
+        map.on('draw.selectionchange', handleDrawEvent);
+        setIsReady(true);
+      },
+      onRemove: (map) => {
+        map.off('draw.create', handleDrawEvent);
+        map.off('draw.update', handleDrawEvent);
+        map.off('draw.delete', handleDrawEvent);
+        map.off('draw.selectionchange', handleDrawEvent);
+        setIsReady(false);
+      },
+    }
   );
 
   React.useEffect(() => {
