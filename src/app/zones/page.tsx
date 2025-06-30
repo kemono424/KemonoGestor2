@@ -217,6 +217,7 @@ export default function ZonesPage() {
         <div className="lg:col-span-2">
           {isMounted ? (
             <ZoneGridEditor
+              key={JSON.stringify(gridConfig)}
               gridConfig={gridConfig}
               zones={zones}
               cellAssignments={cellAssignments}
