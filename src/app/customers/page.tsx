@@ -25,6 +25,17 @@ import { Input } from '@/components/ui/input';
 import { EditCustomerDialog } from '@/components/edit-customer-dialog';
 import { CustomerHistoryDialog } from '@/components/customer-history-dialog';
 import type { Customer } from '@/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CustomersPage() {
   const [customersData, setCustomersData] = useState<Customer[]>(customers);
@@ -33,6 +44,8 @@ export default function CustomersPage() {
   );
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const { toast } = useToast();
 
   const handleViewHistory = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -42,6 +55,10 @@ export default function CustomersPage() {
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsEditOpen(true);
+  };
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    setCustomerToDelete(customer);
   };
 
   const handleSaveCustomer = (updatedCustomer: Customer) => {
@@ -61,6 +78,34 @@ export default function CustomersPage() {
     );
     setIsEditOpen(false);
     setSelectedCustomer(null);
+  };
+
+  const confirmDelete = () => {
+    if (!customerToDelete) return;
+
+    // Update the state for the UI
+    setCustomersData((prev) => prev.filter((c) => c.id !== customerToDelete.id));
+
+    // Update the "master" mock data arrays
+    const customerIndex = customers.findIndex(
+      (c) => c.id === customerToDelete.id
+    );
+    if (customerIndex > -1) {
+      customers.splice(customerIndex, 1);
+    }
+
+    const tripsToKeep = recentTrips.filter(
+      (t) => t.customer.id !== customerToDelete.id
+    );
+    recentTrips.length = 0;
+    recentTrips.push(...tripsToKeep);
+
+    toast({
+      title: 'Customer Deleted',
+      description: `Customer "${customerToDelete.name}" has been permanently removed.`,
+    });
+
+    setCustomerToDelete(null);
   };
 
   return (
@@ -123,7 +168,10 @@ export default function CustomersPage() {
                         >
                           Edit Customer
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          onClick={() => handleDeleteCustomer(customer)}
+                        >
                           Delete Customer
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -153,6 +201,31 @@ export default function CustomersPage() {
         }}
         onSave={handleSaveCustomer}
       />
+      <AlertDialog
+        open={!!customerToDelete}
+        onOpenChange={(open) => {
+          if (!open) setCustomerToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              customer "{customerToDelete?.name}" and all of their associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
