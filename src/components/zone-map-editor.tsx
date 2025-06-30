@@ -13,6 +13,7 @@ const DrawControl = (props: {
 }) => {
   const { onUpdate, onSelect, zones } = props;
   const drawRef = React.useRef<MapboxDraw | null>(null);
+  const [isReady, setIsReady] = React.useState(false);
 
   const handleDrawEvent = React.useCallback(
     (e: { type: string; features: Feature[] }) => {
@@ -65,26 +66,31 @@ const DrawControl = (props: {
       drawRef.current = draw;
       return draw;
     },
-    ({ map }) => { // onAdd
+    (map) => {
       map.on('draw.create', handleDrawEvent);
       map.on('draw.update', handleDrawEvent);
       map.on('draw.delete', handleDrawEvent);
       map.on('draw.selectionchange', handleDrawEvent);
+      setIsReady(true);
     },
-    ({ map }) => { // onRemove
+    (map) => {
       map.off('draw.create', handleDrawEvent);
       map.off('draw.update', handleDrawEvent);
       map.off('draw.delete', handleDrawEvent);
       map.off('draw.selectionchange', handleDrawEvent);
+      setIsReady(false);
     },
     { position: 'top-left' as ControlPosition }
   );
 
   React.useEffect(() => {
-    const draw = drawRef.current;
-    // This is the key fix: ensure the draw instance and its methods are ready.
-    if (!draw || typeof draw.getAll !== 'function') {
+    if (!isReady) {
       return;
+    }
+    
+    const draw = drawRef.current;
+    if (!draw) {
+        return;
     }
 
     const existingFeatures = draw.getAll().features;
@@ -107,7 +113,7 @@ const DrawControl = (props: {
       geometry: z.geometry,
     }));
     draw.set({ type: 'FeatureCollection', features });
-  }, [zones]);
+  }, [zones, isReady]);
 
   return null;
 };
