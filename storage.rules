@@ -1,24 +1,17 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Reglas para las fotos de perfil de los usuarios.
-    match /avatars/{userId}/{fileName} {
-
+    match /avatars/{userId} {
       // Cualquiera puede leer las fotos de perfil.
       allow read;
-
-      // Solo el usuario autenticado puede subir/actualizar su propia foto.
-      // La foto debe ser una imagen y pesar menos de 2MB.
-      // NOTA: Esto requiere que la app use Firebase Authentication
-      // para que `request.auth.uid` esté disponible y coincida con {userId}.
-      allow write: if request.auth != null 
-                    && request.auth.uid == userId
-                    && request.resource.size < 2 * 1024 * 1024
-                    && request.resource.contentType.matches('image/.*');
+      
+      // Solo el usuario autenticado puede escribir en su propia ruta de avatar.
+      // También se comprueba el tipo de contenido de imagen y el límite de tamaño (< 2MB).
+      allow write: if request.auth != null && 
+                      request.auth.uid == userId &&
+                      request.resource.size < 2 * 1024 * 1024 &&
+                      request.resource.contentType.matches('image/.*');
     }
-
   }
 }
