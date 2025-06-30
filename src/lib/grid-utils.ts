@@ -1,3 +1,4 @@
+
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import type { GridConfig, ZoneDefinition } from '@/types';
 

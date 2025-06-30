@@ -1,3 +1,4 @@
+
 import type { Polygon } from 'geojson';
 
 export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
