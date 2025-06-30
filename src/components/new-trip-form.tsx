@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -36,7 +36,8 @@ const formSchema = z.object({
 });
 
 export function NewTripForm() {
-  const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [searchResults, setSearchResults] = useState<Customer[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,40 +49,51 @@ export function NewTripForm() {
     },
   });
 
-  const handlePhoneSearch = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const phone = form.getValues('customerPhone');
-      const customer = customers.find((c) => c.phone === phone);
-      
-      setFoundCustomer(customer || null);
+  const handlePhoneSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    form.setValue('customerPhone', query);
 
-      if (customer) {
-        form.clearErrors('customerPhone');
-        alert(`Customer Found: ${customer.name}. From here we could open their trip history.`);
-      } else {
-        form.setError('customerPhone', { type: 'manual', message: 'Customer not found.' });
-      }
+    const sanitizedQuery = query.replace(/[^0-9]/g, '');
+
+    if (sanitizedQuery.length >= 3) {
+      const results = customers.filter((c) =>
+        c.phone.replace(/[^0-9]/g, '').includes(sanitizedQuery)
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+    
+    if (selectedCustomer) {
+        setSelectedCustomer(null);
     }
   };
 
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    form.setValue('customerPhone', customer.phone);
+    form.clearErrors('customerPhone');
+    setSearchResults([]);
+    alert(`Customer Selected: ${customer.name}. From here we could open their trip history.`);
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!foundCustomer) {
+    if (!selectedCustomer) {
       form.setError('customerPhone', {
         type: 'manual',
-        message: 'Please find a valid customer before creating a trip.',
+        message: 'Please select a customer from the search results.',
       });
       return;
     }
 
     const submissionData = {
       ...values,
-      customer: foundCustomer,
+      customer: selectedCustomer,
     };
     console.log(submissionData);
-    alert(`New trip created for ${foundCustomer.name}! Check the console for details.`);
+    alert(`New trip created for ${selectedCustomer.name}! Check the console for details.`);
     form.reset();
-    setFoundCustomer(null);
+    setSelectedCustomer(null);
   }
 
   return (
@@ -97,11 +109,29 @@ export function NewTripForm() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="e.g., 555-0101, then press Enter"
+                    placeholder="Search by phone (3+ digits)..."
                     {...field}
+                    onChange={handlePhoneSearch}
+                    autoComplete="off"
                     className="pl-10"
-                    onKeyDown={handlePhoneSearch}
                   />
+                   {searchResults.length > 0 && (
+                    <Card className="absolute z-10 w-full mt-1 border shadow-lg">
+                      <ul className="py-1">
+                        {searchResults.map((customer) => (
+                          <li
+                            key={customer.id}
+                            className="px-3 py-2 cursor-pointer hover:bg-muted"
+                            onClick={() => handleCustomerSelect(customer)}
+                            role="button"
+                          >
+                            <p className="font-semibold">{customer.name}</p>
+                            <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </Card>
+                  )}
                 </div>
               </FormControl>
               <FormMessage />
@@ -109,18 +139,18 @@ export function NewTripForm() {
           )}
         />
         
-        {foundCustomer && (
+        {selectedCustomer && (
           <Card className="p-3 bg-muted/50">
             <div className="flex items-center justify-between">
-              <p className="font-semibold">{foundCustomer.name}</p>
-              {foundCustomer.isVip && (
+              <p className="font-semibold">{selectedCustomer.name}</p>
+              {selectedCustomer.isVip && (
                 <Badge variant="secondary">
                   <Star className="mr-1.5 h-3 w-3" />
                   VIP
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{foundCustomer.phone}</p>
+            <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
           </Card>
         )}
 
