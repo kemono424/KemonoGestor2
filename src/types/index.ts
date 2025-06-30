@@ -1,7 +1,7 @@
 
 import type { Polygon } from 'geojson';
 
-export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
+export type VehicleStatus = 'Libre' | 'En descanso' | 'Ocupado' | 'En camino' | 'En espera' | 'Mantenimiento' | 'Fuera de servicio';
 
 export interface Vehicle {
   id: string;

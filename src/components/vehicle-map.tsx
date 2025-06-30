@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Map, { Marker, Source, Layer, LngLatLike } from 'react-map-gl';
-import type { Vehicle } from '@/types';
+import type { Vehicle, VehicleStatus } from '@/types';
 import { MapPin, Flag, Car } from 'lucide-react';
 import type { FeatureCollection, Point, Polygon, LineString } from 'geojson';
 import { generateZoneLayer } from '@/lib/grid-utils';
@@ -18,6 +18,23 @@ interface VehicleMapProps {
   onOriginDrag?: (event: { lngLat: LngLatLike }) => void;
   onDestinationDrag?: (event: { lngLat: LngLatLike }) => void;
 }
+
+const getVehicleColorClass = (status: VehicleStatus) => {
+  switch (status) {
+    case 'Libre':
+      return 'text-green-500'; // Green
+    case 'En descanso':
+      return 'text-yellow-400'; // Yellow
+    case 'Ocupado':
+      return 'text-red-500'; // Red
+    case 'En camino':
+      return 'text-blue-500'; // Blue
+    case 'En espera':
+      return 'text-orange-400'; // Orange
+    default:
+      return 'text-gray-400';
+  }
+};
 
 export default function VehicleMap({
   vehicles,
@@ -50,8 +67,17 @@ export default function VehicleMap({
     }
   }, []);
 
-  const availableVehicles = vehicles.filter(
-    v => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
+  const vehiclesOnMap = vehicles.filter(
+    v =>
+      [
+        'Libre',
+        'En descanso',
+        'Ocupado',
+        'En camino',
+        'En espera',
+      ].includes(v.status) &&
+      v.latitude &&
+      v.longitude
   );
 
   const routeGeoJson: FeatureCollection<LineString> | null = route
@@ -113,7 +139,7 @@ export default function VehicleMap({
           </Source>
         )}
 
-        {availableVehicles.map(vehicle => (
+        {vehiclesOnMap.map(vehicle => (
           <Marker
             key={vehicle.id}
             longitude={vehicle.longitude!}
@@ -121,7 +147,7 @@ export default function VehicleMap({
             anchor="bottom"
           >
             <div className="relative">
-                <Car className="h-8 w-8 text-yellow-400 drop-shadow-md" />
+                <Car className={`h-8 w-8 ${getVehicleColorClass(vehicle.status)} drop-shadow-md`} />
                 <div className="absolute inset-0 flex items-center justify-center -mt-1">
                     <span className="text-[10px] font-bold text-black">
                         {vehicle.unitNumber}

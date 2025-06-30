@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const [destinationQuery, setDestinationQuery] = React.useState('');
   const { toast } = useToast();
 
-  const onlineVehicles = vehicles.filter(v => v.status === 'Available').length;
+  const onlineVehicles = vehicles.filter(v => v.status === 'Libre').length;
   const activeTrips = recentTrips.filter(
     t => t.status === 'In Progress'
   ).length;

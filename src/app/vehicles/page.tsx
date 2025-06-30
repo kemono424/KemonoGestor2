@@ -19,18 +19,47 @@ import { vehicles } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
+import type { VehicleStatus } from '@/types';
 
 export default function VehiclesPage() {
-  const getStatusVariant = (status: string) => {
+  const getStatusBadge = (status: VehicleStatus) => {
     switch (status) {
-      case 'Available':
-        return 'secondary';
-      case 'Busy':
-        return 'default';
-      case 'Maintenance':
-        return 'destructive';
+      case 'Libre':
+        return (
+          <Badge className="border-transparent bg-green-500 text-primary-foreground hover:bg-green-500/80">
+            {status}
+          </Badge>
+        );
+      case 'En descanso':
+        return (
+          <Badge className="border-transparent bg-yellow-400 text-black hover:bg-yellow-400/80">
+            {status}
+          </Badge>
+        );
+      case 'Ocupado':
+        return (
+          <Badge className="border-transparent bg-red-500 text-primary-foreground hover:bg-red-500/80">
+            {status}
+          </Badge>
+        );
+      case 'En camino':
+        return (
+          <Badge className="border-transparent bg-blue-500 text-primary-foreground hover:bg-blue-500/80">
+            {status}
+          </Badge>
+        );
+      case 'En espera':
+        return (
+          <Badge className="border-transparent bg-orange-500 text-primary-foreground hover:bg-orange-500/80">
+            {status}
+          </Badge>
+        );
+      case 'Mantenimiento':
+        return <Badge variant="destructive">{status}</Badge>;
+      case 'Fuera de servicio':
+        return <Badge variant="outline">{status}</Badge>;
       default:
-        return 'outline';
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -69,9 +98,7 @@ export default function VehiclesPage() {
                   <TableCell>{vehicle.licensePlate}</TableCell>
                   <TableCell>{vehicle.operator}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusVariant(vehicle.status)}>
-                      {vehicle.status}
-                    </Badge>
+                    {getStatusBadge(vehicle.status)}
                   </TableCell>
                   <TableCell>
                     {vehicle.insuranceDueDate ? format(new Date(vehicle.insuranceDueDate), 'MMM d, yyyy') : 'N/A'}
