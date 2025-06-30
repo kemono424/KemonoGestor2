@@ -14,7 +14,7 @@ import { recentTrips } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
 import { ArrowRight, History, MapPin, Pencil } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -92,6 +92,11 @@ export function CustomerTripHistoryDialog({
       setIsEditing(false);
     }
   };
+  
+  const handleCancelEdit = () => {
+      setIsEditing(false);
+      setEditableCustomer(activeCustomer);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -216,12 +221,6 @@ export function CustomerTripHistoryDialog({
                           </>
                         )}
                     </CardContent>
-                    {isEditing && (
-                        <CardFooter className="justify-end gap-2">
-                            <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                            <Button onClick={handleSaveCustomer}>Save Changes</Button>
-                        </CardFooter>
-                    )}
                 </Card>
             ) : (
                  <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
@@ -235,14 +234,29 @@ export function CustomerTripHistoryDialog({
           </div>
         </div>
         <DialogFooter className="pt-4 border-t">
-            {activeCustomer && (
-              <Button variant="ghost" onClick={handleBack}>
-                Back
+          {isEditing ? (
+            <div className="flex justify-end w-full gap-2">
+              <Button variant="ghost" onClick={handleCancelEdit}>
+                Cancel
               </Button>
-            )}
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="ml-auto">
-            Close
-          </Button>
+              <Button onClick={handleSaveCustomer}>Save Changes</Button>
+            </div>
+          ) : (
+            <>
+              {activeCustomer && (
+                <Button variant="ghost" onClick={handleBack}>
+                  Back
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="ml-auto"
+              >
+                Close
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
