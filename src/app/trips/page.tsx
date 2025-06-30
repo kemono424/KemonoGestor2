@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -50,7 +50,14 @@ const TripsTable = ({
 }: {
   trips: Trip[];
   onEdit: (trip: Trip) => void;
-}) => (
+}) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  return (
   <Table>
     <TableHeader>
       <TableRow>
@@ -96,10 +103,14 @@ const TripsTable = ({
             </Badge>
           </TableCell>
           <TableCell>
-            {trip.scheduledTime
-              ? format(new Date(trip.scheduledTime), 'MMM d, h:mm a')
-              : format(new Date(trip.requestTime), 'MMM d, h:mm a')}
-              {trip.scheduledTime && <div className="text-xs text-muted-foreground">(Scheduled)</div>}
+            {isClient ? (
+                <>
+                  {trip.scheduledTime
+                    ? format(new Date(trip.scheduledTime), 'MMM d, h:mm a')
+                    : format(new Date(trip.requestTime), 'MMM d, h:mm a')}
+                  {trip.scheduledTime && <div className="text-xs text-muted-foreground">(Scheduled)</div>}
+                </>
+              ) : null}
           </TableCell>
           <TableCell>
             <DropdownMenu>
@@ -132,7 +143,8 @@ const TripsTable = ({
       ))}
     </TableBody>
   </Table>
-);
+  )
+};
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>(recentTrips);
