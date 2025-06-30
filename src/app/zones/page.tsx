@@ -15,8 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
-const TOTAL_GRID_WIDTH = 0.1; // degrees longitude
-const TOTAL_GRID_HEIGHT = 0.1; // degrees latitude
+const TOTAL_GRID_WIDTH = 0.2; // degrees longitude
+const TOTAL_GRID_HEIGHT = 0.2; // degrees latitude
 
 export default function ZonesPage() {
   const [zones, setZones] = useState<ZoneDefinition[]>([]);

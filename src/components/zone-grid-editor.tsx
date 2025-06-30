@@ -46,7 +46,7 @@ export default function ZoneGridEditor({
             type="fill"
             paint={{
               'fill-color': ['get', 'color'],
-              'fill-opacity': 0.15,
+              'fill-opacity': 0,
             }}
           />
           <Layer
