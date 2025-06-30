@@ -23,6 +23,7 @@ import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from './ui/textarea';
 
 
 interface CustomerTripHistoryDialogProps {
@@ -182,6 +183,16 @@ export function CustomerTripHistoryDialog({
                                 onChange={(e) => setEditableCustomer(c => c ? {...c, phone: e.target.value} : null)}
                               />
                             </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="customer-notes">Notes for Driver</Label>
+                                <Textarea
+                                    id="customer-notes"
+                                    value={editableCustomer?.notes || ''}
+                                    onChange={(e) => setEditableCustomer(c => c ? {...c, notes: e.target.value} : null)}
+                                    placeholder="e.g., Prefers quiet rides, has a pet..."
+                                    className="min-h-[100px]"
+                                />
+                            </div>
                           </div>
                         ) : (
                           <>
@@ -198,8 +209,8 @@ export function CustomerTripHistoryDialog({
                             <Separator />
                             <div className="space-y-2">
                                 <h4 className="font-semibold text-sm">Notes</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Customer-specific notes, preferences, or alerts would appear here.
+                                <p className="text-sm text-muted-foreground italic">
+                                    {activeCustomer.notes || 'No notes available for this customer.'}
                                 </p>
                             </div>
                           </>

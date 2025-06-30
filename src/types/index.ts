@@ -39,6 +39,7 @@ export interface Customer {
     name: string;
     phone: string;
     pendingDebt: number; // in currency
+    notes?: string;
 }
 
 export type TripStatus = 'In Tray' | 'Scheduled' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
