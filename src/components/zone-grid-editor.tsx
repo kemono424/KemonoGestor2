@@ -46,8 +46,8 @@ export default function ZoneGridEditor({
         ref={mapRef}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
-          longitude: gridConfig.center.lng,
-          latitude: gridConfig.center.lat,
+          longitude: -65.4117,
+          latitude: -24.7859,
           zoom: 12,
         }}
         style={{ width: '100%', height: '100%' }}
