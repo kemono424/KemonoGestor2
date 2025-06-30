@@ -13,6 +13,7 @@ import { Car, Users, Activity, DollarSign } from 'lucide-react';
 import { vehicles, operators, recentTrips } from '@/lib/mock-data';
 import VehicleMap from '@/components/vehicle-map';
 import { NewTripForm } from '@/components/new-trip-form';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const [originPin, setOriginPin] = React.useState<[number, number] | null>(
@@ -22,6 +23,9 @@ export default function DashboardPage() {
     [number, number] | null
   >(null);
   const [route, setRoute] = React.useState<any>(null);
+  const [originQuery, setOriginQuery] = React.useState('');
+  const [destinationQuery, setDestinationQuery] = React.useState('');
+  const { toast } = useToast();
 
   const onlineVehicles = vehicles.filter(v => v.status === 'Available').length;
   const activeTrips = recentTrips.filter(
@@ -31,6 +35,42 @@ export default function DashboardPage() {
     .filter(t => t.status === 'Completed')
     .reduce((sum, trip) => sum + 25, 0); // Mock revenue
   const availableOperators = operators.filter(o => o.status === 'Active').length;
+
+  const reverseGeocode = React.useCallback(async (coords: [number, number]) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords[0]},${coords[1]}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=address,poi&limit=1`
+      );
+      const data = await response.json();
+      if (data.features && data.features.length > 0) {
+        return data.features[0].place_name;
+      }
+      return `${coords[1]}, ${coords[0]}`; // Fallback to coordinates
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Reverse Geocoding Failed',
+        description: 'Could not fetch address for the selected location.',
+      });
+      return `${coords[1]}, ${coords[0]}`;
+    }
+  }, [toast]);
+
+  const handleOriginDrag = React.useCallback(async (event: any) => {
+    const newCoords: [number, number] = [event.lngLat.lng, event.lngLat.lat];
+    setOriginPin(newCoords);
+    const newAddress = await reverseGeocode(newCoords);
+    setOriginQuery(newAddress);
+  }, [reverseGeocode]);
+
+  const handleDestinationDrag = React.useCallback(async (event: any) => {
+    const newCoords: [number, number] = [event.lngLat.lng, event.lngLat.lat];
+    setDestinationPin(newCoords);
+    const newAddress = await reverseGeocode(newCoords);
+    setDestinationQuery(newAddress);
+  }, [reverseGeocode]);
+
 
   React.useEffect(() => {
     const getRoute = async () => {
@@ -121,6 +161,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <NewTripForm
+              originQuery={originQuery}
+              setOriginQuery={setOriginQuery}
+              destinationQuery={destinationQuery}
+              setDestinationQuery={setDestinationQuery}
               onOriginSelect={setOriginPin}
               onDestinationSelect={setDestinationPin}
             />
@@ -140,6 +184,8 @@ export default function DashboardPage() {
               originPin={originPin}
               destinationPin={destinationPin}
               route={route}
+              onOriginDrag={handleOriginDrag}
+              onDestinationDrag={handleDestinationDrag}
             />
           </CardContent>
         </Card>

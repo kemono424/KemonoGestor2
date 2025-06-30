@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { recentTrips } from '@/lib/mock-data';
@@ -15,6 +16,7 @@ import { ArrowRight, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 
 interface CustomerTripHistoryDialogProps {
   phoneQuery: string;
@@ -54,7 +56,7 @@ export function CustomerTripHistoryDialog({
             appear on the right.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(70vh-80px)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(70vh-120px)]">
           <div className="md:col-span-1 h-full">
             <h3 className="text-lg font-semibold mb-2">Matching Trips</h3>
             <ScrollArea className="h-full pr-4 border rounded-lg">
@@ -119,6 +121,9 @@ export function CustomerTripHistoryDialog({
             </Card>
           </div>
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

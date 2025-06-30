@@ -40,11 +40,19 @@ const formSchema = z.object({
 });
 
 interface NewTripFormProps {
+  originQuery: string;
+  setOriginQuery: (query: string) => void;
+  destinationQuery: string;
+  setDestinationQuery: (query: string) => void;
   onOriginSelect: (coords: [number, number] | null) => void;
   onDestinationSelect: (coords: [number, number] | null) => void;
 }
 
 export function NewTripForm({
+  originQuery,
+  setOriginQuery,
+  destinationQuery,
+  setDestinationQuery,
   onOriginSelect,
   onDestinationSelect,
 }: NewTripFormProps) {
@@ -52,8 +60,6 @@ export function NewTripForm({
   const [isHistoryDialogOpen, setHistoryDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const [originQuery, setOriginQuery] = useState('');
-  const [destinationQuery, setDestinationQuery] = useState('');
   const [originSuggestions, setOriginSuggestions] = useState<any[]>([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState<any[]>([]);
 
@@ -70,6 +76,20 @@ export function NewTripForm({
       recurringDays: 5,
     },
   });
+
+  // Sync parent state with react-hook-form state
+  useEffect(() => {
+    if (originQuery !== form.getValues('origin')) {
+      form.setValue('origin', originQuery, { shouldValidate: true });
+    }
+  }, [originQuery, form]);
+
+  useEffect(() => {
+    if (destinationQuery !== form.getValues('destination')) {
+      form.setValue('destination', destinationQuery, { shouldValidate: true });
+    }
+  }, [destinationQuery, form]);
+
 
   const searchAddresses = async (
     query: string,
@@ -113,7 +133,6 @@ export function NewTripForm({
 
   const handleSelectOrigin = (suggestion: any) => {
     const placeName = suggestion.place_name;
-    form.setValue('origin', placeName, { shouldValidate: true });
     setOriginQuery(placeName);
     onOriginSelect(suggestion.center);
     setOriginSuggestions([]);
@@ -121,7 +140,6 @@ export function NewTripForm({
 
   const handleSelectDestination = (suggestion: any) => {
     const placeName = suggestion.place_name;
-    form.setValue('destination', placeName, { shouldValidate: true });
     setDestinationQuery(placeName);
     onDestinationSelect(suggestion.center);
     setDestinationSuggestions([]);
@@ -139,33 +157,31 @@ export function NewTripForm({
   const handleTripSelectFromHistory = (trip: Trip) => {
     setSelectedCustomer(trip.customer);
     form.setValue('customerPhone', trip.customer.phone);
-    form.setValue('origin', trip.origin);
     setOriginQuery(trip.origin);
-    if (trip.destination) {
-      form.setValue('destination', trip.destination);
-      setDestinationQuery(trip.destination);
-    } else {
-      form.setValue('destination', '');
-      setDestinationQuery('');
-    }
+    setDestinationQuery(trip.destination || '');
     onOriginSelect(trip.originCoords || null);
     onDestinationSelect(trip.destinationCoords || null);
     form.clearErrors('customerPhone');
+    // We don't close the dialog here, user can select another one.
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!selectedCustomer) {
-      form.setError('customerPhone', {
-        type: 'manual',
-        message: 'Please select a customer by searching trip history.',
-      });
-      return;
+    if (!selectedCustomer && values.customerPhone) {
+        toast({
+            variant: "destructive",
+            title: "Customer Not Selected",
+            description: "Please search and select a customer from history before creating a trip.",
+        });
+        form.setError('customerPhone', {
+            type: 'manual',
+            message: 'Please select a customer by searching trip history.',
+        });
+        return;
     }
 
-    // Existing submission logic...
     toast({
         title: "Trip Created",
-        description: `Trip for ${selectedCustomer.name} has been successfully created.`
+        description: `Trip for ${selectedCustomer?.name || 'a new customer'} has been successfully created.`
     });
 
     form.reset();

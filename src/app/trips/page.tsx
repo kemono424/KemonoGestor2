@@ -140,7 +140,7 @@ export default function TripsPage() {
   };
 
   const tripsInTray = trips.filter(trip => trip.status === 'In Tray');
-  const activeServices = trips.filter(trip => trip.status !== 'In Tray');
+  const activeServices = trips.filter(trip => ['Assigned', 'In Progress', 'Scheduled'].includes(trip.status));
 
   return (
     <>

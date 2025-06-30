@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import Map, { Marker, Source, Layer } from 'react-map-gl';
+import Map, { Marker, Source, Layer, LngLatLike } from 'react-map-gl';
 import type { Vehicle } from '@/types';
 import { MapPin, Flag, Car } from 'lucide-react';
 import type { FeatureCollection, Point, Polygon, LineString } from 'geojson';
@@ -15,6 +15,8 @@ interface VehicleMapProps {
   originPin?: [number, number] | null;
   destinationPin?: [number, number] | null;
   route?: any;
+  onOriginDrag?: (event: { lngLat: LngLatLike }) => void;
+  onDestinationDrag?: (event: { lngLat: LngLatLike }) => void;
 }
 
 export default function VehicleMap({
@@ -22,6 +24,8 @@ export default function VehicleMap({
   originPin,
   destinationPin,
   route,
+  onOriginDrag,
+  onDestinationDrag,
 }: VehicleMapProps) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [zoneLayer, setZoneLayer] =
@@ -121,14 +125,26 @@ export default function VehicleMap({
         ))}
 
         {originPin && (
-          <Marker longitude={originPin[0]} latitude={originPin[1]} anchor="bottom">
-            <MapPin className="h-8 w-8 text-primary" />
+          <Marker 
+            longitude={originPin[0]} 
+            latitude={originPin[1]} 
+            anchor="bottom"
+            draggable
+            onDragEnd={onOriginDrag}
+          >
+            <MapPin className="h-8 w-8 text-primary cursor-move" />
           </Marker>
         )}
         
         {destinationPin && (
-          <Marker longitude={destinationPin[0]} latitude={destinationPin[1]} anchor="bottom">
-            <Flag className="h-8 w-8 text-destructive" />
+          <Marker 
+            longitude={destinationPin[0]} 
+            latitude={destinationPin[1]} 
+            anchor="bottom"
+            draggable
+            onDragEnd={onDestinationDrag}
+          >
+            <Flag className="h-8 w-8 text-destructive cursor-move" />
           </Marker>
         )}
         
