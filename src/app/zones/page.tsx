@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,58 +16,82 @@ import ZoneMapEditor from '@/components/zone-map-editor';
 import type { Feature, Polygon } from 'geojson';
 import { EditZoneDialog } from '@/components/edit-zone-dialog';
 
-// Helper to generate a random color
 const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
 };
 
 export default function ZonesPage() {
-  const [zones, setZones] = useState<Zone[]>(mockZones);
+  const [zones, setZones] = useState<Zone[]>(() => {
+    if (typeof window === 'undefined') {
+      return mockZones;
+    }
+    try {
+      const savedZones = localStorage.getItem('fleet-manager-zones');
+      return savedZones ? JSON.parse(savedZones) : mockZones;
+    } catch (error) {
+      console.error('Error parsing zones from localStorage', error);
+      return mockZones;
+    }
+  });
+
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('fleet-manager-zones', JSON.stringify(zones));
+    }
+  }, [zones]);
 
   const handleFeaturesUpdate = useCallback(
     (updatedFeatures: Feature<Polygon>[]) => {
       setZones(currentZones => {
         const newZones: Zone[] = updatedFeatures.map(feature => {
-            const existingZone = currentZones.find(z => z.id === feature.id);
-            if (existingZone) {
-                // It's an existing zone, update its geometry but keep other properties
-                return { ...existingZone, geometry: feature.geometry };
-            } else {
-                // It's a new zone, create it with defaults
-                return {
-                    id: feature.id as string,
-                    name: (feature.properties?.name as string) || `New Zone`,
-                    color: (feature.properties?.color as string) || getRandomColor(),
-                    geometry: feature.geometry,
-                };
-            }
+          const existingZone = currentZones.find(z => z.id === feature.id);
+          if (existingZone) {
+            return { ...existingZone, geometry: feature.geometry };
+          } else {
+            return {
+              id: feature.id as string,
+              name: `New Zone ${feature.id?.substring(0, 4)}`,
+              color: getRandomColor(),
+              geometry: feature.geometry,
+            };
+          }
         });
-        return newZones;
+        
+        // Handle deletions
+        const updatedIds = new Set(updatedFeatures.map(f => f.id));
+        const finalZones = newZones.filter(z => updatedIds.has(z.id));
+        const deletedZones = currentZones.filter(z => !updatedIds.has(z.id));
+        if(deletedZones.length > 0) {
+            return currentZones.filter(z => updatedIds.has(z.id));
+        }
+
+        return finalZones;
       });
     },
     []
   );
 
   const handleCreateZone = () => {
-      alert("To create a new zone, use the polygon drawing tool on the map.");
+    alert('To create a new zone, use the polygon drawing tool on the map.');
   };
 
   const handleDeleteZone = (zoneId: string) => {
-      setZones(currentZones => currentZones.filter(z => z.id !== zoneId));
+    setZones(currentZones => currentZones.filter(z => z.id !== zoneId));
   };
 
   const handleSaveZone = (updatedZone: Zone) => {
-      setZones(currentZones => 
-          currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
-      );
-      setEditingZone(null);
+    setZones(currentZones =>
+      currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
+    );
+    setEditingZone(null);
   };
 
   return (
@@ -102,7 +126,7 @@ export default function ZonesPage() {
                   <div className="flex items-center gap-3">
                     <div
                       className="h-4 w-4 rounded-sm border"
-                      style={{ backgroundColor: `${zone.color}80` }} // 50% opacity
+                      style={{ backgroundColor: `${zone.color}80` }}
                     />
                     <span className="font-medium">{zone.name}</span>
                   </div>
@@ -111,9 +135,9 @@ export default function ZonesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingZone(zone)
+                      onClick={e => {
+                        e.stopPropagation();
+                        setEditingZone(zone);
                       }}
                     >
                       <Edit className="h-4 w-4" />
@@ -122,10 +146,10 @@ export default function ZonesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
-                       onClick={(e) => {
-                           e.stopPropagation();
-                           handleDeleteZone(zone.id)
-                       }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDeleteZone(zone.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -144,10 +168,10 @@ export default function ZonesPage() {
           />
         </div>
       </div>
-       <EditZoneDialog 
+      <EditZoneDialog
         zone={editingZone}
         isOpen={!!editingZone}
-        onOpenChange={(isOpen) => !isOpen && setEditingZone(null)}
+        onOpenChange={isOpen => !isOpen && setEditingZone(null)}
         onSave={handleSaveZone}
       />
     </>

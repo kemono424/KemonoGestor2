@@ -79,8 +79,8 @@ export const vehicles: Vehicle[] = [
     status: 'Available',
     lastMaintenance: '2024-05-10',
     insuranceDueDate: '2025-01-15',
-    latitude: 37.7749,
-    longitude: -122.4194,
+    latitude: -24.791,
+    longitude: -65.412,
   },
   {
     id: 'V002',
@@ -93,8 +93,8 @@ export const vehicles: Vehicle[] = [
     status: 'Busy',
     lastMaintenance: '2024-06-01',
     insuranceDueDate: '2025-03-20',
-    latitude: 37.7880,
-    longitude: -122.4075,
+    latitude: -24.780,
+    longitude: -65.411,
   },
   {
     id: 'V003',
@@ -131,8 +131,8 @@ export const vehicles: Vehicle[] = [
     status: 'Available',
     lastMaintenance: '2024-07-01',
     insuranceDueDate: '2025-02-28',
-    latitude: 37.7950,
-    longitude: -122.4220,
+    latitude: -24.788,
+    longitude: -65.414,
   },
 ];
 

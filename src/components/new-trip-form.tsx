@@ -18,10 +18,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-import { customers } from '@/lib/mock-data';
-import type { Customer, Trip } from '@/types';
+import { customers, vehicles, zones as mockZones } from '@/lib/mock-data';
+import type { Customer, Trip, Zone, Vehicle } from '@/types';
 import { MapPin, User } from 'lucide-react';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
+import { isPointInPolygon, calculateDistanceSquared } from '@/lib/geo-utils';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
@@ -31,7 +32,9 @@ const formSchema = z.object({
 });
 
 export function NewTripForm() {
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
@@ -52,16 +55,16 @@ export function NewTripForm() {
     const sanitizedQuery = query.replace(/[^0-9]/g, '');
 
     if (sanitizedQuery.length >= 3) {
-      const results = customers.filter((c) =>
+      const results = customers.filter(c =>
         c.phone.replace(/[^0-9]/g, '').includes(sanitizedQuery)
       );
       setSearchResults(results);
     } else {
       setSearchResults([]);
     }
-    
+
     if (selectedCustomer) {
-        setSelectedCustomer(null);
+      setSelectedCustomer(null);
     }
   };
 
@@ -88,15 +91,99 @@ export function NewTripForm() {
       return;
     }
 
-    const submissionData = {
+    if (values.inTray) {
+      console.log('Trip sent to tray:', { ...values, customer: selectedCustomer });
+      alert(`Trip for ${selectedCustomer.name} sent to assignment tray.`);
+      form.reset();
+      setSelectedCustomer(null);
+      return;
+    }
+
+    // --- Automatic Assignment Logic ---
+
+    // 1. Mock Geocoding for trip origin. In a real app, this would use a geocoding API.
+    // We'll use a point that falls inside the "Centro" mock zone for demonstration.
+    const originCoords: [number, number] = [-65.41, -24.79];
+
+    // 2. Load zones (from localStorage or fall back to mock data)
+    let allZones: Zone[] = mockZones;
+    if (typeof window !== 'undefined') {
+      try {
+        const savedZones = localStorage.getItem('fleet-manager-zones');
+        if (savedZones) {
+          allZones = JSON.parse(savedZones);
+        }
+      } catch (error) {
+        console.error(
+          'Could not load zones from localStorage, using mock data.',
+          error
+        );
+      }
+    }
+
+    // 3. Find which zone the origin is in.
+    const targetZone = allZones.find(zone =>
+      isPointInPolygon(originCoords, zone.geometry)
+    );
+
+    if (!targetZone) {
+      alert(
+        'Could not find a zone for the trip origin. Please create a zone that covers the area or send the trip to the manual assignment tray.'
+      );
+      return;
+    }
+
+    // 4. Find available vehicles within that zone.
+    const availableVehicles = vehicles.filter(
+      v => v.status === 'Available' && v.latitude && v.longitude
+    );
+    const vehiclesInZone = availableVehicles.filter(v =>
+      isPointInPolygon([v.longitude!, v.latitude!], targetZone.geometry)
+    );
+
+    if (vehiclesInZone.length === 0) {
+      alert(
+        `No available vehicles found in the "${targetZone.name}" zone. Sending trip to the manual assignment tray.`
+      );
+      console.log('Trip sent to tray (no vehicles in zone):', {
+        ...values,
+        customer: selectedCustomer,
+      });
+      form.reset();
+      setSelectedCustomer(null);
+      return;
+    }
+
+    // 5. Find the closest vehicle in the zone.
+    let closestVehicle: Vehicle | null = null;
+    let minDistance = Infinity;
+
+    for (const vehicle of vehiclesInZone) {
+      const distance = calculateDistanceSquared(originCoords, [
+        vehicle.longitude!,
+        vehicle.latitude!,
+      ]);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestVehicle = vehicle;
+      }
+    }
+
+    // 6. Assign the trip and notify.
+    const message = `New trip created for ${
+      selectedCustomer.name
+    }! Auto-assigned to ${closestVehicle!.name} (${
+      closestVehicle!.unitNumber
+    }) in the "${targetZone.name}" zone.`;
+    alert(message);
+
+    console.log('Trip auto-assigned:', {
       ...values,
       customer: selectedCustomer,
-    };
-    console.log(submissionData);
-    const message = values.inTray
-      ? `Trip for ${selectedCustomer.name} sent to tray!`
-      : `New trip created for ${selectedCustomer.name}! Auto-assigning vehicle.`;
-    alert(message);
+      assignedVehicle: closestVehicle,
+      zone: targetZone,
+    });
+
     form.reset();
     setSelectedCustomer(null);
   }
@@ -121,10 +208,10 @@ export function NewTripForm() {
                       autoComplete="off"
                       className="pl-10"
                     />
-                     {searchResults.length > 0 && (
+                    {searchResults.length > 0 && (
                       <Card className="absolute z-10 w-full mt-1 border shadow-lg">
                         <ul className="py-1">
-                          {searchResults.map((customer) => (
+                          {searchResults.map(customer => (
                             <li
                               key={customer.id}
                               className="px-3 py-2 cursor-pointer hover:bg-muted"
@@ -132,7 +219,9 @@ export function NewTripForm() {
                               role="button"
                             >
                               <p className="font-semibold">{customer.name}</p>
-                              <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {customer.phone}
+                              </p>
                             </li>
                           ))}
                         </ul>
@@ -144,13 +233,15 @@ export function NewTripForm() {
               </FormItem>
             )}
           />
-          
+
           {selectedCustomer && (
             <Card className="p-3 bg-muted/50">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{selectedCustomer.name}</p>
               </div>
-              <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
+              <p className="text-sm text-muted-foreground">
+                {selectedCustomer.phone}
+              </p>
             </Card>
           )}
 
@@ -162,8 +253,12 @@ export function NewTripForm() {
                 <FormLabel>Origin</FormLabel>
                 <FormControl>
                   <div className="relative">
-                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                     <Input placeholder="Enter pickup location" {...field} className="pl-10" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter pickup location"
+                      {...field}
+                      className="pl-10"
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -178,10 +273,14 @@ export function NewTripForm() {
               <FormItem>
                 <FormLabel>Destination</FormLabel>
                 <FormControl>
-                   <div className="relative">
-                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                     <Input placeholder="Enter drop-off location" {...field} className="pl-10" />
-                   </div>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Enter drop-off location"
+                      {...field}
+                      className="pl-10"
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -205,7 +304,8 @@ export function NewTripForm() {
                     Send to Manual Assignment Tray
                   </FormLabel>
                   <FormDescription>
-                    If checked, trip requires manual assignment.
+                    If unchecked, the system will try to auto-assign a vehicle by
+                    zone.
                   </FormDescription>
                 </div>
               </FormItem>
@@ -213,7 +313,9 @@ export function NewTripForm() {
           />
 
           <div className="flex justify-end gap-2 pt-4">
-              <Button type="submit" className="w-full">Create Trip</Button>
+            <Button type="submit" className="w-full">
+              Create Trip
+            </Button>
           </div>
         </form>
       </Form>
