@@ -1,5 +1,5 @@
 
-import type { Feature, FeatureCollection, Polygon } from 'geojson';
+import type { Feature, FeatureCollection, Point, Polygon } from 'geojson';
 import type { GridConfig, ZoneDefinition } from '@/types';
 
 export function generateGridLayer(
@@ -34,7 +34,7 @@ export function generateGridLayer(
       ];
 
       const assignedZoneId = cellAssignments[cellId];
-      let fillColor = '#000000'; // Default, won't be visible due to opacity 0
+      let fillColor = '#000000';
       let fillOpacity = 0;
 
       if (assignedZoneId && zoneColorMap[assignedZoneId]) {
@@ -98,4 +98,72 @@ export function areCellsConnected(cellIds: string[]): boolean {
     }
 
     return visited.size === cellIds.length;
+}
+
+export function generateZoneLayer(
+  gridConfig: GridConfig,
+  zones: ZoneDefinition[]
+): { zonesFc: FeatureCollection<Polygon>; labelsFc: FeatureCollection<Point> } {
+  const { rows, cols, center, cellWidth, cellHeight } = gridConfig;
+  const startLat = center.lat + (rows / 2) * cellHeight;
+  const startLng = center.lng - (cols / 2) * cellWidth;
+
+  const zoneFeatures: Feature<Polygon>[] = [];
+  const labelFeatures: Feature<Point>[] = [];
+
+  for (const zone of zones) {
+    if (!zone.cellIds || zone.cellIds.length === 0) continue;
+
+    for (const cellId of zone.cellIds) {
+      const [r, c] = cellId.split('-').map(Number);
+      const lat = startLat - r * cellHeight;
+      const lng = startLng + c * cellWidth;
+      const coordinates: [number, number][] = [
+        [lng, lat],
+        [lng + cellWidth, lat],
+        [lng + cellWidth, lat - cellHeight],
+        [lng, lat - cellHeight],
+        [lng, lat],
+      ];
+
+      zoneFeatures.push({
+        type: 'Feature',
+        properties: {
+          color: zone.color,
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coordinates],
+        },
+      });
+    }
+
+    let totalLat = 0;
+    let totalLng = 0;
+    zone.cellIds.forEach(cellId => {
+      const [r, c] = cellId.split('-').map(Number);
+      const lat = startLat - r * cellHeight - cellHeight / 2;
+      const lng = startLng + c * cellWidth + cellWidth / 2;
+      totalLat += lat;
+      totalLng += lng;
+    });
+    const centerLat = totalLat / zone.cellIds.length;
+    const centerLng = totalLng / zone.cellIds.length;
+
+    labelFeatures.push({
+      type: 'Feature',
+      properties: {
+        name: zone.name,
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [centerLng, centerLat],
+      },
+    });
+  }
+
+  return {
+    zonesFc: { type: 'FeatureCollection', features: zoneFeatures },
+    labelsFc: { type: 'FeatureCollection', features: labelFeatures },
+  };
 }
