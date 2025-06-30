@@ -47,9 +47,9 @@ export default function ZoneGridEditor({
         ref={mapRef}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
-            longitude: gridConfig.center.lng,
-            latitude: gridConfig.center.lat,
-            zoom: 12,
+          longitude: -65.4117,
+          latitude: -24.7859,
+          zoom: 12,
         }}
         style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
@@ -73,7 +73,7 @@ export default function ZoneGridEditor({
             paint={{
               'line-color': '#ffffff',
               'line-width': 0.5,
-              'line-opacity': 0.2
+              'line-opacity': 0.2,
             }}
           />
         </Source>
