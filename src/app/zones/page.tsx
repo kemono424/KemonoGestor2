@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,8 @@ import type { GridConfig, ZoneDefinition } from '@/types';
 import { areCellsConnected } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, Minus } from 'lucide-react';
+import { generateGridLayer } from '@/lib/grid-utils';
+import type { ViewState } from 'react-map-gl';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones';
 
@@ -34,6 +36,15 @@ export default function ZonesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const [viewState, setViewState] = useState<ViewState>({
+    longitude: INITIAL_GRID_CONFIG.center.lng,
+    latitude: INITIAL_GRID_CONFIG.center.lat,
+    zoom: 12,
+    pitch: 0,
+    bearing: 0,
+    padding: { top: 0, bottom: 0, left: 0, right: 0 },
+  });
+
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -43,6 +54,11 @@ export default function ZonesPage() {
           setGridConfig(savedGrid);
           setZones(savedZones);
           setCellAssignments(savedAssignments);
+          setViewState(vs => ({
+            ...vs,
+            longitude: savedGrid.center.lng,
+            latitude: savedGrid.center.lat,
+          }));
         }
       }
     } catch (error) {
@@ -61,10 +77,14 @@ export default function ZonesPage() {
       }
     }
   }, [gridConfig, zones, cellAssignments, isMounted]);
+  
+  const gridData = useMemo(() => {
+    return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
+  }, [gridConfig, zones, cellAssignments, selectedCells]);
 
   const handleGridMove = (direction: 'up' | 'down' | 'left' | 'right') => {
     setGridConfig(prevConfig => {
-      const moveStep = prevConfig.cellSize;
+      const moveStep = prevConfig.cellSize * 5; // Move 5 cells at a time
       let { lat, lng } = prevConfig.center;
       switch (direction) {
         case 'up': lat += moveStep; break;
@@ -72,14 +92,15 @@ export default function ZonesPage() {
         case 'left': lng -= moveStep; break;
         case 'right': lng += moveStep; break;
       }
-      return { ...prevConfig, center: { lat, lng } };
+      const newConfig = { ...prevConfig, center: { lat, lng } };
+      setViewState(vs => ({ ...vs, latitude: lat, longitude: lng }));
+      return newConfig;
     });
   };
 
   const handleGridZoom = (direction: 'in' | 'out') => {
     setGridConfig(prevConfig => {
       const newCellSize = direction === 'in' ? prevConfig.cellSize / ZOOM_FACTOR : prevConfig.cellSize * ZOOM_FACTOR;
-      // Changing scale is destructive
       setZones([]);
       setCellAssignments({});
       setSelectedCells(new Set());
@@ -90,7 +111,6 @@ export default function ZonesPage() {
   
   const handleDimensionChange = (dimension: 'rows' | 'cols', value: number) => {
     if (isNaN(value) || value <= 0) return;
-    // Changing dimensions is destructive
     setZones([]);
     setCellAssignments({});
     setSelectedCells(new Set());
@@ -101,10 +121,12 @@ export default function ZonesPage() {
   const handleCoordinateChange = (coord: 'lat' | 'lng', valueAsString: string) => {
       const value = parseFloat(valueAsString);
       if(!isNaN(value)) {
-          setGridConfig(c => ({
-            ...c,
-            center: { ...c.center, [coord]: value }
-          }));
+          setGridConfig(c => {
+              const newConfig = { ...c, center: { ...c.center, [coord]: value } };
+              if (coord === 'lat') setViewState(vs => ({ ...vs, latitude: value }));
+              if (coord === 'lng') setViewState(vs => ({ ...vs, longitude: value }));
+              return newConfig;
+          });
       }
   };
 
@@ -274,10 +296,9 @@ export default function ZonesPage() {
         <div className="lg:col-span-2">
           {isMounted ? (
             <ZoneGridEditor
-              gridConfig={gridConfig}
-              zones={zones}
-              cellAssignments={cellAssignments}
-              selectedCells={selectedCells}
+              gridData={gridData}
+              viewState={viewState}
+              onViewStateChange={setViewState}
               onCellClick={handleCellClick}
             />
           ) : (
