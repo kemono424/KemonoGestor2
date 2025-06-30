@@ -2,12 +2,10 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect } from 'react';
 import Map, { Source, Layer, MapRef } from 'react-map-gl';
-import type { MapLayerMouseEvent } from 'react-map-gl';
+import type { MapLayerMouseEvent, ViewState } from 'react-map-gl';
 import type { GridConfig, ZoneDefinition } from '@/types';
 import { generateGridLayer } from '@/lib/grid-utils';
-import type { FeatureCollection } from 'geojson';
 
 interface ZoneGridEditorProps {
   gridConfig: GridConfig;
@@ -15,6 +13,8 @@ interface ZoneGridEditorProps {
   cellAssignments: Record<string, string | null>;
   selectedCells: Set<string>;
   onCellClick: (cellId: string) => void;
+  viewState: ViewState;
+  onMapMove: (evt: { viewState: ViewState }) => void;
 }
 
 export default function ZoneGridEditor({
@@ -23,18 +23,10 @@ export default function ZoneGridEditor({
   cellAssignments,
   selectedCells,
   onCellClick,
+  viewState,
+  onMapMove,
 }: ZoneGridEditorProps) {
   const mapRef = React.useRef<MapRef>(null);
-
-  // This effect ensures the map camera moves when the grid center changes
-  useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.flyTo({
-        center: [gridConfig.center.lng, gridConfig.center.lat],
-        duration: 800, // ms
-      });
-    }
-  }, [gridConfig.center]);
 
   const gridLayer = React.useMemo(() => {
     return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
@@ -56,13 +48,10 @@ export default function ZoneGridEditor({
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
       <Map
+        {...viewState}
         ref={mapRef}
+        onMove={onMapMove}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-        initialViewState={{
-          longitude: gridConfig.center.lng,
-          latitude: gridConfig.center.lat,
-          zoom: 12,
-        }}
         style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
         onClick={handleMapClick}

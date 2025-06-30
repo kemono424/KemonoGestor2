@@ -13,6 +13,7 @@ import type { GridConfig, ZoneDefinition } from '@/types';
 import { areCellsConnected } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, Minus } from 'lucide-react';
+import type { ViewState } from 'react-map-gl';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones';
 
@@ -33,6 +34,15 @@ export default function ZonesPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  
+  const [viewState, setViewState] = useState<ViewState>({
+    longitude: INITIAL_GRID_CONFIG.center.lng,
+    latitude: INITIAL_GRID_CONFIG.center.lat,
+    zoom: 12,
+    pitch: 0,
+    bearing: 0,
+    padding: { top: 0, bottom: 0, left: 0, right: 0 }
+  });
 
   useEffect(() => {
     try {
@@ -41,6 +51,7 @@ export default function ZonesPage() {
         const { gridConfig: savedGrid, zones: savedZones, cellAssignments: savedAssignments } = JSON.parse(savedData);
         if (savedGrid && savedZones && savedAssignments) {
           setGridConfig(savedGrid);
+          setViewState(prev => ({ ...prev, longitude: savedGrid.center.lng, latitude: savedGrid.center.lat }));
           setZones(savedZones);
           setCellAssignments(savedAssignments);
         }
@@ -64,7 +75,7 @@ export default function ZonesPage() {
 
   const handleGridMove = (direction: 'up' | 'down' | 'left' | 'right') => {
     setGridConfig(prevConfig => {
-      const moveStep = prevConfig.cellSize; // Move by one cell size
+      const moveStep = prevConfig.cellSize;
       let { lat, lng } = prevConfig.center;
       switch (direction) {
         case 'up': lat += moveStep; break;
@@ -72,7 +83,9 @@ export default function ZonesPage() {
         case 'left': lng -= moveStep; break;
         case 'right': lng += moveStep; break;
       }
-      return { ...prevConfig, center: { lat, lng } };
+      const newCenter = { lat, lng };
+      setViewState(prev => ({ ...prev, longitude: newCenter.lng, latitude: newCenter.lat }));
+      return { ...prevConfig, center: newCenter };
     });
   };
 
@@ -101,10 +114,14 @@ export default function ZonesPage() {
   const handleCoordinateChange = (coord: 'lat' | 'lng', valueAsString: string) => {
       const value = parseFloat(valueAsString);
       if(!isNaN(value)) {
-          setGridConfig(c => ({
-              ...c,
-              center: { ...c.center, [coord]: value }
-          }));
+          setGridConfig(c => {
+            const newCenter = { ...c.center, [coord]: value };
+            setViewState(prev => ({ ...prev, longitude: newCenter.lng, latitude: newCenter.lat }));
+            return {
+                ...c,
+                center: newCenter
+            }
+          });
       }
   };
 
@@ -176,6 +193,10 @@ export default function ZonesPage() {
     });
     toast({ title: 'Zone Deleted' });
   };
+  
+  const handleMapMove = useCallback((evt: { viewState: ViewState }) => {
+    setViewState(evt.viewState);
+  }, []);
 
   return (
     <>
@@ -279,6 +300,8 @@ export default function ZonesPage() {
               cellAssignments={cellAssignments}
               selectedCells={selectedCells}
               onCellClick={handleCellClick}
+              viewState={viewState}
+              onMapMove={handleMapMove}
             />
           ) : (
             <div className="h-[600px] w-full bg-muted rounded-lg flex items-center justify-center">
