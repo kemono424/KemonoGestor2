@@ -20,6 +20,8 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
+import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const links = [
   {
@@ -67,8 +69,13 @@ const links = [
 ];
 
 export default function SidebarNav() {
+  const [isClient, setIsClient] = React.useState(false);
   const pathname = usePathname();
   const { role } = useAppContext();
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredLinks = links.filter(link => link.roles.includes(role));
 
@@ -83,16 +90,23 @@ export default function SidebarNav() {
       <SidebarMenu className="flex-1 p-2">
         {filteredLinks.map(link => (
           <SidebarMenuItem key={link.href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === link.href}
-              tooltip={link.label}
-            >
-              <Link href={link.href}>
-                <link.icon />
-                <span>{link.label}</span>
-              </Link>
-            </SidebarMenuButton>
+            {isClient ? (
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === link.href}
+                tooltip={link.label}
+              >
+                <Link href={link.href}>
+                  <link.icon />
+                  <span>{link.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            ) : (
+              <div className="flex h-8 items-center gap-2 rounded-md p-2 text-sm">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            )}
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
