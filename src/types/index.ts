@@ -27,6 +27,7 @@ export interface Operator {
   role: UserRole;
   username: string;
   password: string;
+  avatarUrl?: string;
   shift: 'Día' | 'Noche' | 'Admin';
   status: OperatorStatus;
   // stats

@@ -1,3 +1,4 @@
+'use client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 
 export default function MessagesPage() {
   const activeOperator = operators[0];
+  const dispatcher = operators.find(op => op.role === 'Admin');
+  
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       <PageHeader title="Mensajería Interna" description="Comunícate con los operadores en tiempo real." />
@@ -29,7 +32,7 @@ export default function MessagesPage() {
                   }`}
                 >
                   <Avatar>
-                    <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="person user" />
+                    <AvatarImage src={op.avatarUrl} alt={op.name} />
                     <AvatarFallback>{op.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -46,7 +49,7 @@ export default function MessagesPage() {
         <div className="md:col-span-2 lg:col-span-3 flex flex-col h-full">
           <div className="p-4 border-b flex items-center gap-3">
              <Avatar>
-                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="person user" />
+                <AvatarImage src={activeOperator.avatarUrl} alt={activeOperator.name} />
                 <AvatarFallback>{activeOperator.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
@@ -59,8 +62,8 @@ export default function MessagesPage() {
               {/* Chat messages */}
                <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
-                  <AvatarFallback>D</AvatarFallback>
+                  <AvatarImage src={dispatcher?.avatarUrl} alt={dispatcher?.name} />
+                  <AvatarFallback>{dispatcher?.name.charAt(0) || 'D'}</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">
                   <p className="text-sm">John, nuevo viaje asignado. Recoger en 123 Main St.</p>
@@ -71,14 +74,14 @@ export default function MessagesPage() {
                   <p className="text-sm">Entendido. En camino.</p>
                 </div>
                  <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
-                  <AvatarFallback>J</AvatarFallback>
+                  <AvatarImage src={activeOperator.avatarUrl} alt={activeOperator.name} />
+                  <AvatarFallback>{activeOperator.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               </div>
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
-                  <AvatarFallback>D</AvatarFallback>
+                  <AvatarImage src={dispatcher?.avatarUrl} alt={dispatcher?.name} />
+                  <AvatarFallback>{dispatcher?.name.charAt(0) || 'D'}</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">
                   <p className="text-sm">El nombre del cliente es Alice. Destino: 456 Oak Ave.</p>

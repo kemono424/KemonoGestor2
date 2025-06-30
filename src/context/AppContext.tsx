@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from 'react';
 import type { Operator, UserRole } from '@/types';
 import { operators } from '@/lib/mock-data';
 
@@ -9,7 +15,8 @@ interface AppContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
-  setCurrentUserRole: (role: UserRole) => void; 
+  setCurrentUserRole: (role: UserRole) => void;
+  updateCurrentUser: (updatedData: Partial<Operator>) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,23 +32,42 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       const storedUser = sessionStorage.getItem(CURRENT_USER_STORAGE_KEY);
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
-        const userExists = operators.some(op => op.id === parsedUser.id);
+        const userExists = operators.some((op) => op.id === parsedUser.id);
         if (userExists) {
-            setCurrentUser(parsedUser);
+          setCurrentUser(parsedUser);
         } else {
-            sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+          sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
         }
       }
     } catch (error) {
-        console.error("Failed to load user from session storage", error);
-        sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+      console.error('Failed to load user from session storage', error);
+      sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+  const updateCurrentUser = (updatedData: Partial<Operator>) => {
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updatedData };
+      setCurrentUser(updatedUser);
+      sessionStorage.setItem(
+        CURRENT_USER_STORAGE_KEY,
+        JSON.stringify(updatedUser)
+      );
+      // Also update the master operators array for this prototype
+      const userIndex = operators.findIndex((op) => op.id === updatedUser.id);
+      if (userIndex !== -1) {
+        operators[userIndex] = updatedUser;
+      }
+    }
+  };
+
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const user = operators.find(
       (op) => op.username === username && op.password === password
     );
@@ -60,15 +86,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setCurrentUserRole = (role: UserRole) => {
-    if (currentUser) {
-        const updatedUser = { ...currentUser, role };
-        setCurrentUser(updatedUser);
-        sessionStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(updatedUser));
-    }
+    updateCurrentUser({ role });
   };
 
   return (
-    <AppContext.Provider value={{ currentUser, login, logout, isLoading, setCurrentUserRole }}>
+    <AppContext.Provider
+      value={{
+        currentUser,
+        login,
+        logout,
+        isLoading,
+        setCurrentUserRole,
+        updateCurrentUser,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
