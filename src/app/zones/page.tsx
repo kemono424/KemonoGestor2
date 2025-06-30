@@ -209,11 +209,11 @@ export default function ZonesPage() {
                 <div className="grid grid-cols-2 gap-4 pt-2">
                     <div className="space-y-2">
                         <Label htmlFor="lat">Center Latitude</Label>
-                        <Input id="lat" type="number" step="0.0001" value={gridConfig.center.lat} onChange={e => handleCoordinateChange('lat', e.target.value)} />
+                        <Input id="lat" type="number" step="0.0001" value={gridConfig.center.lat.toFixed(4)} onChange={e => handleCoordinateChange('lat', e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="lng">Center Longitude</Label>
-                        <Input id="lng" type="number" step="0.0001" value={gridConfig.center.lng} onChange={e => handleCoordinateChange('lng', e.target.value)} />
+                        <Input id="lng" type="number" step="0.0001" value={gridConfig.center.lng.toFixed(4)} onChange={e => handleCoordinateChange('lng', e.target.value)} />
                     </div>
                 </div>
 
@@ -274,7 +274,6 @@ export default function ZonesPage() {
         <div className="lg:col-span-2">
           {isMounted ? (
             <ZoneGridEditor
-              key={JSON.stringify(gridConfig)}
               gridConfig={gridConfig}
               zones={zones}
               cellAssignments={cellAssignments}

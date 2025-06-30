@@ -1,6 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
+import { useEffect } from 'react';
 import Map, { Source, Layer, MapRef } from 'react-map-gl';
 import type { MapLayerMouseEvent } from 'react-map-gl';
 import type { GridConfig, ZoneDefinition } from '@/types';
@@ -23,6 +25,16 @@ export default function ZoneGridEditor({
   onCellClick,
 }: ZoneGridEditorProps) {
   const mapRef = React.useRef<MapRef>(null);
+
+  // This effect ensures the map camera moves when the grid center changes
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [gridConfig.center.lng, gridConfig.center.lat],
+        duration: 800, // ms
+      });
+    }
+  }, [gridConfig.center]);
 
   const gridLayer = React.useMemo(() => {
     return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
