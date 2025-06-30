@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -12,11 +15,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { recentTrips, type Trip } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
@@ -35,6 +48,62 @@ const getStatusVariant = (status: string) => {
     default: // In Tray
       return 'outline';
   }
+};
+
+const AssignVehicleDialog = ({ tripId }: { tripId: string }) => {
+  const [searchUnit, setSearchUnit] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleAssign = () => {
+    if (searchUnit.trim() === '') {
+      alert('Please enter a unit number.');
+      return;
+    }
+    alert(`Assigning vehicle with unit #${searchUnit} to trip ${tripId}.`);
+    setSearchUnit('');
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <DropdownMenuItem onSelect={e => e.preventDefault()}>
+          Assign Vehicle
+        </DropdownMenuItem>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Assign Vehicle</DialogTitle>
+          <DialogDescription>
+            Find a vehicle by unit number to assign to this trip.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by unit number..."
+              className="pl-10"
+              value={searchUnit}
+              onChange={e => setSearchUnit(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setIsOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleAssign}>
+            Assign
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const TripsTable = ({ trips }: { trips: Trip[] }) => (
@@ -59,10 +128,14 @@ const TripsTable = ({ trips }: { trips: Trip[] }) => (
           </TableCell>
           <TableCell>
             <div className="font-medium">{trip.origin}</div>
-            <div className="text-sm text-muted-foreground">{trip.destination}</div>
+            <div className="text-sm text-muted-foreground">
+              {trip.destination}
+            </div>
           </TableCell>
           <TableCell>
-            {trip.status !== 'In Tray' ? `${trip.vehicle.name} (${trip.vehicle.licensePlate})` : 'Unassigned'}
+            {trip.status !== 'In Tray'
+              ? `${trip.vehicle.name} (${trip.vehicle.licensePlate})`
+              : 'Unassigned'}
           </TableCell>
           <TableCell>
             <Badge
@@ -85,7 +158,7 @@ const TripsTable = ({ trips }: { trips: Trip[] }) => (
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {trip.status === 'In Tray' ? (
-                  <DropdownMenuItem>Assign Vehicle</DropdownMenuItem>
+                  <AssignVehicleDialog tripId={trip.id} />
                 ) : (
                   <>
                     <DropdownMenuItem>View Details</DropdownMenuItem>
