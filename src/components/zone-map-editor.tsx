@@ -5,50 +5,114 @@ import Map, { useControl } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Zone } from '@/types';
 import type { Feature, Polygon } from 'geojson';
+import type { ControlPosition } from 'react-map-gl';
 
-// This component encapsulates the MapboxDraw control and its logic.
-// It must be a child of the <Map> component to have access to the map context.
-function DrawControlComponent(props: {
-  draw: MapboxDraw;
-  onUpdate: (features: Feature<Polygon>[]) => void;
+function DrawControl({
+  onUpdate,
+  onSelect,
+  zones,
+}: {
+  onUpdate: (features: Feature[]) => void;
+  onSelect: (id: string | null) => void;
   zones: Zone[];
 }) {
-  const { draw, onUpdate, zones } = props;
+  const drawRef = React.useRef<MapboxDraw | null>(null);
 
-  useControl(
-    () => draw,
-    ({ map }) => {
-      // onAdd: This function is called when the control is added to the map.
-      // Load initial zones from props
-      const features = zones.map(z => ({
-        id: z.id,
-        type: 'Feature' as const,
-        properties: { name: z.name, color: z.color },
-        geometry: z.geometry,
-      }));
-      draw.add({ type: 'FeatureCollection', features });
+  const onAdd = React.useCallback(
+    ({ map }: { map: mapboxgl.Map }) => {
+      const draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+          polygon: true,
+          trash: true,
+        },
+        userProperties: true,
+        styles: [
+          {
+            id: 'gl-draw-polygon-fill-active',
+            type: 'fill',
+            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
+            paint: { 'fill-color': '#3498DB', 'fill-opacity': 0.1 },
+          },
+          {
+            id: 'gl-draw-polygon-stroke-active',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-color': '#3498DB', 'line-dasharray': [0.2, 2], 'line-width': 2 },
+          },
+          {
+            id: 'gl-draw-polygon-fill-inactive',
+            type: 'fill',
+            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
+            paint: { 'fill-color': ['get', 'color'], 'fill-outline-color': ['get', 'color'], 'fill-opacity': 0.2 },
+          },
+          {
+            id: 'gl-draw-polygon-stroke-inactive',
+            type: 'line',
+            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-color': ['get', 'color'], 'line-width': 2 },
+          },
+        ],
+      });
+      
+      drawRef.current = draw;
 
-      // Event handler for draw events
-      const handleDrawEvents = () => {
-        onUpdate(draw.getAll().features as Feature<Polygon>[]);
+      const handleEvents = (e: { type: string; features: Feature[] }) => {
+        if (e.type === 'draw.selectionchange') {
+          onSelect(e.features.length > 0 ? (e.features[0].id as string) : null);
+        } else {
+          onUpdate(draw.getAll().features);
+        }
       };
 
-      // Register event listeners
-      map.on('draw.create', handleDrawEvents);
-      map.on('draw.update', handleDrawEvents);
-      map.on('draw.delete', handleDrawEvents);
-
-      // onRemove: Cleanup function
-      return () => {
-        map.off('draw.create', handleDrawEvents);
-        map.off('draw.update', handleDrawEvents);
-        map.off('draw.delete', handleDrawEvents);
-      };
+      map.on('draw.create', handleEvents);
+      map.on('draw.update', handleEvents);
+      map.on('draw.delete', handleEvents);
+      map.on('draw.selectionchange', handleEvents);
+      
+      return draw;
     },
-    {
-      position: 'top-left',
-    }
+    [onSelect, onUpdate]
   );
+
+  const onRemove = React.useCallback(
+    ({ map }: { map: mapboxgl.Map }) => {
+      // Cleanup logic if needed when control is removed
+    },
+    []
+  );
+
+  useControl(onAdd, onRemove, { position: 'top-left' as ControlPosition });
+
+  React.useEffect(() => {
+    const draw = drawRef.current;
+    if (!draw) return;
+
+    const existingFeatures = draw.getAll().features;
+    if (existingFeatures.length === zones.length) {
+        let propertiesChanged = false;
+        for(const zone of zones) {
+            const feature = existingFeatures.find(f => f.id === zone.id);
+            if(feature && (feature.properties.color !== zone.color || feature.properties.name !== zone.name)) {
+                propertiesChanged = true;
+                break;
+            }
+        }
+        if(!propertiesChanged) return;
+    }
+
+    const features = zones.map((z) => ({
+      id: z.id,
+      type: 'Feature' as const,
+      properties: { name: z.name, color: z.color },
+      geometry: z.geometry,
+    }));
+    
+    draw.set({ type: 'FeatureCollection', features });
+
+  }, [zones]);
 
   return null;
 }
@@ -56,72 +120,16 @@ function DrawControlComponent(props: {
 interface ZoneMapEditorProps {
   zones: Zone[];
   onUpdate: (features: Feature<Polygon>[]) => void;
+  onSelect: (zoneId: string | null) => void;
+  selectedZoneId: string | null;
 }
 
 export default function ZoneMapEditor({
   zones,
   onUpdate,
+  onSelect,
+  selectedZoneId,
 }: ZoneMapEditorProps) {
-  // Memoize the draw instance so it's not recreated on every render
-  const draw = React.useMemo(
-    () =>
-      new MapboxDraw({
-        displayControlsDefault: true,
-        // Set styles for the drawn features
-        styles: [
-          // ACTIVE (being drawn)
-          {
-            id: 'gl-draw-polygon-fill-active',
-            type: 'fill',
-            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
-            paint: {
-              'fill-color': '#4A90E2',
-              'fill-opacity': 0.1,
-            },
-          },
-          {
-            id: 'gl-draw-polygon-stroke-active',
-            type: 'line',
-            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'active', 'true']],
-            layout: {
-              'line-cap': 'round',
-              'line-join': 'round',
-            },
-            paint: {
-              'line-color': '#4A90E2',
-              'line-dasharray': [0.2, 2],
-              'line-width': 2,
-            },
-          },
-          // INACTIVE
-          {
-            id: 'gl-draw-polygon-fill-inactive',
-            type: 'fill',
-            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
-            paint: {
-              'fill-color': ['get', 'color'],
-              'fill-outline-color': ['get', 'color'],
-              'fill-opacity': 0.2,
-            },
-          },
-          {
-            id: 'gl-draw-polygon-stroke-inactive',
-            type: 'line',
-            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
-            layout: {
-              'line-cap': 'round',
-              'line-join': 'round',
-            },
-            paint: {
-              'line-color': ['get', 'color'],
-              'line-width': 2,
-            },
-          },
-        ],
-      }),
-    []
-  );
-
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
       <Map
@@ -134,7 +142,7 @@ export default function ZoneMapEditor({
         style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
       >
-        <DrawControlComponent draw={draw} onUpdate={onUpdate} zones={zones} />
+        <DrawControl onUpdate={onUpdate} onSelect={onSelect} zones={zones} />
       </Map>
     </div>
   );

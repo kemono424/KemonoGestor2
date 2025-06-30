@@ -14,24 +14,61 @@ import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { zones as mockZones, type Zone } from '@/lib/mock-data';
 import ZoneMapEditor from '@/components/zone-map-editor';
 import type { Feature, Polygon } from 'geojson';
+import { EditZoneDialog } from '@/components/edit-zone-dialog';
+
+// Helper to generate a random color
+const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+};
 
 export default function ZonesPage() {
   const [zones, setZones] = useState<Zone[]>(mockZones);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(
-    zones.length > 0 ? zones[0].id : null
-  );
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [editingZone, setEditingZone] = useState<Zone | null>(null);
 
   const handleFeaturesUpdate = useCallback(
     (updatedFeatures: Feature<Polygon>[]) => {
-      // In a real application, you would handle creating, updating,
-      // and deleting zones based on the features returned from the map editor.
-      console.log('Map features have changed:', updatedFeatures);
-      // For this prototype, we just log the changes.
+      setZones(currentZones => {
+        const newZones: Zone[] = updatedFeatures.map(feature => {
+            const existingZone = currentZones.find(z => z.id === feature.id);
+            if (existingZone) {
+                // It's an existing zone, update its geometry but keep other properties
+                return { ...existingZone, geometry: feature.geometry };
+            } else {
+                // It's a new zone, create it with defaults
+                return {
+                    id: feature.id as string,
+                    name: (feature.properties?.name as string) || `New Zone`,
+                    color: (feature.properties?.color as string) || getRandomColor(),
+                    geometry: feature.geometry,
+                };
+            }
+        });
+        return newZones;
+      });
     },
     []
   );
-  
-  const selectedZone = zones.find(z => z.id === selectedZoneId);
+
+  const handleCreateZone = () => {
+      alert("To create a new zone, use the polygon drawing tool on the map.");
+  };
+
+  const handleDeleteZone = (zoneId: string) => {
+      setZones(currentZones => currentZones.filter(z => z.id !== zoneId));
+  };
+
+  const handleSaveZone = (updatedZone: Zone) => {
+      setZones(currentZones => 
+          currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
+      );
+      setEditingZone(null);
+  };
 
   return (
     <>
@@ -39,7 +76,7 @@ export default function ZonesPage() {
         title="Zone Management"
         description="Draw and manage geographical zones for vehicle assignment."
       >
-        <Button onClick={() => alert('TODO: Implement new zone creation')}>
+        <Button onClick={handleCreateZone}>
           <PlusCircle className="mr-2 h-4 w-4" />
           New Zone
         </Button>
@@ -74,7 +111,10 @@ export default function ZonesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => alert(`TODO: Edit ${zone.name}`)}
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingZone(zone)
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -82,7 +122,10 @@ export default function ZonesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
-                       onClick={() => alert(`TODO: Delete ${zone.name}`)}
+                       onClick={(e) => {
+                           e.stopPropagation();
+                           handleDeleteZone(zone.id)
+                       }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -96,9 +139,17 @@ export default function ZonesPage() {
           <ZoneMapEditor
             zones={zones}
             onUpdate={handleFeaturesUpdate}
+            onSelect={setSelectedZoneId}
+            selectedZoneId={selectedZoneId}
           />
         </div>
       </div>
+       <EditZoneDialog 
+        zone={editingZone}
+        isOpen={!!editingZone}
+        onOpenChange={(isOpen) => !isOpen && setEditingZone(null)}
+        onSave={handleSaveZone}
+      />
     </>
   );
 }
