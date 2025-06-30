@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,7 +12,7 @@ import ZoneGridEditor from '@/components/zone-grid-editor';
 import type { GridConfig, ZoneDefinition } from '@/types';
 import { areCellsConnected } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, Minus } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones';
 
@@ -22,9 +23,10 @@ const INITIAL_GRID_CONFIG: GridConfig = {
   cellSize: 0.005, // Approx 500 meters
 };
 
+const ZOOM_FACTOR = 1.2;
+
 export default function ZonesPage() {
   const [gridConfig, setGridConfig] = useState<GridConfig>(INITIAL_GRID_CONFIG);
-  const [tempConfig, setTempConfig] = useState<GridConfig>(INITIAL_GRID_CONFIG);
   const [zones, setZones] = useState<ZoneDefinition[]>([]);
   const [cellAssignments, setCellAssignments] = useState<Record<string, string | null>>({});
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
@@ -39,7 +41,6 @@ export default function ZonesPage() {
         const { gridConfig: savedGrid, zones: savedZones, cellAssignments: savedAssignments } = JSON.parse(savedData);
         if (savedGrid && savedZones && savedAssignments) {
           setGridConfig(savedGrid);
-          setTempConfig(savedGrid);
           setZones(savedZones);
           setCellAssignments(savedAssignments);
         }
@@ -61,13 +62,50 @@ export default function ZonesPage() {
     }
   }, [gridConfig, zones, cellAssignments, isMounted]);
 
-  const handleUpdateGrid = () => {
-    setGridConfig(tempConfig);
-    // Clear selections and assignments if grid changes
-    setSelectedCells(new Set());
-    setCellAssignments({});
+  const handleGridMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    setGridConfig(prevConfig => {
+      const moveStep = prevConfig.cellSize; // Move by one cell size
+      let { lat, lng } = prevConfig.center;
+      switch (direction) {
+        case 'up': lat += moveStep; break;
+        case 'down': lat -= moveStep; break;
+        case 'left': lng -= moveStep; break;
+        case 'right': lng += moveStep; break;
+      }
+      return { ...prevConfig, center: { lat, lng } };
+    });
+  };
+
+  const handleGridZoom = (direction: 'in' | 'out') => {
+    setGridConfig(prevConfig => {
+      const newCellSize = direction === 'in' ? prevConfig.cellSize / ZOOM_FACTOR : prevConfig.cellSize * ZOOM_FACTOR;
+      // Changing scale is destructive
+      setZones([]);
+      setCellAssignments({});
+      setSelectedCells(new Set());
+      toast({ title: "Grid Rescaled", description: "Zones have been cleared due to grid scale change." });
+      return { ...prevConfig, cellSize: newCellSize };
+    });
+  };
+  
+  const handleDimensionChange = (dimension: 'rows' | 'cols', value: number) => {
+    if (isNaN(value) || value <= 0) return;
+    // Changing dimensions is destructive
     setZones([]);
-    toast({ title: "Grid Updated", description: "The map grid has been reconfigured." });
+    setCellAssignments({});
+    setSelectedCells(new Set());
+    toast({ title: "Grid Resized", description: "Zones have been cleared due to grid dimension change." });
+    setGridConfig(c => ({...c, [dimension]: value}));
+  };
+  
+  const handleCoordinateChange = (coord: 'lat' | 'lng', valueAsString: string) => {
+      const value = parseFloat(valueAsString);
+      if(!isNaN(value)) {
+          setGridConfig(c => ({
+              ...c,
+              center: { ...c.center, [coord]: value }
+          }));
+      }
   };
 
   const handleCellClick = useCallback((cellId: string) => {
@@ -139,7 +177,6 @@ export default function ZonesPage() {
     toast({ title: 'Zone Deleted' });
   };
 
-
   return (
     <>
       <PageHeader
@@ -150,34 +187,54 @@ export default function ZonesPage() {
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card>
             <CardHeader>
-                <CardTitle>Grid Configuration</CardTitle>
-                <CardDescription>Define the grid's dimensions, position, and scale.</CardDescription>
+                <CardTitle>Grid Controls</CardTitle>
+                <CardDescription>Position and scale the grid on the map.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="rows">Rows</Label>
-                  <Input id="rows" type="number" value={tempConfig.rows} onChange={e => setTempConfig(c => ({ ...c, rows: parseInt(e.target.value) || 0 }))} />
+                    <Label className="text-center block">Position</Label>
+                    <div className="flex justify-center">
+                        <Button variant="outline" size="icon" onClick={() => handleGridMove('up')} aria-label="Move grid up"><ArrowUp className="h-4 w-4" /></Button>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                        <Button variant="outline" size="icon" onClick={() => handleGridMove('left')} aria-label="Move grid left"><ArrowLeft className="h-4 w-4" /></Button>
+                        <div className="w-10 h-10" />
+                        <Button variant="outline" size="icon" onClick={() => handleGridMove('right')} aria-label="Move grid right"><ArrowRight className="h-4 w-4" /></Button>
+                    </div>
+                    <div className="flex justify-center">
+                        <Button variant="outline" size="icon" onClick={() => handleGridMove('down')} aria-label="Move grid down"><ArrowDown className="h-4 w-4" /></Button>
+                    </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="lat">Center Latitude</Label>
+                        <Input id="lat" type="number" step="0.0001" value={gridConfig.center.lat} onChange={e => handleCoordinateChange('lat', e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="lng">Center Longitude</Label>
+                        <Input id="lng" type="number" step="0.0001" value={gridConfig.center.lng} onChange={e => handleCoordinateChange('lng', e.target.value)} />
+                    </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="cols">Columns</Label>
-                  <Input id="cols" type="number" value={tempConfig.cols} onChange={e => setTempConfig(c => ({ ...c, cols: parseInt(e.target.value) || 0 }))} />
+                    <Label className="text-center block">Scale (Cell Size: {gridConfig.cellSize.toFixed(5)})</Label>
+                    <div className="flex justify-center gap-2">
+                        <Button variant="outline" size="icon" onClick={() => handleGridZoom('out')} aria-label="Zoom out grid"><Minus className="h-4 w-4"/></Button>
+                        <Button variant="outline" size="icon" onClick={() => handleGridZoom('in')} aria-label="Zoom in grid"><Plus className="h-4 w-4"/></Button>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="lat">Center Latitude</Label>
-                    <Input id="lat" type="number" step="0.0001" value={tempConfig.center.lat} onChange={e => setTempConfig(c => ({ ...c, center: { ...c.center, lat: parseFloat(e.target.value) || 0 } }))} />
+                
+                 <div className="grid grid-cols-2 gap-4 border-t pt-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="rows">Rows</Label>
+                      <Input id="rows" type="number" value={gridConfig.rows} onChange={e => handleDimensionChange('rows', parseInt(e.target.value, 10))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cols">Columns</Label>
+                      <Input id="cols" type="number" value={gridConfig.cols} onChange={e => handleDimensionChange('cols', parseInt(e.target.value, 10))} />
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="lng">Center Longitude</Label>
-                    <Input id="lng" type="number" step="0.0001" value={tempConfig.center.lng} onChange={e => setTempConfig(c => ({ ...c, center: { ...c.center, lng: parseFloat(e.target.value) || 0 } }))} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cell-size">Cell Size (degrees)</Label>
-                <Input id="cell-size" type="number" step="0.0001" value={tempConfig.cellSize} onChange={e => setTempConfig(c => ({ ...c, cellSize: parseFloat(e.target.value) || 0 }))} />
-                <p className="text-xs text-muted-foreground">Approx. 0.001° is 111 meters.</p>
-              </div>
-               <Button onClick={handleUpdateGrid} className="w-full">Update Grid</Button>
             </CardContent>
           </Card>
           
