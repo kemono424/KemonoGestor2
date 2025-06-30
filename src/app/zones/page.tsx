@@ -31,63 +31,85 @@ export default function ZonesPage() {
   const [zones, setZones] = useState<Zone[]>(mockZones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
+  const [drawInstance, setDrawInstance] = useState<any>(null);
 
   const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
   const handleFeaturesUpdate = useCallback(
     (updatedFeatures: Feature<Polygon>[]) => {
-      setZones(currentZones => {
-        const updatedIds = new Set(updatedFeatures.map(f => f.id));
-        
-        // Update existing zones or add new ones
-        const newZones = updatedFeatures.map(feature => {
-          const existingZone = currentZones.find(z => z.id === feature.id);
-          if (existingZone) {
-            return { ...existingZone, geometry: feature.geometry };
-          }
-          return {
-            id: feature.id as string,
-            name: `New Zone ${feature.id?.substring(0, 4)}`,
-            color: getRandomColor(),
-            geometry: feature.geometry,
-          };
-        });
+      const isCreating = updatedFeatures.length > zones.length;
+      let zoneToEdit: Zone | null = null;
 
-        // Filter out deleted zones
-        return newZones.filter(z => updatedIds.has(z.id));
+      const newZones = updatedFeatures.map((feature): Zone => {
+        const existingZone = zones.find(z => z.id === feature.id);
+        if (existingZone) {
+          return { ...existingZone, geometry: feature.geometry };
+        }
+        // This must be the new zone
+        const newZone: Zone = {
+          id: feature.id as string,
+          name: 'New Zone', // Temporary name
+          color: getRandomColor(),
+          geometry: feature.geometry,
+        };
+        if (isCreating) {
+          zoneToEdit = newZone;
+        }
+        return newZone;
       });
+      
+      const updatedIds = new Set(updatedFeatures.map(f => f.id));
+      const finalZones = newZones.filter(z => updatedIds.has(z.id));
+
+      setZones(finalZones);
+
+      if (zoneToEdit) {
+        setTimeout(() => setEditingZone(zoneToEdit), 0);
+      }
     },
-    []
+    [zones]
   );
 
   const handleCreateZone = () => {
-    alert('To create a new zone, use the polygon drawing tool on the map.');
+    alert(
+      'To create a new zone, use the polygon drawing tool on the map. After drawing, you will be prompted to name it.'
+    );
   };
 
   const handleDeleteZone = (zoneId: string) => {
-    setZones(currentZones => currentZones.filter(z => z.id !== zoneId));
+    if (drawInstance) {
+      drawInstance.delete([zoneId]);
+    }
+    // The onUpdate event will fire from the map, which will then update the state
   };
 
   const handleSaveZone = (updatedZone: Zone) => {
+    if (drawInstance) {
+      drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
+      drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
+    }
     setZones(currentZones =>
       currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
     );
     setEditingZone(null);
   };
-  
+
   if (!canEditZones) {
     return (
-        <div className="flex items-center justify-center h-full">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle className="text-center">Access Denied</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-center text-muted-foreground">You do not have permission to manage zones. Please contact an administrator.</p>
-                </CardContent>
-            </Card>
-        </div>
-    )
+      <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-muted-foreground">
+              You do not have permission to manage zones. Please contact an
+              administrator.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -115,7 +137,9 @@ export default function ZonesPage() {
                 <div
                   key={zone.id}
                   className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                    selectedZoneId === zone.id ? 'bg-muted' : 'hover:bg-muted/50'
+                    selectedZoneId === zone.id
+                      ? 'bg-muted'
+                      : 'hover:bg-muted/50'
                   }`}
                   onClick={() => setSelectedZoneId(zone.id)}
                 >
@@ -161,6 +185,7 @@ export default function ZonesPage() {
             onUpdate={handleFeaturesUpdate}
             onSelect={setSelectedZoneId}
             selectedZoneId={selectedZoneId}
+            setDrawInstance={setDrawInstance}
           />
         </div>
       </div>
