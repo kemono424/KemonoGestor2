@@ -24,8 +24,8 @@ export default function ZonesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const [rows, setRows] = useState(50);
-  const [cols, setCols] = useState(50);
+  const [rows, setRows] = useState(100);
+  const [cols, setCols] = useState(100);
 
   const gridConfig = useMemo<GridConfig>(() => ({
     rows,
