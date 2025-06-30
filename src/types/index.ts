@@ -11,9 +11,10 @@ export interface Vehicle {
   licensePlate: string;
   model: string;
   operator: string;
+  username: string;
+  password: string;
   status: VehicleStatus;
-  lastMaintenance: string;
-  insuranceDueDate?: string;
+  joinDate: string;
   latitude?: number;
   longitude?: number;
 }

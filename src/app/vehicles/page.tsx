@@ -20,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { vehicles } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Vehicle, VehicleStatus } from '@/types';
 import { Input } from '@/components/ui/input';
@@ -34,12 +33,7 @@ export default function VehiclesPage() {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const filteredVehicles = vehiclesData.filter((vehicle) => {
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -61,11 +55,23 @@ export default function VehiclesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveVehicle = (savedVehicle: Vehicle) => {
+  const handleSaveVehicle = (savedVehicle: Partial<Vehicle>) => {
     const isNew = !savedVehicle.id;
 
     if (isNew) {
-      const newVehicle = { ...savedVehicle, id: `V${Date.now()}` };
+      const newVehicle: Vehicle = {
+        id: `V${Date.now()}`,
+        joinDate: new Date().toISOString(),
+        name: savedVehicle.name!,
+        unitNumber: savedVehicle.unitNumber!,
+        licensePlate: savedVehicle.licensePlate!,
+        operator: savedVehicle.operator!,
+        model: savedVehicle.model!,
+        color: savedVehicle.color!,
+        username: savedVehicle.username!,
+        password: savedVehicle.password!,
+        status: savedVehicle.status || 'Fuera de servicio',
+      };
       vehicles.unshift(newVehicle); // Mutate mock data
       setVehiclesData([...vehicles]); // Update local state
       toast({
@@ -75,7 +81,7 @@ export default function VehiclesPage() {
     } else {
       const index = vehicles.findIndex((v) => v.id === savedVehicle.id);
       if (index !== -1) {
-        vehicles[index] = savedVehicle; // Mutate mock data
+        vehicles[index] = { ...vehicles[index], ...savedVehicle } as Vehicle;
         setVehiclesData([...vehicles]); // Update local state
         toast({
           title: 'Vehicle Updated',
@@ -157,7 +163,6 @@ export default function VehiclesPage() {
                 <TableHead>License Plate</TableHead>
                 <TableHead>Operator</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Insurance Due</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -173,11 +178,6 @@ export default function VehiclesPage() {
                   <TableCell>{vehicle.licensePlate}</TableCell>
                   <TableCell>{vehicle.operator}</TableCell>
                   <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
-                  <TableCell>
-                    {isClient && vehicle.insuranceDueDate
-                      ? format(new Date(vehicle.insuranceDueDate), 'MMM d, yyyy')
-                      : 'N/A'}
-                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

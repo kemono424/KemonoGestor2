@@ -21,21 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface EditVehicleDialogProps {
   vehicle: Partial<Vehicle> | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSave: (vehicle: Vehicle) => void;
+  onSave: (vehicle: Partial<Vehicle>) => void;
 }
 
 const vehicleStatuses: VehicleStatus[] = [
@@ -77,7 +68,9 @@ export function EditVehicleDialog({
         !editableVehicle.licensePlate ||
         !editableVehicle.operator ||
         !editableVehicle.model ||
-        !editableVehicle.color
+        !editableVehicle.color ||
+        !editableVehicle.username ||
+        !editableVehicle.password
       ) {
         toast({
           variant: 'destructive',
@@ -86,22 +79,7 @@ export function EditVehicleDialog({
         });
         return;
       }
-
-      const vehicleToSave: Vehicle = {
-        id: editableVehicle.id || '',
-        name: editableVehicle.name,
-        unitNumber: editableVehicle.unitNumber,
-        licensePlate: editableVehicle.licensePlate,
-        operator: editableVehicle.operator,
-        status: editableVehicle.status || 'Fuera de servicio',
-        insuranceDueDate: editableVehicle.insuranceDueDate,
-        model: editableVehicle.model,
-        color: editableVehicle.color,
-        lastMaintenance:
-          editableVehicle.lastMaintenance || new Date().toISOString(),
-      };
-
-      onSave(vehicleToSave);
+      onSave(editableVehicle);
     }
   };
 
@@ -180,7 +158,7 @@ export function EditVehicleDialog({
                 onChange={(e) => handleValueChange('color', e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 col-span-2">
               <Label htmlFor="status">Status</Label>
               <Select
                 value={editableVehicle.status}
@@ -201,41 +179,21 @@ export function EditVehicleDialog({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="insuranceDueDate">Insurance Due Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="insuranceDueDate"
-                    variant={'outline'}
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !editableVehicle.insuranceDueDate &&
-                        'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editableVehicle.insuranceDueDate ? (
-                      format(new Date(editableVehicle.insuranceDueDate), 'PPP')
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={
-                      editableVehicle.insuranceDueDate
-                        ? new Date(editableVehicle.insuranceDueDate)
-                        : undefined
-                    }
-                    onSelect={(date) =>
-                      handleValueChange('insuranceDueDate', date?.toISOString())
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                    id="username"
+                    value={editableVehicle.username || ''}
+                    onChange={(e) => handleValueChange('username', e.target.value)}
+                />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                    id="password"
+                    type="password"
+                    value={editableVehicle.password || ''}
+                    onChange={(e) => handleValueChange('password', e.target.value)}
+                />
             </div>
           </div>
           <DialogFooter className="pt-4">
