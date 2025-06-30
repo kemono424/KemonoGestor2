@@ -66,6 +66,7 @@ const TripsTable = ({
         <TableHead>Vehicle</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>Time</TableHead>
+        <TableHead className="text-right">Amount</TableHead>
         <TableHead>
           <span className="sr-only">Actions</span>
         </TableHead>
@@ -111,6 +112,9 @@ const TripsTable = ({
                   {trip.scheduledTime && <div className="text-xs text-muted-foreground">(Scheduled)</div>}
                 </>
               ) : null}
+          </TableCell>
+          <TableCell className="text-right font-mono">
+            {trip.price != null ? `$${trip.price.toFixed(2)}` : 'N/A'}
           </TableCell>
           <TableCell>
             <DropdownMenu>

@@ -66,6 +66,12 @@ const links = [
     label: 'Messages',
     roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
+  {
+    href: '/settings',
+    icon: Settings,
+    label: 'Settings',
+    roles: ['Admin'],
+  },
 ];
 
 export default function SidebarNav() {

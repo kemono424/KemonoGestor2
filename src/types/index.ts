@@ -60,6 +60,7 @@ export interface Trip {
   originCoords?: [number, number];
   destinationCoords?: [number, number];
   notes?: string;
+  price?: number;
 }
 
 export interface GridConfig {
@@ -75,4 +76,10 @@ export interface ZoneDefinition {
   name:string;
   color: string;
   cellIds: string[];
+}
+
+export interface PricingConfig {
+  baseFare: number;
+  perKilometer: number;
+  perStop: number;
 }

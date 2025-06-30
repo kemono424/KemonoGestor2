@@ -38,7 +38,7 @@ export const operators: Operator[] = [
     name: 'Mike Johnson',
     role: 'Dispatcher',
     shift: 'Day',
-    status: 'On Leave',
+    status: 'Inactive',
     servicesToday: 0,
     avgAssignmentTime: 0,
     maxIdleTime: 0,
@@ -60,7 +60,7 @@ export const operators: Operator[] = [
     name: 'Admin User',
     role: 'Admin',
     shift: 'Admin',
-    status: 'Inactive',
+    status: 'Active',
     servicesToday: 0,
     avgAssignmentTime: 0,
     maxIdleTime: 0,
@@ -182,6 +182,7 @@ export const recentTrips: Trip[] = [
     originCoords: [-65.4093, -24.7813],
     destinationCoords: [-65.4110, -24.7891],
     notes: 'Pick up at the main entrance. The client is waiting with a blue suitcase.',
+    price: 15.75,
   },
   {
     id: 'T002',
@@ -196,6 +197,7 @@ export const recentTrips: Trip[] = [
     destination: 'Plaza 9 de Julio, Salta',
     originCoords: [-65.4075, -24.7865],
     destinationCoords: [-65.4102, -24.7888],
+    price: 22.50,
   },
   {
     id: 'T003',
@@ -211,6 +213,7 @@ export const recentTrips: Trip[] = [
     originCoords: [-65.4190, -24.7788],
     destinationCoords: [-65.4077, -24.7946],
     notes: 'The street is under construction, it is necessary to enter through the parallel one.',
+    price: 18.00,
   },
     {
     id: 'T004',
@@ -225,6 +228,7 @@ export const recentTrips: Trip[] = [
     destination: 'Mercado Artesanal de Salta',
     originCoords: [-65.4045, -24.7871],
     destinationCoords: [-65.4147, -24.7905],
+    price: 12.25,
   },
   {
     id: 'T005',
@@ -239,6 +243,7 @@ export const recentTrips: Trip[] = [
     destination: 'Catedral Basílica de Salta',
     originCoords: [-65.4069, -24.7917],
     destinationCoords: [-65.4108, -24.7890],
+    price: 25.00,
   },
   {
     id: 'T006',
@@ -253,6 +258,7 @@ export const recentTrips: Trip[] = [
     destination: 'Parque San Martín, Salta',
     originCoords: [-65.4101, -24.8322],
     destinationCoords: [-65.4181, -24.7932],
+    price: 0,
   },
   {
     id: 'T007',
@@ -268,5 +274,6 @@ export const recentTrips: Trip[] = [
     originCoords: [-65.4208, -24.7981],
     destinationCoords: [-65.4870, -24.8465],
     notes: 'The customer has a lot of luggage, help is required.',
+    price: 35.50,
   }
 ];
