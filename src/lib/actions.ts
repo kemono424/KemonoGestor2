@@ -6,10 +6,10 @@ import admin from '@/lib/firebase-admin';
 export async function addOperator(
   operatorData: Partial<Operator>
 ): Promise<{ success: boolean; message: string; newId: string }> {
-  if (!operatorData.username || !operatorData.password) {
+  if (!operatorData.name || !operatorData.username || !operatorData.password) {
     return {
       success: false,
-      message: 'El usuario y la contraseña son obligatorios.',
+      message: 'El nombre, usuario y la contraseña son obligatorios.',
       newId: '',
     };
   }
@@ -21,7 +21,9 @@ export async function addOperator(
       displayName: operatorData.name,
     });
 
-    // TODO: Aquí también guardarías el perfil del operador en Firestore
+    // Asignar un rol por defecto usando Custom Claims
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role: 'Operador' });
+
     console.log('Server Action: Creando usuario en Firebase Auth', userRecord.uid);
 
     return {
