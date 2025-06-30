@@ -35,7 +35,7 @@ export function generateGridLayer(
 
       const assignedZoneId = cellAssignments[cellId];
       // Use bright, highly visible colors by default to ensure they appear on the dark map
-      let color = '#FFFF00'; // Bright yellow for unassigned cells
+      let color = '#808080'; // Grey for unassigned cells
 
       if (assignedZoneId && zoneColorMap[assignedZoneId]) {
         color = zoneColorMap[assignedZoneId];
@@ -43,7 +43,7 @@ export function generateGridLayer(
       
       // Selected cells are always highlighted with a different bright color for contrast
       if (selectedCells.has(cellId)) {
-        color = '#00FFFF'; // Bright cyan for selection
+        color = '#3b82f6'; // Blue for selection
       }
 
       features.push({

@@ -3,32 +3,25 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EditZoneDialog } from '@/components/edit-zone-dialog';
 import ZoneGridEditor from '@/components/zone-grid-editor';
 import type { GridConfig, ZoneDefinition } from '@/types';
-import { areCellsConnected } from '@/lib/grid-utils';
+import { areCellsConnected, generateGridLayer } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, Minus } from 'lucide-react';
-import { generateGridLayer } from '@/lib/grid-utils';
-import type { ViewState } from 'react-map-gl';
+import { Trash2 } from 'lucide-react';
 
-const LOCAL_STORAGE_KEY = 'fleet-grid-zones';
+const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
 
-const INITIAL_GRID_CONFIG: GridConfig = {
-  rows: 20,
-  cols: 20,
+const STATIC_GRID_CONFIG: GridConfig = {
+  rows: 50,
+  cols: 50,
   center: { lat: -24.7859, lng: -65.4117 },
-  cellSize: 0.005, // Approx 500 meters
+  cellSize: 0.005,
 };
 
-const ZOOM_FACTOR = 1.2;
-
 export default function ZonesPage() {
-  const [gridConfig, setGridConfig] = useState<GridConfig>(INITIAL_GRID_CONFIG);
   const [zones, setZones] = useState<ZoneDefinition[]>([]);
   const [cellAssignments, setCellAssignments] = useState<Record<string, string | null>>({});
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
@@ -36,29 +29,14 @@ export default function ZonesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const [viewState, setViewState] = useState<ViewState>({
-    longitude: INITIAL_GRID_CONFIG.center.lng,
-    latitude: INITIAL_GRID_CONFIG.center.lat,
-    zoom: 12,
-    pitch: 0,
-    bearing: 0,
-    padding: { top: 0, bottom: 0, left: 0, right: 0 },
-  });
-
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
-        const { gridConfig: savedGrid, zones: savedZones, cellAssignments: savedAssignments } = JSON.parse(savedData);
-        if (savedGrid && savedZones && savedAssignments) {
-          setGridConfig(savedGrid);
+        const { zones: savedZones, cellAssignments: savedAssignments } = JSON.parse(savedData);
+        if (savedZones && savedAssignments) {
           setZones(savedZones);
           setCellAssignments(savedAssignments);
-          setViewState(vs => ({
-            ...vs,
-            longitude: savedGrid.center.lng,
-            latitude: savedGrid.center.lat,
-          }));
         }
       }
     } catch (error) {
@@ -70,65 +48,18 @@ export default function ZonesPage() {
   useEffect(() => {
     if (isMounted) {
       try {
-        const dataToSave = JSON.stringify({ gridConfig, zones, cellAssignments });
+        const dataToSave = JSON.stringify({ zones, cellAssignments });
         localStorage.setItem(LOCAL_STORAGE_KEY, dataToSave);
       } catch (error) {
         console.error("Failed to save zones to localStorage", error);
       }
     }
-  }, [gridConfig, zones, cellAssignments, isMounted]);
+  }, [zones, cellAssignments, isMounted]);
   
   const gridData = useMemo(() => {
-    return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
-  }, [gridConfig, zones, cellAssignments, selectedCells]);
+    return generateGridLayer(STATIC_GRID_CONFIG, zones, cellAssignments, selectedCells);
+  }, [zones, cellAssignments, selectedCells]);
 
-  const handleGridMove = (direction: 'up' | 'down' | 'left' | 'right') => {
-    setGridConfig(prevConfig => {
-      const moveStep = prevConfig.cellSize * 5; // Move 5 cells at a time
-      let { lat, lng } = prevConfig.center;
-      switch (direction) {
-        case 'up': lat += moveStep; break;
-        case 'down': lat -= moveStep; break;
-        case 'left': lng -= moveStep; break;
-        case 'right': lng += moveStep; break;
-      }
-      const newConfig = { ...prevConfig, center: { lat, lng } };
-      setViewState(vs => ({ ...vs, latitude: lat, longitude: lng }));
-      return newConfig;
-    });
-  };
-
-  const handleGridZoom = (direction: 'in' | 'out') => {
-    setGridConfig(prevConfig => {
-      const newCellSize = direction === 'in' ? prevConfig.cellSize / ZOOM_FACTOR : prevConfig.cellSize * ZOOM_FACTOR;
-      setZones([]);
-      setCellAssignments({});
-      setSelectedCells(new Set());
-      toast({ title: "Grid Rescaled", description: "Zones have been cleared due to grid scale change." });
-      return { ...prevConfig, cellSize: newCellSize };
-    });
-  };
-  
-  const handleDimensionChange = (dimension: 'rows' | 'cols', value: number) => {
-    if (isNaN(value) || value <= 0) return;
-    setZones([]);
-    setCellAssignments({});
-    setSelectedCells(new Set());
-    toast({ title: "Grid Resized", description: "Zones have been cleared due to grid dimension change." });
-    setGridConfig(c => ({...c, [dimension]: value}));
-  };
-  
-  const handleCoordinateChange = (coord: 'lat' | 'lng', valueAsString: string) => {
-      const value = parseFloat(valueAsString);
-      if(!isNaN(value)) {
-          setGridConfig(c => {
-              const newConfig = { ...c, center: { ...c.center, [coord]: value } };
-              if (coord === 'lat') setViewState(vs => ({ ...vs, latitude: value }));
-              if (coord === 'lng') setViewState(vs => ({ ...vs, longitude: value }));
-              return newConfig;
-          });
-      }
-  };
 
   const handleCellClick = useCallback((cellId: string) => {
     if (cellAssignments[cellId]) {
@@ -208,59 +139,6 @@ export default function ZonesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card>
-            <CardHeader>
-                <CardTitle>Grid Controls</CardTitle>
-                <CardDescription>Position and scale the grid on the map.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="space-y-2">
-                    <Label className="text-center block">Position</Label>
-                    <div className="flex justify-center">
-                        <Button variant="outline" size="icon" onClick={() => handleGridMove('up')} aria-label="Move grid up"><ArrowUp className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="flex justify-center gap-2">
-                        <Button variant="outline" size="icon" onClick={() => handleGridMove('left')} aria-label="Move grid left"><ArrowLeft className="h-4 w-4" /></Button>
-                        <div className="w-10 h-10" />
-                        <Button variant="outline" size="icon" onClick={() => handleGridMove('right')} aria-label="Move grid right"><ArrowRight className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="flex justify-center">
-                        <Button variant="outline" size="icon" onClick={() => handleGridMove('down')} aria-label="Move grid down"><ArrowDown className="h-4 w-4" /></Button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="lat">Center Latitude</Label>
-                        <Input id="lat" type="number" step="0.0001" value={gridConfig.center.lat.toFixed(4)} onChange={e => handleCoordinateChange('lat', e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="lng">Center Longitude</Label>
-                        <Input id="lng" type="number" step="0.0001" value={gridConfig.center.lng.toFixed(4)} onChange={e => handleCoordinateChange('lng', e.target.value)} />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label className="text-center block">Scale (Cell Size: {gridConfig.cellSize.toFixed(5)})</Label>
-                    <div className="flex justify-center gap-2">
-                        <Button variant="outline" size="icon" onClick={() => handleGridZoom('out')} aria-label="Zoom out grid"><Minus className="h-4 w-4"/></Button>
-                        <Button variant="outline" size="icon" onClick={() => handleGridZoom('in')} aria-label="Zoom in grid"><Plus className="h-4 w-4"/></Button>
-                    </div>
-                </div>
-                
-                 <div className="grid grid-cols-2 gap-4 border-t pt-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="rows">Rows</Label>
-                      <Input id="rows" type="number" value={gridConfig.rows} onChange={e => handleDimensionChange('rows', parseInt(e.target.value, 10))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cols">Columns</Label>
-                      <Input id="cols" type="number" value={gridConfig.cols} onChange={e => handleDimensionChange('cols', parseInt(e.target.value, 10))} />
-                    </div>
-                </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
             <CardHeader><CardTitle>Zone Controls</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">Select connected cells on the map to create a new operational zone.</p>
@@ -297,8 +175,6 @@ export default function ZonesPage() {
           {isMounted ? (
             <ZoneGridEditor
               gridData={gridData}
-              viewState={viewState}
-              onViewStateChange={setViewState}
               onCellClick={handleCellClick}
             />
           ) : (
