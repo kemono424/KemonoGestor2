@@ -97,7 +97,7 @@ export function NewTripForm() {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Enter phone and press Enter"
+                    placeholder="e.g., 555-0101, then press Enter"
                     {...field}
                     className="pl-10"
                     onKeyDown={handlePhoneSearch}
