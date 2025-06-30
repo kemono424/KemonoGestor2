@@ -29,7 +29,7 @@ export default function Header() {
       <div className="flex items-center gap-2">
         <SidebarTrigger className="md:hidden" />
         <Car className="h-6 w-6" />
-        <h1 className="text-lg font-semibold">Fleet Manager</h1>
+        <h1 className="text-lg font-semibold">KemonoGestor</h1>
       </div>
 
       <div className="ml-auto flex items-center gap-4">

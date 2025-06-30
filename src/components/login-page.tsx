@@ -44,7 +44,7 @@ export function LoginPage() {
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-2 mb-2">
             <Car className="h-8 w-8" />
-            <CardTitle>Fleet Manager</CardTitle>
+            <CardTitle>KemonoGestor</CardTitle>
           </div>
           <CardDescription>
             Enter your credentials to access the platform.

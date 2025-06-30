@@ -6,8 +6,8 @@ import { AppProvider } from '@/context/AppContext';
 import { AuthWrapper } from '@/components/auth-wrapper';
 
 export const metadata: Metadata = {
-  title: 'Fleet Manager',
-  description: 'Advanced Taxi Fleet Management System',
+  title: 'KemonoGestor',
+  description: 'Sistema Avanzado de Gestión de Flotas Kemono',
 };
 
 export default function RootLayout({

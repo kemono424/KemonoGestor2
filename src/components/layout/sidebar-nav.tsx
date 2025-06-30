@@ -94,7 +94,7 @@ export default function SidebarNav() {
       <SidebarHeader className="flex items-center gap-2 p-4">
         <Car className="h-6 w-6 text-sidebar-foreground" />
         <span className="text-lg font-semibold text-sidebar-foreground">
-          Fleet Manager
+          KemonoGestor
         </span>
       </SidebarHeader>
       <SidebarMenu className="flex-1 p-2">
