@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User, Car, PlusCircle } from 'lucide-react';
+import { LogOut, Settings, User, Car } from 'lucide-react';
 import { SidebarTrigger } from '../ui/sidebar';
 import RoleSwitcher from '../role-switcher';
 import { useAppContext } from '@/context/AppContext';
@@ -22,7 +22,6 @@ export default function Header() {
   if (!currentUser) return null;
 
   const { role, name } = currentUser;
-  const canCreateTrips = ['Admin', 'Supervisor', 'Operador'].includes(role);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -33,14 +32,6 @@ export default function Header() {
       </div>
 
       <div className="ml-auto flex items-center gap-4">
-        {canCreateTrips && (
-          <Button asChild>
-            <Link href="/">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nuevo Viaje
-            </Link>
-          </Button>
-        )}
         <div className="hidden md:block">
           <RoleSwitcher />
         </div>

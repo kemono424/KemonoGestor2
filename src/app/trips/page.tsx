@@ -20,10 +20,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { recentTrips, type Trip, type TripStatus } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EditTripDialog } from '@/components/edit-trip-dialog';
 
@@ -168,14 +167,7 @@ export default function TripsPage() {
       <PageHeader
         title="Gestor de Viajes"
         description="Facilita la creación de viajes y sigue los trayectos existentes."
-      >
-        <Button asChild>
-          <Link href="/">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nuevo Viaje
-          </Link>
-        </Button>
-      </PageHeader>
+      />
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="active">Servicios Activos</TabsTrigger>
