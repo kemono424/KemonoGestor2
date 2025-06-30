@@ -7,8 +7,8 @@ if (!admin.apps.length) {
       credential: admin.credential.cert({
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // The private key must have newline characters escaped in the .env file
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        // The private key from .env. The .env parser handles newlines when the string is quoted.
+        privateKey: process.env.FIREBASE_PRIVATE_KEY,
       }),
     });
     console.log('Firebase Admin SDK initialized successfully.');
