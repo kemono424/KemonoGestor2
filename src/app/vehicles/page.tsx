@@ -25,8 +25,19 @@ import type { Vehicle, VehicleStatus } from '@/types';
 import { Input } from '@/components/ui/input';
 import { EditVehicleDialog } from '@/components/edit-vehicle-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { addVehicle, updateVehicle } from '@/lib/actions';
+import { addVehicle, updateVehicle, deleteVehicle } from '@/lib/actions';
 import { useAppContext } from '@/context/AppContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 export default function VehiclesPage() {
   const { currentUser } = useAppContext();
@@ -37,6 +48,7 @@ export default function VehiclesPage() {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,7 +76,7 @@ export default function VehiclesPage() {
       vehicle.unitNumber.toLowerCase().includes(lowercasedFilter) ||
       vehicle.name.toLowerCase().includes(lowercasedFilter) ||
       vehicle.licensePlate.toLowerCase().includes(lowercasedFilter) ||
-      vehicle.operator.toLowerCase().includes(lowercasedFilter)
+      vehicle.operator?.toLowerCase().includes(lowercasedFilter)
     );
   });
 
@@ -78,12 +90,34 @@ export default function VehiclesPage() {
     setIsDialogOpen(true);
   };
 
+  const handleConfirmDelete = async () => {
+    if (!vehicleToDelete) return;
+
+    const result = await deleteVehicle(vehicleToDelete.id, vehicleToDelete.username);
+    if (result.success) {
+      setVehiclesData((prev) =>
+        prev.filter((v) => v.id !== vehicleToDelete.id)
+      );
+      toast({
+        title: 'Vehículo Eliminado',
+        description: `El vehículo "${vehicleToDelete.name}" ha sido eliminado.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: result.message,
+      });
+    }
+    setVehicleToDelete(null);
+  }
+
   const handleSaveVehicle = async (savedVehicle: Partial<Vehicle>) => {
     const isNew = !savedVehicle.id;
 
     if (isNew) {
       const result = await addVehicle(savedVehicle);
-      if (result.success) {
+      if (result.success && result.newId) {
         const newVehicle: Vehicle = {
           id: result.newId,
           joinDate: new Date().toISOString(),
@@ -210,7 +244,7 @@ export default function VehiclesPage() {
                   <TableHead>Unidad</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Matrícula</TableHead>
-                  <TableHead>Operador</TableHead>
+                  <TableHead>Operador Asignado</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>
                     <span className="sr-only">Acciones</span>
@@ -225,7 +259,7 @@ export default function VehiclesPage() {
                     </TableCell>
                     <TableCell className="font-medium">{vehicle.name}</TableCell>
                     <TableCell>{vehicle.licensePlate}</TableCell>
-                    <TableCell>{vehicle.operator}</TableCell>
+                    <TableCell>{vehicle.operator || 'N/A'}</TableCell>
                     <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -245,7 +279,8 @@ export default function VehiclesPage() {
                           <DropdownMenuItem>
                             Programar Mantenimiento
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            onClick={() => setVehicleToDelete(vehicle)}>
                             Eliminar
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -267,6 +302,29 @@ export default function VehiclesPage() {
         }}
         onSave={handleSaveVehicle}
       />
+      <AlertDialog
+        open={!!vehicleToDelete}
+        onOpenChange={(open) => !open && setVehicleToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el
+              vehículo "{vehicleToDelete?.name}" y su cuenta de acceso asociada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmDelete}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

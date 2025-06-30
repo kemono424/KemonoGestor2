@@ -3,41 +3,66 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check for Admin role from custom claims
-    function isAdmin() {
-      return request.auth.token.role == 'Admin';
-    }
-    
-    // Helper function to check for Supervisor role
-    function isSupervisor() {
-      return request.auth.token.role == 'Supervisor';
-    }
-
-    // Helper function to check for Authenticated users
-    function isAuthenticated() {
+    // Helper function to check for specific roles in the user's auth token.
+    function isSignedIn() {
       return request.auth != null;
     }
     
-    // Operators can only be managed by Admins
+    function isUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && request.auth.token.role == role;
+    }
+    
+    function hasAnyRole(roles) {
+      return isSignedIn() && request.auth.token.role in roles;
+    }
+
+    // OPERATORS
     match /operators/{operatorId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+      // Admins can do anything.
+      // Users can read their own profile.
+      allow read: if hasRole('Admin') || isUser(operatorId);
+      // Only Admins can create or delete operators.
+      allow create, delete: if hasRole('Admin');
+      // Users can update their own profile, Admins can update any.
+      allow update: if hasRole('Admin') || isUser(operatorId);
     }
     
-    // Vehicles can be managed by Admins and Supervisors
+    // VEHICLES
     match /vehicles/{vehicleId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin() || isSupervisor();
+      // Any authenticated user (Admin, Supervisor, Operator) can see the list of vehicles.
+      allow read: if isSignedIn();
+      
+      // Only Admins and Supervisors can add or delete vehicles from the fleet.
+      allow create, delete: if hasAnyRole(['Admin', 'Supervisor']);
+
+      // An Admin/Supervisor can update any field.
+      // A logged-in vehicle can only update its own status and location.
+      allow update: if hasAnyRole(['Admin', 'Supervisor']) || 
+                     (request.auth.token.vehicleId == vehicleId && 
+                      request.resource.data.keys().hasOnly(['status', 'latitude', 'longitude']));
     }
-    
-    // Customers can be managed by any authenticated user (Admin, Supervisor, Operator)
-    match /customers/{customerId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Trips can be managed by any authenticated user
+
+    // TRIPS & CUSTOMERS
     match /trips/{tripId} {
-       allow read, write: if isAuthenticated();
+      // Any internal user can read, create, and update trips.
+      allow read, create, update: if hasAnyRole(['Admin', 'Supervisor', 'Operador']);
+      // Only Admins/Supervisors can delete trips.
+      allow delete: if hasAnyRole(['Admin', 'Supervisor']);
+    }
+
+    match /customers/{customerId} {
+      // Any internal user can manage customer data.
+      allow read, create, update: if hasAnyRole(['Admin', 'Supervisor', 'Operador']);
+      allow delete: if hasAnyRole(['Admin', 'Supervisor']);
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

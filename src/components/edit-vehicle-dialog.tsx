@@ -43,12 +43,14 @@ export function EditVehicleDialog({
   const [editableVehicle, setEditableVehicle] =
     useState<Partial<Vehicle> | null>(null);
   const { toast } = useToast();
+  const isNew = !vehicle?.id;
 
   useEffect(() => {
     if (isOpen) {
       if (vehicle) {
         setEditableVehicle(vehicle);
       } else {
+        // Default state for a new vehicle
         setEditableVehicle({ status: 'Fuera de servicio' });
       }
     }
@@ -57,16 +59,13 @@ export function EditVehicleDialog({
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
     if (editableVehicle) {
-      if (
-        !editableVehicle.name ||
-        !editableVehicle.unitNumber ||
-        !editableVehicle.licensePlate ||
-        !editableVehicle.operator ||
-        !editableVehicle.model ||
-        !editableVehicle.color ||
-        !editableVehicle.username ||
-        !editableVehicle.password
-      ) {
+      const requiredFields = [
+        'name', 'unitNumber', 'licensePlate', 'model', 'color', 'username'
+      ];
+      
+      const missingField = requiredFields.find(field => !editableVehicle[field as keyof Vehicle]);
+
+      if (missingField) {
         toast({
           variant: 'destructive',
           title: 'Información Faltante',
@@ -74,6 +73,17 @@ export function EditVehicleDialog({
         });
         return;
       }
+      
+      // Password is only required for new vehicles
+      if (isNew && !editableVehicle.password) {
+         toast({
+          variant: 'destructive',
+          title: 'Contraseña Requerida',
+          description: 'Debes establecer una contraseña para el nuevo vehículo.',
+        });
+        return;
+      }
+
       onSave(editableVehicle);
     }
   };
@@ -102,12 +112,12 @@ export function EditVehicleDialog({
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>
-              {vehicle ? 'Editar Vehículo' : 'Añadir Nuevo Vehículo'}
+              {isNew ? 'Añadir Nuevo Vehículo' : 'Editar Vehículo'}
             </DialogTitle>
             <DialogDescription>
-              {vehicle
-                ? 'Actualiza los detalles del vehículo a continuación.'
-                : 'Introduce los detalles del nuevo vehículo.'}
+              {isNew
+                ? 'Introduce los detalles del nuevo vehículo.'
+                : 'Actualiza los detalles del vehículo a continuación.'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -139,7 +149,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="operator">Operador</Label>
+              <Label htmlFor="operator">Operador Asignado (Opcional)</Label>
               <Input
                 id="operator"
                 value={editableVehicle.operator || ''}
@@ -163,7 +173,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="status">Estado</Label>
+              <Label htmlFor="status">Estado Administrativo</Label>
               <Select
                 value={selectValue}
                 onValueChange={(value: VehicleStatus) =>
@@ -183,11 +193,12 @@ export function EditVehicleDialog({
               </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="username">Usuario</Label>
+                <Label htmlFor="username">Usuario (Correo)</Label>
                 <Input
                     id="username"
                     value={editableVehicle.username || ''}
                     onChange={(e) => handleValueChange('username', e.target.value)}
+                    autoComplete='off'
                 />
             </div>
             <div className="space-y-2">
@@ -195,8 +206,10 @@ export function EditVehicleDialog({
                 <Input
                     id="password"
                     type="password"
+                    placeholder={isNew ? 'Establecer contraseña' : 'Dejar en blanco para no cambiar'}
                     value={editableVehicle.password || ''}
                     onChange={(e) => handleValueChange('password', e.target.value)}
+                    autoComplete="new-password"
                 />
             </div>
           </div>
