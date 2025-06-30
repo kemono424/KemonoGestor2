@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [destinationPin, setDestinationPin] = React.useState<
     [number, number] | null
   >(null);
+  const [route, setRoute] = React.useState<any>(null);
 
   const onlineVehicles = vehicles.filter(v => v.status === 'Available').length;
   const activeTrips = recentTrips.filter(
@@ -30,6 +31,28 @@ export default function DashboardPage() {
     .filter(t => t.status === 'Completed')
     .reduce((sum, trip) => sum + 25, 0); // Mock revenue
   const availableOperators = operators.filter(o => o.status === 'Active').length;
+
+  React.useEffect(() => {
+    const getRoute = async () => {
+      if (originPin && destinationPin) {
+        try {
+          const response = await fetch(
+            `https://api.mapbox.com/directions/v5/mapbox/driving/${originPin[0]},${originPin[1]};${destinationPin[0]},${destinationPin[1]}?steps=true&geometries=geojson&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+          );
+          const data = await response.json();
+          if (data.routes && data.routes.length > 0) {
+            setRoute(data.routes[0].geometry);
+          }
+        } catch (error) {
+          console.error('Error fetching route:', error);
+          setRoute(null);
+        }
+      } else {
+        setRoute(null);
+      }
+    };
+    getRoute();
+  }, [originPin, destinationPin]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -116,6 +139,7 @@ export default function DashboardPage() {
               vehicles={vehicles}
               originPin={originPin}
               destinationPin={destinationPin}
+              route={route}
             />
           </CardContent>
         </Card>

@@ -4,8 +4,8 @@
 import * as React from 'react';
 import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { Vehicle } from '@/types';
-import { MapPin, Flag } from 'lucide-react';
-import type { FeatureCollection, Point, Polygon } from 'geojson';
+import { MapPin, Flag, Car } from 'lucide-react';
+import type { FeatureCollection, Point, Polygon, LineString } from 'geojson';
 import { generateZoneLayer } from '@/lib/grid-utils';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
@@ -14,12 +14,14 @@ interface VehicleMapProps {
   vehicles: Vehicle[];
   originPin?: [number, number] | null;
   destinationPin?: [number, number] | null;
+  route?: any;
 }
 
 export default function VehicleMap({
   vehicles,
   originPin,
   destinationPin,
+  route,
 }: VehicleMapProps) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [zoneLayer, setZoneLayer] =
@@ -47,6 +49,19 @@ export default function VehicleMap({
   const availableVehicles = vehicles.filter(
     v => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
   );
+
+  const routeGeoJson: FeatureCollection<LineString> | null = route
+    ? {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            properties: {},
+            geometry: route,
+          },
+        ],
+      }
+    : null;
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
@@ -101,7 +116,7 @@ export default function VehicleMap({
             latitude={vehicle.latitude!}
             anchor="bottom"
           >
-            <MapPin className="h-6 w-6 text-primary animate-pulse" />
+            <Car className="h-6 w-6 text-yellow-400" />
           </Marker>
         ))}
 
@@ -115,6 +130,24 @@ export default function VehicleMap({
           <Marker longitude={destinationPin[0]} latitude={destinationPin[1]} anchor="bottom">
             <Flag className="h-8 w-8 text-destructive" />
           </Marker>
+        )}
+        
+        {routeGeoJson && (
+          <Source id="route" type="geojson" data={routeGeoJson}>
+            <Layer
+              id="route"
+              type="line"
+              paint={{
+                'line-color': '#3b82f6',
+                'line-width': 5,
+                'line-opacity': 0.8,
+              }}
+              layout={{
+                'line-join': 'round',
+                'line-cap': 'round',
+              }}
+            />
+          </Source>
         )}
       </Map>
     </div>
