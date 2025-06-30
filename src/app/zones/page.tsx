@@ -15,6 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
+const TOTAL_GRID_WIDTH = 0.1; // degrees longitude
+const TOTAL_GRID_HEIGHT = 0.1; // degrees latitude
 
 export default function ZonesPage() {
   const [zones, setZones] = useState<ZoneDefinition[]>([]);
@@ -31,7 +33,8 @@ export default function ZonesPage() {
     rows,
     cols,
     center: { lat: -24.7859, lng: -65.4117 },
-    cellSize: 0.005,
+    cellWidth: TOTAL_GRID_WIDTH / cols,
+    cellHeight: TOTAL_GRID_HEIGHT / rows,
   }), [rows, cols]);
 
   useEffect(() => {

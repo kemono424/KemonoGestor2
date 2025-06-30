@@ -8,11 +8,11 @@ export function generateGridLayer(
   cellAssignments: Record<string, string | null>,
   selectedCells: Set<string>
 ): FeatureCollection<Polygon> {
-  const { rows, cols, center, cellSize } = gridConfig;
+  const { rows, cols, center, cellWidth, cellHeight } = gridConfig;
   const features: Feature<Polygon>[] = [];
 
-  const startLat = center.lat + (rows / 2) * cellSize;
-  const startLng = center.lng - (cols / 2) * cellSize;
+  const startLat = center.lat + (rows / 2) * cellHeight;
+  const startLng = center.lng - (cols / 2) * cellWidth;
 
   const zoneColorMap = zones.reduce((acc, zone) => {
     acc[zone.id] = zone.color;
@@ -22,28 +22,26 @@ export function generateGridLayer(
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const cellId = `${r}-${c}`;
-      const lat = startLat - r * cellSize;
-      const lng = startLng + c * cellSize;
+      const lat = startLat - r * cellHeight;
+      const lng = startLng + c * cellWidth;
 
       const coordinates: [number, number][] = [
         [lng, lat],
-        [lng + cellSize, lat],
-        [lng + cellSize, lat - cellSize],
-        [lng, lat - cellSize],
+        [lng + cellWidth, lat],
+        [lng + cellWidth, lat - cellHeight],
+        [lng, lat - cellHeight],
         [lng, lat],
       ];
 
       const assignedZoneId = cellAssignments[cellId];
-      // Use bright, highly visible colors by default to ensure they appear on the dark map
-      let color = '#808080'; // Grey for unassigned cells
+      let color = '#FFFF00'; // Default to yellow for unassigned cells
 
       if (assignedZoneId && zoneColorMap[assignedZoneId]) {
         color = zoneColorMap[assignedZoneId];
       }
       
-      // Selected cells are always highlighted with a different bright color for contrast
       if (selectedCells.has(cellId)) {
-        color = '#3b82f6'; // Blue for selection
+        color = '#00FFFF'; // Cyan for selection
       }
 
       features.push({

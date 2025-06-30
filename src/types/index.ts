@@ -59,7 +59,8 @@ export interface GridConfig {
   rows: number;
   cols: number;
   center: { lat: number; lng: number };
-  cellSize: number;
+  cellWidth: number;
+  cellHeight: number;
 }
 
 export interface ZoneDefinition {
