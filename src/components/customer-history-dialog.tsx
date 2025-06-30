@@ -18,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { recentTrips } from '@/lib/mock-data';
 import type { Customer, Trip, TripStatus } from '@/types';
 import { format } from 'date-fns';
 import { useMemo, useState, useEffect } from 'react';
@@ -26,6 +25,7 @@ import { Badge } from './ui/badge';
 
 interface CustomerHistoryDialogProps {
   customer: Customer | null;
+  trips: Trip[];
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
@@ -48,6 +48,7 @@ const getStatusVariant = (status: TripStatus) => {
 
 export function CustomerHistoryDialog({
   customer,
+  trips,
   isOpen,
   onOpenChange,
 }: CustomerHistoryDialogProps) {
@@ -58,13 +59,13 @@ export function CustomerHistoryDialog({
 
   const customerTrips = useMemo(() => {
     if (!customer) return [];
-    return recentTrips
+    return trips
       .filter((trip) => trip.customer.id === customer.id)
       .sort(
         (a, b) =>
           new Date(b.requestTime).getTime() - new Date(a.requestTime).getTime()
       );
-  }, [customer]);
+  }, [customer, trips]);
 
   if (!customer) return null;
 
@@ -108,7 +109,10 @@ export function CustomerHistoryDialog({
                       </TableCell>
                       <TableCell>
                         {isClient
-                          ? format(new Date(trip.requestTime), 'MMM d, yyyy h:mm a')
+                          ? format(
+                              new Date(trip.requestTime),
+                              'MMM d, yyyy h:mm a'
+                            )
                           : null}
                       </TableCell>
                       <TableCell>{trip.vehicle?.name || 'N/A'}</TableCell>

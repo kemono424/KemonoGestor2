@@ -1,15 +1,53 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PageHeader } from '@/components/page-header';
-import { operators } from '@/lib/mock-data';
+import { getOperators } from '@/lib/mock-data';
 import { SendHorizonal } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import type { Operator } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MessagesPage() {
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOperators = async () => {
+      setIsLoading(true);
+      const data = await getOperators();
+      setOperators(data);
+      setIsLoading(false);
+    };
+    fetchOperators();
+  }, []);
+  
+  if (isLoading) {
+    return (
+        <div className="h-[calc(100vh-6rem)] flex flex-col">
+          <PageHeader title="Mensajería Interna" description="Comunícate con los operadores en tiempo real." />
+           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 border rounded-lg overflow-hidden">
+                <div className="md:col-span-1 lg:col-span-1 border-r">
+                   <div className="p-4"><Skeleton className="h-10 w-full" /></div>
+                   <Separator />
+                   <div className="p-4 space-y-4">
+                       {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+                   </div>
+                </div>
+                 <div className="md:col-span-2 lg:col-span-3 flex flex-col h-full">
+                     <div className="p-4 border-b"><Skeleton className="h-12 w-1/2" /></div>
+                     <div className="flex-1 p-4"><Skeleton className="h-full w-full" /></div>
+                     <div className="p-4 border-t"><Skeleton className="h-10 w-full" /></div>
+                 </div>
+           </div>
+        </div>
+    )
+  }
+
   const activeOperator = operators[0];
   const dispatcher = operators.find(op => op.role === 'Admin');
   

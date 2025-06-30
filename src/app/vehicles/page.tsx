@@ -18,22 +18,43 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { vehicles } from '@/lib/mock-data';
+import { getVehicles } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Vehicle, VehicleStatus } from '@/types';
 import { Input } from '@/components/ui/input';
 import { EditVehicleDialog } from '@/components/edit-vehicle-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { addVehicle, updateVehicle } from '@/lib/actions';
 
 export default function VehiclesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>(vehicles);
+  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingVehicle, setEditingVehicle] = useState<Partial<Vehicle> | null>(
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getVehicles();
+        setVehiclesData(data);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron cargar los vehículos.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [toast]);
 
   const filteredVehicles = vehiclesData.filter((vehicle) => {
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -55,38 +76,45 @@ export default function VehiclesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleSaveVehicle = (savedVehicle: Partial<Vehicle>) => {
+  const handleSaveVehicle = async (savedVehicle: Partial<Vehicle>) => {
     const isNew = !savedVehicle.id;
 
     if (isNew) {
-      const newVehicle: Vehicle = {
-        id: `V${Date.now()}`,
-        joinDate: new Date().toISOString(),
-        name: savedVehicle.name!,
-        unitNumber: savedVehicle.unitNumber!,
-        licensePlate: savedVehicle.licensePlate!,
-        operator: savedVehicle.operator!,
-        model: savedVehicle.model!,
-        color: savedVehicle.color!,
-        username: savedVehicle.username!,
-        password: savedVehicle.password!,
-        status: savedVehicle.status || 'Fuera de servicio',
-      };
-      vehicles.unshift(newVehicle); // Mutate mock data
-      setVehiclesData([...vehicles]); // Update local state
-      toast({
-        title: 'Vehículo Añadido',
-        description: `El vehículo "${newVehicle.name}" ha sido añadido exitosamente.`,
-      });
-    } else {
-      const index = vehicles.findIndex((v) => v.id === savedVehicle.id);
-      if (index !== -1) {
-        vehicles[index] = { ...vehicles[index], ...savedVehicle } as Vehicle;
-        setVehiclesData([...vehicles]); // Update local state
+      const result = await addVehicle(savedVehicle);
+      if (result.success) {
+        const newVehicle: Vehicle = {
+          id: result.newId,
+          joinDate: new Date().toISOString(),
+          status: 'Fuera de servicio',
+          ...savedVehicle,
+        } as Vehicle;
+        setVehiclesData(prev => [newVehicle, ...prev]);
         toast({
-          title: 'Vehículo Actualizado',
-          description: `El vehículo "${savedVehicle.name}" ha sido actualizado exitosamente.`,
+          title: 'Vehículo Añadido',
+          description: `El vehículo "${newVehicle.name}" ha sido añadido exitosamente.`,
         });
+      } else {
+        toast({
+            variant: 'destructive',
+            title: 'Error al añadir',
+            description: result.message,
+        })
+      }
+      
+    } else {
+      const result = await updateVehicle(savedVehicle);
+      if (result.success) {
+          setVehiclesData(prev => prev.map(v => v.id === savedVehicle.id ? {...v, ...savedVehicle} : v));
+          toast({
+            title: 'Vehículo Actualizado',
+            description: `El vehículo "${savedVehicle.name}" ha sido actualizado exitosamente.`,
+          });
+      } else {
+         toast({
+            variant: 'destructive',
+            title: 'Error al actualizar',
+            description: result.message,
+        })
       }
     }
     setIsDialogOpen(false);
@@ -153,57 +181,61 @@ export default function VehiclesPage() {
       </PageHeader>
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Unidad</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Operador</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>
-                  <span className="sr-only">Acciones</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredVehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell className="font-mono">
-                    {vehicle.unitNumber}
-                  </TableCell>
-                  <TableCell className="font-medium">{vehicle.name}</TableCell>
-                  <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell>{vehicle.operator}</TableCell>
-                  <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleEditVehicle(vehicle)}
-                        >
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Ver en Mapa</DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Programar Mantenimiento
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="text-center p-8">Cargando vehículos...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Unidad</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Matrícula</TableHead>
+                  <TableHead>Operador</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredVehicles.map((vehicle) => (
+                  <TableRow key={vehicle.id}>
+                    <TableCell className="font-mono">
+                      {vehicle.unitNumber}
+                    </TableCell>
+                    <TableCell className="font-medium">{vehicle.name}</TableCell>
+                    <TableCell>{vehicle.licensePlate}</TableCell>
+                    <TableCell>{vehicle.operator}</TableCell>
+                    <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleEditVehicle(vehicle)}
+                          >
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Ver en Mapa</DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Programar Mantenimiento
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       <EditVehicleDialog

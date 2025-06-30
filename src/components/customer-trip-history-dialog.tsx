@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { recentTrips, customers } from '@/lib/mock-data';
+import { getRecentTrips } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
 import { ArrowRight, History, MapPin, Pencil } from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -29,6 +29,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from './ui/textarea';
+import { updateCustomer } from '@/lib/actions';
 
 interface CustomerTripHistoryDialogProps {
   phoneQuery: string;
@@ -45,6 +46,8 @@ export function CustomerTripHistoryDialog({
   onTripSelect,
   onBackClick,
 }: CustomerTripHistoryDialogProps) {
+  const [allTrips, setAllTrips] = useState<Trip[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,13 +56,34 @@ export function CustomerTripHistoryDialog({
   );
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (isOpen) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          const trips = await getRecentTrips();
+          setAllTrips(trips);
+        } catch (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'No se pudo cargar el historial de viajes.',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [isOpen, toast]);
+
   const filteredTrips = useMemo(() => {
     const sanitizedQuery = phoneQuery.replace(/[^0-9]/g, '');
     if (!sanitizedQuery) return [];
-    return recentTrips.filter(trip =>
+    return allTrips.filter((trip) =>
       trip.customer.phone.replace(/[^0-9]/g, '').includes(sanitizedQuery)
     );
-  }, [phoneQuery]);
+  }, [phoneQuery, allTrips]);
 
   const handleSelectTrip = (trip: Trip) => {
     setSelectedTripId(trip.id);
@@ -83,41 +107,30 @@ export function CustomerTripHistoryDialog({
     }
   }, [isOpen, handleBack]);
 
-  const handleSaveCustomer = () => {
+  const handleSaveCustomer = async () => {
     if (editableCustomer) {
-      // In a real app, you'd call a service here to persist the changes.
-      // For this prototype, we directly mutate the imported mock data arrays.
+      const result = await updateCustomer(editableCustomer);
 
-      // 1. Find the index in the master customers array and update it.
-      const customerIndexInMasterList = customers.findIndex(
-        c => c.id === editableCustomer.id
-      );
-      if (customerIndexInMasterList !== -1) {
-        customers[customerIndexInMasterList] = editableCustomer;
+      if (result.success) {
+        // Update the local state for the UI to refresh instantly.
+        setActiveCustomer(editableCustomer);
+        toast({
+          title: 'Cliente Actualizado',
+          description: `La información de ${editableCustomer.name} ha sido guardada.`,
+        });
+        setIsEditing(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error al actualizar',
+          description: 'No se pudo guardar la información del cliente.',
+        });
       }
-
-      // 2. The customer object is shared by reference in `recentTrips`, but
-      // to be safe, we explicitly update the customer reference on all related trips.
-      recentTrips.forEach(trip => {
-        if (trip.customer && trip.customer.id === editableCustomer.id) {
-          trip.customer = editableCustomer;
-        }
-      });
-
-      // 3. Update the local state for the UI to refresh instantly.
-      setActiveCustomer(editableCustomer);
-
-      toast({
-        title: 'Cliente Actualizado',
-        description: `La información de ${editableCustomer.name} ha sido guardada.`,
-      });
-      setIsEditing(false);
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Revert any changes by setting editable customer back to the original active customer
     setEditableCustomer(activeCustomer);
   };
 
@@ -127,19 +140,22 @@ export function CustomerTripHistoryDialog({
         <DialogHeader>
           <DialogTitle>Cliente e Historial de Viajes</DialogTitle>
           <DialogDescription>
-            Busca un cliente por teléfono para ver sus viajes pasados. Selecciona uno para autocompletar el formulario.
+            Busca un cliente por teléfono para ver sus viajes pasados.
+            Selecciona uno para autocompletar el formulario.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
           {/* Left Panel: Trip List */}
           <div className="h-full flex flex-col gap-2">
             <h3 className="text-lg font-semibold shrink-0">
-              Viajes Coincidentes ({filteredTrips.length})
+              {isLoading ? 'Buscando...' : `Viajes Coincidentes (${filteredTrips.length})`}
             </h3>
             <ScrollArea className="h-full pr-4 -mr-4">
               <div className="space-y-2">
-                {filteredTrips.length > 0 ? (
-                  filteredTrips.map(trip => (
+                {isLoading ? (
+                    <p className="text-muted-foreground">Cargando viajes...</p>
+                ) : filteredTrips.length > 0 ? (
+                  filteredTrips.map((trip) => (
                     <button
                       key={trip.id}
                       className={cn(
@@ -215,8 +231,8 @@ export function CustomerTripHistoryDialog({
                         <Input
                           id="customer-name"
                           value={editableCustomer?.name || ''}
-                          onChange={e =>
-                            setEditableCustomer(c =>
+                          onChange={(e) =>
+                            setEditableCustomer((c) =>
                               c ? { ...c, name: e.target.value } : null
                             )
                           }
@@ -228,20 +244,22 @@ export function CustomerTripHistoryDialog({
                         <Input
                           id="customer-phone"
                           value={editableCustomer?.phone || ''}
-                          onChange={e =>
-                            setEditableCustomer(c =>
+                          onChange={(e) =>
+                            setEditableCustomer((c) =>
                               c ? { ...c, phone: e.target.value } : null
                             )
                           }
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customer-notes">Notas para el Conductor</Label>
+                        <Label htmlFor="customer-notes">
+                          Notas para el Conductor
+                        </Label>
                         <Textarea
                           id="customer-notes"
                           value={editableCustomer?.notes || ''}
-                          onChange={e =>
-                            setEditableCustomer(c =>
+                          onChange={(e) =>
+                            setEditableCustomer((c) =>
                               c ? { ...c, notes: e.target.value } : null
                             )
                           }
@@ -287,9 +305,12 @@ export function CustomerTripHistoryDialog({
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
                 <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">Selecciona un Viaje Pasado</h3>
+                <h3 className="text-lg font-semibold">
+                  Selecciona un Viaje Pasado
+                </h3>
                 <p className="text-muted-foreground max-w-sm">
-                  Haz clic en un viaje de la lista para ver los detalles del cliente y reutilizar la información del viaje para un nuevo servicio.
+                  Haz clic en un viaje de la lista para ver los detalles del
+                  cliente y reutilizar la información del viaje.
                 </p>
               </div>
             )}

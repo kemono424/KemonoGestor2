@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -18,13 +18,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { customers, recentTrips } from '@/lib/mock-data';
+import { getCustomers, getRecentTrips } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EditCustomerDialog } from '@/components/edit-customer-dialog';
 import { CustomerHistoryDialog } from '@/components/customer-history-dialog';
-import type { Customer } from '@/types';
+import type { Customer, Trip } from '@/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,16 +36,45 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { deleteCustomer, updateCustomer } from '@/lib/actions';
 
 export default function CustomersPage() {
-  const [customersData, setCustomersData] = useState<Customer[]>(customers);
+  const [customersData, setCustomersData] = useState<Customer[]>([]);
+  const [recentTrips, setRecentTrips] = useState<Trip[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null
+  );
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [customers, trips] = await Promise.all([
+          getCustomers(),
+          getRecentTrips(),
+        ]);
+        setCustomersData(customers);
+        setRecentTrips(trips);
+      } catch (error) {
+        console.error('Failed to fetch customer data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error al cargar datos',
+          description: 'No se pudieron cargar los datos de los clientes.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [toast]);
 
   const handleViewHistory = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -61,49 +90,47 @@ export default function CustomersPage() {
     setCustomerToDelete(customer);
   };
 
-  const handleSaveCustomer = (updatedCustomer: Customer) => {
-    const customerIndex = customers.findIndex(
-      (c) => c.id === updatedCustomer.id
-    );
-    if (customerIndex !== -1) {
-      customers[customerIndex] = updatedCustomer;
+  const handleSaveCustomer = async (updatedCustomer: Customer) => {
+    const result = await updateCustomer(updatedCustomer);
+    if (result.success) {
+      setCustomersData((prev) =>
+        prev.map((c) => (c.id === updatedCustomer.id ? updatedCustomer : c))
+      );
+      toast({
+        title: 'Cliente Actualizado',
+        description: `Los datos de "${updatedCustomer.name}" se han actualizado.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo actualizar el cliente.',
+      });
     }
-    recentTrips.forEach((trip) => {
-      if (trip.customer && trip.customer.id === updatedCustomer.id) {
-        trip.customer = updatedCustomer;
-      }
-    });
-    setCustomersData((prev) =>
-      prev.map((c) => (c.id === updatedCustomer.id ? updatedCustomer : c))
-    );
     setIsEditOpen(false);
     setSelectedCustomer(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!customerToDelete) return;
 
-    // Update the state for the UI
-    setCustomersData((prev) => prev.filter((c) => c.id !== customerToDelete.id));
+    const result = await deleteCustomer(customerToDelete.id);
 
-    // Update the "master" mock data arrays
-    const customerIndex = customers.findIndex(
-      (c) => c.id === customerToDelete.id
-    );
-    if (customerIndex > -1) {
-      customers.splice(customerIndex, 1);
+    if (result.success) {
+      setCustomersData((prev) =>
+        prev.filter((c) => c.id !== customerToDelete.id)
+      );
+      toast({
+        title: 'Cliente Eliminado',
+        description: `El cliente "${customerToDelete.name}" ha sido eliminado.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo eliminar el cliente.',
+      });
     }
-
-    const tripsToKeep = recentTrips.filter(
-      (t) => t.customer.id !== customerToDelete.id
-    );
-    recentTrips.length = 0;
-    recentTrips.push(...tripsToKeep);
-
-    toast({
-      title: 'Cliente Eliminado',
-      description: `El cliente "${customerToDelete.name}" ha sido eliminado permanentemente.`,
-    });
 
     setCustomerToDelete(null);
   };
@@ -124,68 +151,75 @@ export default function CustomersPage() {
       </PageHeader>
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Deuda</TableHead>
-                <TableHead>
-                  <span className="sr-only">Acciones</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {customersData.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        customer.pendingDebt > 0 ? 'destructive' : 'secondary'
-                      }
-                    >
-                      ${customer.pendingDebt.toFixed(2)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleViewHistory(customer)}
-                        >
-                          Ver Historial de Viajes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleEditCustomer(customer)}
-                        >
-                          Editar Cliente
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                          onClick={() => handleDeleteCustomer(customer)}
-                        >
-                          Eliminar Cliente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="text-center p-8">Cargando clientes...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Contacto</TableHead>
+                  <TableHead>Deuda</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {customersData.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">
+                      {customer.name}
+                    </TableCell>
+                    <TableCell>{customer.phone}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          customer.pendingDebt > 0 ? 'destructive' : 'secondary'
+                        }
+                      >
+                        ${customer.pendingDebt.toFixed(2)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewHistory(customer)}
+                          >
+                            Ver Historial de Viajes
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditCustomer(customer)}
+                          >
+                            Editar Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                            onClick={() => handleDeleteCustomer(customer)}
+                          >
+                            Eliminar Cliente
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
       <CustomerHistoryDialog
         customer={selectedCustomer}
+        trips={recentTrips}
         isOpen={isHistoryOpen}
         onOpenChange={(open) => {
           setIsHistoryOpen(open);

@@ -1,6 +1,9 @@
-import type { Vehicle, Operator, Trip, Customer, VehicleStatus } from '@/types';
+// NOTA: Este archivo ahora actúa como una capa de servicio de datos simulada.
+// En una aplicación real, las funciones aquí consultarían una base de datos (por ejemplo, Firestore).
 
-export const customers: Customer[] = [
+import type { Vehicle, Operator, Trip, Customer } from '@/types';
+
+const customers: Customer[] = [
     { id: 'C001', name: 'Alice Williams', phone: '555-0101', pendingDebt: 0, notes: 'Prefiere viajes tranquilos. Por favor, evite hablar demasiado.' },
     { id: 'C002', name: 'Bob Brown', phone: '555-0102', pendingDebt: 25.50, notes: 'Suele pagar en efectivo. Tiene un transportín para perro pequeño.' },
     { id: 'C003', name: 'Charlie Davis', phone: '555-0103', pendingDebt: 0 },
@@ -9,7 +12,7 @@ export const customers: Customer[] = [
     { id: 'C006', name: 'Fiona Garcia', phone: '555-0106', pendingDebt: 0, notes: 'Estudiante, el destino suele ser el campus universitario.' },
 ];
 
-export const operators: Operator[] = [
+const operators: Operator[] = [
   {
     id: 'O001',
     name: 'John Doe',
@@ -77,9 +80,7 @@ export const operators: Operator[] = [
   },
 ];
 
-export let assignmentQueue: string[] = ['O001', 'O002']; // Operator IDs
-
-export const vehicles: Vehicle[] = [
+const vehicles: Vehicle[] = [
   {
     id: 'V001',
     name: 'Red Fury',
@@ -183,7 +184,7 @@ export const vehicles: Vehicle[] = [
   },
 ];
 
-export const recentTrips: Trip[] = [
+const recentTrips: Trip[] = [
   {
     id: 'T001',
     customer: customers[0],
@@ -293,3 +294,34 @@ export const recentTrips: Trip[] = [
     price: 35.50,
   }
 ];
+
+// --- DATA SERVICE FUNCTIONS ---
+// In a real app, these would fetch from a database.
+
+export async function getCustomers(): Promise<Customer[]> {
+  // Simula un retraso de red
+  await new Promise(resolve => setTimeout(resolve, 300));
+  // TODO: Reemplazar con la consulta a Firestore
+  // e.g., const snapshot = await getDocs(collection(db, "customers"));
+  // return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+  return Promise.resolve(customers);
+}
+
+export async function getOperators(): Promise<Operator[]> {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  // TODO: Reemplazar con la consulta a Firestore
+  return Promise.resolve(operators);
+}
+
+export async function getVehicles(): Promise<Vehicle[]> {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  // TODO: Reemplazar con la consulta a Firestore
+  return Promise.resolve(vehicles);
+}
+
+export async function getRecentTrips(): Promise<Trip[]> {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  // TODO: Reemplazar con la consulta a Firestore
+  // Asegúrate de que los objetos anidados (cliente, vehículo) se resuelvan correctamente.
+  return Promise.resolve(recentTrips);
+}

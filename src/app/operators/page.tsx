@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { operators } from '@/lib/mock-data';
+import { getOperators } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,17 +34,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { addOperator, updateOperator, deleteOperator } from '@/lib/actions';
 
 export default function OperatorsPage() {
   const { currentUser, logout } = useAppContext();
   const { toast } = useToast();
-  const [operatorsData, setOperatorsData] = useState<Operator[]>(operators);
+  const [operatorsData, setOperatorsData] = useState<Operator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOperator, setEditingOperator] =
     useState<Partial<Operator> | null>(null);
   const [operatorToDelete, setOperatorToDelete] = useState<Operator | null>(
     null
   );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getOperators();
+        setOperatorsData(data);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron cargar los operadores.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [toast]);
 
   const handleAddOperator = () => {
     setEditingOperator(null);
@@ -60,81 +81,87 @@ export default function OperatorsPage() {
     setOperatorToDelete(operator);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!operatorToDelete || !currentUser) return;
 
-    const operatorIndex = operators.findIndex(
-      (op) => op.id === operatorToDelete.id
-    );
-    if (operatorIndex > -1) {
-      operators.splice(operatorIndex, 1);
-    }
+    const result = await deleteOperator(operatorToDelete.id);
 
-    setOperatorsData((prev) => prev.filter((op) => op.id !== operatorToDelete.id));
+    if (result.success) {
+      setOperatorsData((prev) =>
+        prev.filter((op) => op.id !== operatorToDelete.id)
+      );
+      toast({
+        title: 'Operador Eliminado',
+        description: `El operador "${operatorToDelete.name}" ha sido eliminado.`,
+      });
 
-    toast({
-      title: 'Operador Eliminado',
-      description: `El operador "${operatorToDelete.name}" ha sido eliminado permanentemente.`,
-    });
-
-    if (currentUser.id === operatorToDelete.id) {
+      if (currentUser.id === operatorToDelete.id) {
+        toast({
+          variant: 'destructive',
+          title: '¡Autodestrucción!',
+          description: 'Has eliminado tu propia cuenta y serás desconectado.',
+        });
+        setTimeout(() => {
+          logout();
+        }, 1500);
+      }
+    } else {
       toast({
         variant: 'destructive',
-        title: '¡Autodestrucción!',
-        description: 'Has eliminado tu propia cuenta y serás desconectado.',
+        title: 'Error',
+        description: 'No se pudo eliminar al operador.',
       });
-      setTimeout(() => {
-        logout();
-      }, 1500);
     }
 
     setOperatorToDelete(null);
   };
 
-  const handleSaveOperator = (savedOperator: Partial<Operator>) => {
+  const handleSaveOperator = async (savedOperator: Partial<Operator>) => {
     const isNew = !editingOperator;
 
     if (isNew) {
-      if (operators.some((op) => op.id === savedOperator.id)) {
-        toast({
-          variant: 'destructive',
-          title: 'El ID ya existe',
-          description: `Ya existe un operador con el ID "${savedOperator.id}".`,
-        });
-        return;
-      }
-      const newOperator: Operator = {
-        role: 'Operador',
-        shift: 'Día',
-        status: 'Inactivo',
-        servicesToday: 0,
-        avgAssignmentTime: 0,
-        maxIdleTime: 0,
-        activeServices: 0,
-        id: savedOperator.id!,
-        name: savedOperator.name!,
-        username: savedOperator.username!,
-        password: savedOperator.password!,
-      };
-
-      operators.unshift(newOperator);
-      setOperatorsData([...operators]);
-
-      toast({
-        title: 'Operador Añadido',
-        description: `El operador "${newOperator.name}" ha sido añadido.`,
-      });
-    } else {
-      const index = operators.findIndex((o) => o.id === savedOperator.id);
-      if (index !== -1) {
-        operators[index] = {
-          ...operators[index],
+      const result = await addOperator(savedOperator as Omit<Operator, 'id'>);
+      if (result.success) {
+        const newOperator: Operator = {
+          role: 'Operador',
+          shift: 'Día',
+          status: 'Inactivo',
+          servicesToday: 0,
+          avgAssignmentTime: 0,
+          maxIdleTime: 0,
+          activeServices: 0,
+          id: result.newId,
           ...savedOperator,
         } as Operator;
-        setOperatorsData([...operators]);
+        setOperatorsData((prev) => [newOperator, ...prev]);
+        toast({
+          title: 'Operador Añadido',
+          description: `El operador "${newOperator.name}" ha sido añadido.`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.message,
+        });
+      }
+    } else {
+      const result = await updateOperator(savedOperator);
+      if (result.success) {
+        setOperatorsData((prev) =>
+          prev.map((op) =>
+            op.id === savedOperator.id ? { ...op, ...savedOperator } : op
+          )
+        );
         toast({
           title: 'Operador Actualizado',
           description: `Los detalles de ${savedOperator.name} han sido actualizados.`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.message,
         });
       }
     }
@@ -174,64 +201,72 @@ export default function OperatorsPage() {
       </PageHeader>
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Servicios (Hoy)</TableHead>
-                <TableHead>Servicios Activos</TableHead>
-                <TableHead>
-                  <span className="sr-only">Acciones</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {operatorsData.map((operator) => (
-                <TableRow key={operator.id}>
-                  <TableCell className="font-medium">{operator.name}</TableCell>
-                  <TableCell>{operator.role}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        operator.status === 'Activo' ? 'secondary' : 'outline'
-                      }
-                    >
-                      {operator.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{operator.servicesToday}</TableCell>
-                  <TableCell>{operator.activeServices}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Ver Estadísticas</DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleEditOperator(operator)}
-                        >
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Ver Historial de Acciones</DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                          onClick={() => handleDeleteOperator(operator)}
-                        >
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="text-center p-8">Cargando operadores...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Servicios (Hoy)</TableHead>
+                  <TableHead>Servicios Activos</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {operatorsData.map((operator) => (
+                  <TableRow key={operator.id}>
+                    <TableCell className="font-medium">
+                      {operator.name}
+                    </TableCell>
+                    <TableCell>{operator.role}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          operator.status === 'Activo' ? 'secondary' : 'outline'
+                        }
+                      >
+                        {operator.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{operator.servicesToday}</TableCell>
+                    <TableCell>{operator.activeServices}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Ver Estadísticas</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditOperator(operator)}
+                          >
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Ver Historial de Acciones
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                            onClick={() => handleDeleteOperator(operator)}
+                          >
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       <EditOperatorDialog

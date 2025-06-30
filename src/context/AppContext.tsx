@@ -8,7 +8,8 @@ import React, {
   useEffect,
 } from 'react';
 import type { Operator, UserRole } from '@/types';
-import { operators } from '@/lib/mock-data';
+import { getOperators } from '@/lib/mock-data';
+import { updateOperator } from '@/lib/actions';
 
 interface AppContextType {
   currentUser: Operator | null;
@@ -28,37 +29,44 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = sessionStorage.getItem(CURRENT_USER_STORAGE_KEY);
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        const userExists = operators.some((op) => op.id === parsedUser.id);
-        if (userExists) {
-          setCurrentUser(parsedUser);
-        } else {
-          sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    const checkUser = async () => {
+      try {
+        const storedUser = sessionStorage.getItem(CURRENT_USER_STORAGE_KEY);
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          // Verify user still exists in the "database"
+          const allOperators = await getOperators();
+          const userExists = allOperators.some((op) => op.id === parsedUser.id);
+          
+          if (userExists) {
+            setCurrentUser(parsedUser);
+          } else {
+            // User was deleted, clear session
+            sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+          }
         }
+      } catch (error) {
+        console.error('Failed to load user from session storage', error);
+        sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
       }
-    } catch (error) {
-      console.error('Failed to load user from session storage', error);
-      sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+      setIsLoading(false);
     }
-    setIsLoading(false);
+    checkUser();
   }, []);
 
-  const updateCurrentUser = (updatedData: Partial<Operator>) => {
+  const updateCurrentUser = async (updatedData: Partial<Operator>) => {
     if (currentUser) {
       const updatedUser = { ...currentUser, ...updatedData };
+      
+      // Call server action to persist changes
+      await updateOperator(updatedUser);
+
+      // Update local state and session storage
       setCurrentUser(updatedUser);
       sessionStorage.setItem(
         CURRENT_USER_STORAGE_KEY,
         JSON.stringify(updatedUser)
       );
-      // Also update the master operators array for this prototype
-      const userIndex = operators.findIndex((op) => op.id === updatedUser.id);
-      if (userIndex !== -1) {
-        operators[userIndex] = updatedUser;
-      }
     }
   };
 
@@ -66,12 +74,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     username: string,
     password: string
   ): Promise<boolean> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const user = operators.find(
+    setIsLoading(true);
+    const allOperators = await getOperators();
+    const user = allOperators.find(
       (op) => op.username === username && op.password === password
     );
-
+    
+    setIsLoading(false);
     if (user) {
       setCurrentUser(user);
       sessionStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
