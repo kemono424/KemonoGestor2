@@ -11,15 +11,10 @@ import type { GridConfig, ZoneDefinition } from '@/types';
 import { areCellsConnected, generateGridLayer } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones-v2';
-
-const STATIC_GRID_CONFIG: GridConfig = {
-  rows: 50,
-  cols: 50,
-  center: { lat: -24.7859, lng: -65.4117 },
-  cellSize: 0.005,
-};
 
 export default function ZonesPage() {
   const [zones, setZones] = useState<ZoneDefinition[]>([]);
@@ -28,6 +23,16 @@ export default function ZonesPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const [rows, setRows] = useState(50);
+  const [cols, setCols] = useState(50);
+
+  const gridConfig = useMemo<GridConfig>(() => ({
+    rows,
+    cols,
+    center: { lat: -24.7859, lng: -65.4117 },
+    cellSize: 0.005,
+  }), [rows, cols]);
 
   useEffect(() => {
     try {
@@ -57,8 +62,8 @@ export default function ZonesPage() {
   }, [zones, cellAssignments, isMounted]);
   
   const gridData = useMemo(() => {
-    return generateGridLayer(STATIC_GRID_CONFIG, zones, cellAssignments, selectedCells);
-  }, [zones, cellAssignments, selectedCells]);
+    return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
+  }, [gridConfig, zones, cellAssignments, selectedCells]);
 
 
   const handleCellClick = useCallback((cellId: string) => {
@@ -141,7 +146,29 @@ export default function ZonesPage() {
           <Card>
             <CardHeader><CardTitle>Zone Controls</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">Select connected cells on the map to create a new operational zone.</p>
+              <p className="text-sm text-muted-foreground">Define grid dimensions and select cells to create a zone.</p>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="rows">Rows</Label>
+                      <Input
+                          id="rows"
+                          type="number"
+                          value={rows}
+                          onChange={(e) => setRows(Math.max(1, Number(e.target.value)))}
+                          placeholder="50"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="cols">Columns</Label>
+                      <Input
+                          id="cols"
+                          type="number"
+                          value={cols}
+                          onChange={(e) => setCols(Math.max(1, Number(e.target.value)))}
+                          placeholder="50"
+                      />
+                  </div>
+              </div>
               <Button onClick={handleCreateZoneClick} className="w-full" disabled={selectedCells.size === 0}>
                 Create Zone from Selection ({selectedCells.size})
               </Button>
