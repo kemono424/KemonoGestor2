@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -72,8 +71,8 @@ export default function ZoneGridEditor({
             source="grid-source"
             paint={{
               'line-color': '#ffffff',
-              'line-width': 0.5,
-              'line-opacity': 0.2,
+              'line-width': 1,
+              'line-opacity': 0.4,
             }}
           />
         </Source>
