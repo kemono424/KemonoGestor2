@@ -1,3 +1,4 @@
+
 import type { Polygon } from 'geojson';
 
 export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
@@ -53,3 +54,19 @@ export interface Trip {
   origin: string;
   destination: string;
 }
+
+export interface GridConfig {
+  rows: number;
+  cols: number;
+  center: { lat: number; lng: number };
+  cellSize: number;
+}
+
+export interface ZoneDefinition {
+  id: string;
+  name: string;
+  color: string;
+  cellIds: string[];
+}
+
+    
