@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -19,9 +22,31 @@ import { vehicles } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import type { VehicleStatus } from '@/types';
+import type { Vehicle, VehicleStatus } from '@/types';
+import { Input } from '@/components/ui/input';
 
 export default function VehiclesPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>(vehicles);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filtered = vehicles.filter((vehicle) => {
+      return (
+        vehicle.unitNumber.toLowerCase().includes(lowercasedFilter) ||
+        vehicle.name.toLowerCase().includes(lowercasedFilter) ||
+        vehicle.licensePlate.toLowerCase().includes(lowercasedFilter) ||
+        vehicle.operator.toLowerCase().includes(lowercasedFilter)
+      );
+    });
+    setFilteredVehicles(filtered);
+  }, [searchTerm]);
+
   const getStatusBadge = (status: VehicleStatus) => {
     switch (status) {
       case 'Libre':
@@ -69,10 +94,18 @@ export default function VehiclesPage() {
         title="Vehicle Manager"
         description="Register, track, and manage all vehicles in your fleet."
       >
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Vehicle
-        </Button>
+        <div className="flex items-center space-x-2">
+           <Input 
+                placeholder="Filter by unit, name, plate..." 
+                className="w-64" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Vehicle
+          </Button>
+        </div>
       </PageHeader>
       <Card>
         <CardContent className="pt-6">
@@ -91,7 +124,7 @@ export default function VehiclesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vehicles.map(vehicle => (
+              {filteredVehicles.map(vehicle => (
                 <TableRow key={vehicle.id}>
                   <TableCell className="font-mono">{vehicle.unitNumber}</TableCell>
                   <TableCell className="font-medium">{vehicle.name}</TableCell>
@@ -101,7 +134,7 @@ export default function VehiclesPage() {
                     {getStatusBadge(vehicle.status)}
                   </TableCell>
                   <TableCell>
-                    {vehicle.insuranceDueDate ? format(new Date(vehicle.insuranceDueDate), 'MMM d, yyyy') : 'N/A'}
+                    {isClient && vehicle.insuranceDueDate ? format(new Date(vehicle.insuranceDueDate), 'MMM d, yyyy') : 'N/A'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
