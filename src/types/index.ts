@@ -1,4 +1,3 @@
-
 import type { Polygon } from 'geojson';
 
 export type VehicleStatus = 'Available' | 'Busy' | 'Maintenance' | 'Out of Service';
@@ -68,5 +67,3 @@ export interface ZoneDefinition {
   color: string;
   cellIds: string[];
 }
-
-    

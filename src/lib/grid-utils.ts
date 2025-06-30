@@ -1,4 +1,3 @@
-
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import type { GridConfig, ZoneDefinition } from '@/types';
 
@@ -66,7 +65,7 @@ export function generateGridLayer(
   };
 }
 
-export function areCellsConnected(cellIds: string[], rows: number, cols: number): boolean {
+export function areCellsConnected(cellIds: string[]): boolean {
     if (cellIds.length <= 1) {
         return true;
     }
@@ -97,5 +96,3 @@ export function areCellsConnected(cellIds: string[], rows: number, cols: number)
 
     return visited.size === cellIds.length;
 }
-
-    

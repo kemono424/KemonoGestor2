@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -93,7 +92,7 @@ export default function ZonesPage() {
       toast({ variant: 'destructive', title: 'No Cells Selected', description: 'Please select one or more cells to form a zone.' });
       return;
     }
-    if (!areCellsConnected(Array.from(selectedCells), gridConfig.rows, gridConfig.cols)) {
+    if (!areCellsConnected(Array.from(selectedCells))) {
       toast({ variant: 'destructive', title: 'Selection Not Connected', description: 'All selected cells must be adjacent to form a single zone.' });
       return;
     }
@@ -224,5 +223,3 @@ export default function ZonesPage() {
     </>
   );
 }
-
-    

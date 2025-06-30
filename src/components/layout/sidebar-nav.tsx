@@ -54,6 +54,12 @@ const links = [
     roles: ['Admin', 'Supervisor', 'Dispatcher'],
   },
   {
+    href: '/zones',
+    icon: Shapes,
+    label: 'Zones',
+    roles: ['Admin', 'Supervisor'],
+  },
+  {
     href: '/messages',
     icon: MessageSquare,
     label: 'Messages',

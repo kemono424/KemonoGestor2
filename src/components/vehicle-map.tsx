@@ -1,9 +1,8 @@
-
 'use client';
 
 import * as React from 'react';
 import Map, { Marker, Source, Layer } from 'react-map-gl';
-import type { Vehicle, GridConfig, ZoneDefinition } from '@/types';
+import type { Vehicle } from '@/types';
 import { MapPin } from 'lucide-react';
 import type { FeatureCollection } from 'geojson';
 import { generateGridLayer } from '@/lib/grid-utils';
@@ -86,5 +85,3 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
     </div>
   );
 }
-
-    
