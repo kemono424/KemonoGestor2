@@ -10,11 +10,17 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { recentTrips } from '@/lib/mock-data';
+import { recentTrips, customers } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
 import { ArrowRight, History, MapPin, Pencil } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -24,7 +30,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from './ui/textarea';
-
 
 interface CustomerTripHistoryDialogProps {
   phoneQuery: string;
@@ -44,7 +49,9 @@ export function CustomerTripHistoryDialog({
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editableCustomer, setEditableCustomer] = useState<Customer | null>(null);
+  const [editableCustomer, setEditableCustomer] = useState<Customer | null>(
+    null
+  );
   const { toast } = useToast();
 
   const filteredTrips = useMemo(() => {
@@ -57,34 +64,50 @@ export function CustomerTripHistoryDialog({
 
   const handleSelectTrip = (trip: Trip) => {
     setSelectedTripId(trip.id);
-    onTripSelect(trip);
     setActiveCustomer(trip.customer);
-    setEditableCustomer(trip.customer);
-    setIsEditing(false);
+    setEditableCustomer({ ...trip.customer }); // Create a copy for editing
+    setIsEditing(false); // Reset editing state on new selection
+    onTripSelect(trip);
   };
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setSelectedTripId(null);
     setActiveCustomer(null);
     setEditableCustomer(null);
     setIsEditing(false);
     onBackClick();
-  };
-  
+  }, [onBackClick]);
+
   useEffect(() => {
     if (!isOpen) {
-      setActiveCustomer(null);
-      setSelectedTripId(null);
-      setIsEditing(false);
-      setEditableCustomer(null);
+      handleBack();
     }
-  }, [isOpen]);
+  }, [isOpen, handleBack]);
 
   const handleSaveCustomer = () => {
     if (editableCustomer) {
       // In a real app, you'd call a service here to persist the changes.
-      // For this demo, we'll update the local state.
+      // For this prototype, we directly mutate the imported mock data arrays.
+
+      // 1. Find the index in the master customers array and update it.
+      const customerIndexInMasterList = customers.findIndex(
+        c => c.id === editableCustomer.id
+      );
+      if (customerIndexInMasterList !== -1) {
+        customers[customerIndexInMasterList] = editableCustomer;
+      }
+
+      // 2. The customer object is shared by reference in `recentTrips`, but
+      // to be safe, we explicitly update the customer reference on all related trips.
+      recentTrips.forEach(trip => {
+        if (trip.customer && trip.customer.id === editableCustomer.id) {
+          trip.customer = editableCustomer;
+        }
+      });
+
+      // 3. Update the local state for the UI to refresh instantly.
       setActiveCustomer(editableCustomer);
+
       toast({
         title: 'Customer Updated',
         description: `The information for ${editableCustomer.name} has been saved.`,
@@ -92,11 +115,12 @@ export function CustomerTripHistoryDialog({
       setIsEditing(false);
     }
   };
-  
+
   const handleCancelEdit = () => {
-      setIsEditing(false);
-      setEditableCustomer(activeCustomer);
-  }
+    setIsEditing(false);
+    // Revert any changes by setting editable customer back to the original active customer
+    setEditableCustomer(activeCustomer);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -104,13 +128,16 @@ export function CustomerTripHistoryDialog({
         <DialogHeader>
           <DialogTitle>Customer & Trip History</DialogTitle>
           <DialogDescription>
-            Search for a customer by phone to view their past trips. Select one to auto-fill the form.
+            Search for a customer by phone to view their past trips. Select one
+            to auto-fill the form.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
           {/* Left Panel: Trip List */}
           <div className="h-full flex flex-col gap-2">
-            <h3 className="text-lg font-semibold shrink-0">Matching Trips ({filteredTrips.length})</h3>
+            <h3 className="text-lg font-semibold shrink-0">
+              Matching Trips ({filteredTrips.length})
+            </h3>
             <ScrollArea className="h-full pr-4 -mr-4">
               <div className="space-y-2">
                 {filteredTrips.length > 0 ? (
@@ -118,26 +145,30 @@ export function CustomerTripHistoryDialog({
                     <button
                       key={trip.id}
                       className={cn(
-                        "w-full p-3 border rounded-lg text-left transition-colors",
-                        "hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary",
-                        selectedTripId === trip.id ? "bg-muted border-primary shadow-sm" : "border-transparent"
+                        'w-full p-3 border rounded-lg text-left transition-colors',
+                        'hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary',
+                        selectedTripId === trip.id
+                          ? 'bg-muted border-primary shadow-sm'
+                          : 'border-transparent'
                       )}
                       onClick={() => handleSelectTrip(trip)}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold truncate">{trip.customer.name}</span>
+                        <span className="font-semibold truncate">
+                          {trip.customer.name}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(trip.requestTime), 'MMM d, yyyy')}
                         </span>
                       </div>
                       <div className="text-sm text-muted-foreground mt-2 space-y-1">
                         <div className="flex items-start gap-2">
-                            <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-                            <span className="truncate">{trip.origin}</span>
+                          <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                          <span className="truncate">{trip.origin}</span>
                         </div>
                         <div className="flex items-start gap-2">
-                            <ArrowRight className="h-4 w-4 mt-0.5 shrink-0" />
-                            <span className="truncate">{trip.destination}</span>
+                          <ArrowRight className="h-4 w-4 mt-0.5 shrink-0" />
+                          <span className="truncate">{trip.destination}</span>
                         </div>
                       </div>
                     </button>
@@ -155,81 +186,115 @@ export function CustomerTripHistoryDialog({
           {/* Right Panel: Customer Details */}
           <div className="h-full flex flex-col">
             {activeCustomer ? (
-                <Card className="h-full flex flex-col">
-                    <CardHeader className="flex-row justify-between items-start">
-                        <div>
-                          <CardTitle>{isEditing ? 'Edit Customer' : activeCustomer.name}</CardTitle>
-                          <CardDescription>{isEditing ? 'Update the details below.' : activeCustomer.phone}</CardDescription>
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-row justify-between items-start">
+                  <div>
+                    <CardTitle>
+                      {isEditing ? 'Edit Customer' : activeCustomer.name}
+                    </CardTitle>
+                    <CardDescription>
+                      {isEditing
+                        ? 'Update the details below.'
+                        : activeCustomer.phone}
+                    </CardDescription>
+                  </div>
+                  {!isEditing && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="mr-2 h-3 w-3" />
+                      Edit
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="flex-grow space-y-4">
+                  {isEditing ? (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="customer-name">Name</Label>
+                        <Input
+                          id="customer-name"
+                          value={editableCustomer?.name || ''}
+                          onChange={e =>
+                            setEditableCustomer(c =>
+                              c ? { ...c, name: e.target.value } : null
+                            )
+                          }
+                          autoFocus
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customer-phone">Phone</Label>
+                        <Input
+                          id="customer-phone"
+                          value={editableCustomer?.phone || ''}
+                          onChange={e =>
+                            setEditableCustomer(c =>
+                              c ? { ...c, phone: e.target.value } : null
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customer-notes">Notes for Driver</Label>
+                        <Textarea
+                          id="customer-notes"
+                          value={editableCustomer?.notes || ''}
+                          onChange={e =>
+                            setEditableCustomer(c =>
+                              c ? { ...c, notes: e.target.value } : null
+                            )
+                          }
+                          placeholder="e.g., Prefers quiet rides, has a pet..."
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm">
+                          Financial Status
+                        </h4>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">
+                            Pending Debt
+                          </span>
+                          <Badge
+                            variant={
+                              activeCustomer.pendingDebt > 0
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            ${activeCustomer.pendingDebt.toFixed(2)}
+                          </Badge>
                         </div>
-                        {!isEditing && (
-                          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                            <Pencil className="mr-2 h-3 w-3" />
-                            Edit
-                          </Button>
-                        )}
-                    </CardHeader>
-                    <CardContent className="flex-grow space-y-4">
-                        {isEditing ? (
-                          <div className="space-y-4 pt-2">
-                            <div className="space-y-2">
-                              <Label htmlFor="customer-name">Name</Label>
-                              <Input
-                                id="customer-name"
-                                value={editableCustomer?.name || ''}
-                                onChange={(e) => setEditableCustomer(c => c ? {...c, name: e.target.value} : null)}
-                                autoFocus
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="customer-phone">Phone</Label>
-                              <Input
-                                id="customer-phone"
-                                value={editableCustomer?.phone || ''}
-                                onChange={(e) => setEditableCustomer(c => c ? {...c, phone: e.target.value} : null)}
-                              />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="customer-notes">Notes for Driver</Label>
-                                <Textarea
-                                    id="customer-notes"
-                                    value={editableCustomer?.notes || ''}
-                                    onChange={(e) => setEditableCustomer(c => c ? {...c, notes: e.target.value} : null)}
-                                    placeholder="e.g., Prefers quiet rides, has a pet..."
-                                    className="min-h-[100px]"
-                                />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <Separator />
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-sm">Financial Status</h4>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-muted-foreground">Pending Debt</span>
-                                    <Badge variant={activeCustomer.pendingDebt > 0 ? 'destructive' : 'secondary'}>
-                                        ${activeCustomer.pendingDebt.toFixed(2)}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <Separator />
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-sm">Notes</h4>
-                                <p className="text-sm text-muted-foreground italic">
-                                    {activeCustomer.notes || 'No notes available for this customer.'}
-                                </p>
-                            </div>
-                          </>
-                        )}
-                    </CardContent>
-                </Card>
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm">Notes</h4>
+                        <p className="text-sm text-muted-foreground italic">
+                          {activeCustomer.notes ||
+                            'No notes available for this customer.'}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
-                    <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-semibold">Select a Past Trip</h3>
-                    <p className="text-muted-foreground max-w-sm">
-                        Click on a trip from the list to view customer details and reuse the trip information for a new service.
-                    </p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
+                <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold">Select a Past Trip</h3>
+                <p className="text-muted-foreground max-w-sm">
+                  Click on a trip from the list to view customer details and
+                  reuse the trip information for a new service.
+                </p>
+              </div>
             )}
           </div>
         </div>
