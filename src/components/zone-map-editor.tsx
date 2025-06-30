@@ -66,11 +66,7 @@ export default function ZoneMapEditor({
   const draw = React.useMemo(
     () =>
       new MapboxDraw({
-        displayControlsDefault: false,
-        controls: {
-          polygon: true,
-          trash: true,
-        },
+        displayControlsDefault: true,
         // Set styles for the drawn features
         styles: [
           // ACTIVE (being drawn)
