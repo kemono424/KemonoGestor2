@@ -19,6 +19,7 @@ import { customers } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { CustomerSummaryCell } from '@/components/customer-summary-cell';
 
 export default function CustomersPage() {
   return (
@@ -43,6 +44,7 @@ export default function CustomersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Debt</TableHead>
+                <TableHead className="w-[40%]">AI Summary</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -59,6 +61,9 @@ export default function CustomersPage() {
                     <Badge variant={customer.pendingDebt > 0 ? 'destructive' : 'secondary'}>
                       ${customer.pendingDebt.toFixed(2)}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <CustomerSummaryCell customer={customer} />
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
