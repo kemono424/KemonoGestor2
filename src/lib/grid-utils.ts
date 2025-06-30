@@ -34,21 +34,25 @@ export function generateGridLayer(
       ];
 
       const assignedZoneId = cellAssignments[cellId];
-      let color = '#FFFF00'; // Default to yellow for unassigned cells
+      let fillColor = '#000000'; // Default, won't be visible due to opacity 0
+      let fillOpacity = 0;
 
       if (assignedZoneId && zoneColorMap[assignedZoneId]) {
-        color = zoneColorMap[assignedZoneId];
+        fillColor = zoneColorMap[assignedZoneId];
+        fillOpacity = 0.3;
       }
       
       if (selectedCells.has(cellId)) {
-        color = '#00FFFF'; // Cyan for selection
+        fillColor = '#00FFFF'; // Cyan for selection
+        fillOpacity = 0.5;
       }
 
       features.push({
         type: 'Feature',
         properties: {
           id: cellId,
-          color: color,
+          fillColor: fillColor,
+          fillOpacity: fillOpacity,
         },
         geometry: {
           type: 'Polygon',
