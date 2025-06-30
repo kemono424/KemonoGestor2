@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -48,7 +47,7 @@ export default function ZoneGridEditor({
             type="fill"
             paint={{
               'fill-color': ['get', 'color'],
-              'fill-opacity': 0.4,
+              'fill-opacity': 0.2,
             }}
           />
           <Layer
@@ -57,7 +56,7 @@ export default function ZoneGridEditor({
             paint={{
               'line-color': '#FFFFFF',
               'line-width': 1,
-              'line-opacity': 0.5,
+              'line-opacity': 0.3,
             }}
           />
         </Source>
