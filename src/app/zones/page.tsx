@@ -13,7 +13,6 @@ import type { GridConfig, ZoneDefinition } from '@/types';
 import { areCellsConnected } from '@/lib/grid-utils';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Plus, Minus } from 'lucide-react';
-import type { ViewState } from 'react-map-gl';
 
 const LOCAL_STORAGE_KEY = 'fleet-grid-zones';
 

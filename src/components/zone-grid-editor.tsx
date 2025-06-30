@@ -2,10 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import Map, { Source, Layer, MapRef } from 'react-map-gl';
-import type { MapLayerMouseEvent } from 'react-map-gl';
-import type { GridConfig, ZoneDefinition } from '@/types';
-import { generateGridLayer } from '@/lib/grid-utils';
+import Map, { Source, Layer, MapRef, MapLayerMouseEvent } from 'react-map-gl';
+import type { FeatureCollection } from 'geojson';
 
 interface ZoneGridEditorProps {
   gridConfig: GridConfig;
@@ -14,6 +12,70 @@ interface ZoneGridEditorProps {
   selectedCells: Set<string>;
   onCellClick: (cellId: string) => void;
 }
+
+// NOTE: This utility is being moved into the component to avoid import issues.
+function generateGridLayer(
+  gridConfig: GridConfig,
+  zones: ZoneDefinition[],
+  cellAssignments: Record<string, string | null>,
+  selectedCells: Set<string>
+): FeatureCollection {
+  const { rows, cols, center, cellSize } = gridConfig;
+  const features: any[] = [];
+
+  const startLat = center.lat + (rows / 2) * cellSize;
+  const startLng = center.lng - (cols / 2) * cellSize;
+
+  const zoneColorMap = zones.reduce((acc, zone) => {
+    acc[zone.id] = zone.color;
+    return acc;
+  }, {} as Record<string, string>);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cellId = `${r}-${c}`;
+      const lat = startLat - r * cellSize;
+      const lng = startLng + c * cellSize;
+
+      const coordinates: [number, number][] = [
+        [lng, lat],
+        [lng + cellSize, lat],
+        [lng + cellSize, lat - cellSize],
+        [lng, lat - cellSize],
+        [lng, lat],
+      ];
+
+      const assignedZoneId = cellAssignments[cellId];
+      let color = '#555555'; // Default mid-grey for unassigned cells
+
+      if (assignedZoneId && zoneColorMap[assignedZoneId]) {
+        color = zoneColorMap[assignedZoneId];
+      }
+      
+      if (selectedCells.has(cellId)) {
+        color = '#3b82f6'; // A distinct blue for selection
+      }
+
+      features.push({
+        type: 'Feature',
+        properties: {
+          id: cellId,
+          color: color,
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coordinates],
+        },
+      });
+    }
+  }
+
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
+}
+
 
 export default function ZoneGridEditor({
   gridConfig,
@@ -27,6 +89,7 @@ export default function ZoneGridEditor({
   const gridLayer = React.useMemo(() => {
     return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
   }, [gridConfig, zones, cellAssignments, selectedCells]);
+
 
   const handleMapClick = (e: MapLayerMouseEvent) => {
     const features = mapRef.current?.queryRenderedFeatures(e.point, {
@@ -47,8 +110,8 @@ export default function ZoneGridEditor({
         ref={mapRef}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
-          longitude: -65.4117,
-          latitude: -24.7859,
+          longitude: gridConfig.center.lng,
+          latitude: gridConfig.center.lat,
           zoom: 12,
         }}
         style={{ width: '100%', height: '100%' }}
@@ -61,7 +124,7 @@ export default function ZoneGridEditor({
             id="grid-fill"
             type="fill"
             paint={{
-              'fill-color': '#00FFFF', // Use a single, bright, unmissable color for debugging.
+              'fill-color': ['get', 'color'],
               'fill-opacity': 0.5,
             }}
           />
@@ -70,7 +133,8 @@ export default function ZoneGridEditor({
             type="line"
             paint={{
               'line-color': '#FFFFFF',
-              'line-width': 1.5,
+              'line-width': 1,
+              'line-opacity': 0.5,
             }}
           />
         </Source>
