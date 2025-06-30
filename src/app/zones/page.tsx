@@ -45,6 +45,7 @@ export default function ZonesPage() {
       if (savedZones) {
         setZones(JSON.parse(savedZones));
       } else {
+        // If no zones are saved, you can initialize with mocks or an empty array
         setZones(mockZones);
       }
     } catch (error) {
@@ -69,15 +70,7 @@ export default function ZonesPage() {
     if (drawInstance && isMounted) {
       const featureIdsOnMap = drawInstance.getAll().features.map((f: Feature) => f.id);
       
-      // Prevent re-sync if the feature being edited is a new, unsaved one
-      if (editingZone?.id && featureIdsOnMap.includes(editingZone.id)) {
-         const unsavedFeature = drawInstance.get(editingZone.id);
-         if(unsavedFeature && unsavedFeature.properties.name === undefined) {
-            return;
-         }
-      }
-
-      // Full sync: Delete all and add from state
+      // Full sync: Delete all and add from state. This is the most reliable way.
       drawInstance.deleteAll();
       if (zones.length > 0) {
         const features = zones.map(z => ({
@@ -89,7 +82,7 @@ export default function ZonesPage() {
         drawInstance.add({ type: 'FeatureCollection', features });
       }
     }
-  }, [zones, drawInstance, isMounted, editingZone]);
+  }, [zones, drawInstance, isMounted]);
 
 
   const handleMapUpdate = useCallback(
@@ -103,11 +96,11 @@ export default function ZonesPage() {
         // This is a temporary zone object. It will be finalized when saved from the dialog.
         const newZone: Zone = {
           id: newFeature.id as string,
-          name: 'New Zone', // Placeholder name
+          name: '', // Start with an empty name
           color: getRandomColor(),
           geometry: newFeature.geometry,
         };
-        setEditingZone(newZone); // Open the dialog
+        setEditingZone(newZone); // Open the dialog to finalize creation
       } else if (type === 'draw.update') {
         setZones((currentZones) =>
           currentZones.map((zone) => {
@@ -152,9 +145,9 @@ export default function ZonesPage() {
   };
 
   const handleSaveZone = (updatedZone: Zone) => {
-    // Check if it's a new zone or an existing one
     const isNew = !zones.some(z => z.id === updatedZone.id);
-    if(isNew) {
+    
+    if (isNew) {
       // Add the finalized new zone to the state
       setZones(current => [...current, updatedZone]);
     } else {
@@ -164,20 +157,22 @@ export default function ZonesPage() {
       );
     }
     
-    // Update the feature properties on the map to reflect name/color changes
+    // Explicitly update the feature properties on the map to reflect name/color changes
     if (drawInstance) {
         drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
         drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
     }
+    
     setEditingZone(null); // Close the dialog
   };
   
   const onDialogChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // If the dialog is closed for a new, unsaved zone, remove it from the map.
+      // If the dialog is closed for a new, unsaved zone, remove its feature from the map.
       const isNewUnsaved = editingZone && !zones.some(z => z.id === editingZone.id);
       if (isNewUnsaved && drawInstance && editingZone) {
-        handleDeleteZone(editingZone.id);
+        // Use a timeout to prevent an error where drawInstance is not ready
+        setTimeout(() => drawInstance.delete([editingZone.id]), 0);
       }
       setEditingZone(null); // Clear the editing state
     }
@@ -234,7 +229,6 @@ export default function ZonesPage() {
                     setSelectedZoneId(zone.id)
                     if (drawInstance) {
                       try {
-                        // Select the feature on the map when clicked in the list
                         drawInstance.changeMode('simple_select', { featureIds: [zone.id] });
                       } catch (error) {
                         console.error("Error changing mode:", error)
@@ -256,7 +250,6 @@ export default function ZonesPage() {
                       className="h-8 w-8"
                       onClick={e => {
                         e.stopPropagation();
-                        // Find the full zone object from state to edit
                         const zoneToEdit = zones.find(z => z.id === zone.id);
                         if (zoneToEdit) {
                             setEditingZone(zoneToEdit);
@@ -279,6 +272,11 @@ export default function ZonesPage() {
                   </div>
                 </div>
               ))}
+              {zones.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No zones created. Click "New Zone" to start drawing.
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

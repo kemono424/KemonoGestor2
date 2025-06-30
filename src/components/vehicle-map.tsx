@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,15 +9,29 @@ import type { FeatureCollection } from 'geojson';
 
 interface VehicleMapProps {
   vehicles: Vehicle[];
-  zones?: Zone[];
 }
 
-export default function VehicleMap({ vehicles, zones = [] }: VehicleMapProps) {
+export default function VehicleMap({ vehicles }: VehicleMapProps) {
+  const [zones, setZones] = React.useState<Zone[]>([]);
+
+  // On component mount, load zones from localStorage.
+  // This makes the map self-sufficient and ensures it displays the user's saved zones.
+  React.useEffect(() => {
+    try {
+      const savedZones = localStorage.getItem('fleet-manager-zones');
+      if (savedZones) {
+        setZones(JSON.parse(savedZones));
+      }
+    } catch (error) {
+      console.error("Failed to load zones from localStorage for map display.", error);
+    }
+  }, []);
+
   const availableVehicles = vehicles.filter(
     (v) => (v.status === 'Available' || v.status === 'Busy') && v.latitude && v.longitude
   );
 
-  const zonesFc: FeatureCollection = {
+  const zonesFc: FeatureCollection | null = zones.length > 0 ? {
     type: 'FeatureCollection',
     features: zones.map(zone => ({
       type: 'Feature',
@@ -26,7 +41,7 @@ export default function VehicleMap({ vehicles, zones = [] }: VehicleMapProps) {
       },
       geometry: zone.geometry,
     })),
-  };
+  } : null;
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
@@ -40,7 +55,7 @@ export default function VehicleMap({ vehicles, zones = [] }: VehicleMapProps) {
             style={{ width: '100%', height: '100%'}}
             mapStyle="mapbox://styles/mapbox/dark-v11"
             >
-            {zones.length > 0 && (
+            {zonesFc && (
                 <Source id="zones" type="geojson" data={zonesFc}>
                     <Layer
                         id="zone-fills"

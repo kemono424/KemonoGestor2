@@ -33,7 +33,7 @@ export function EditZoneDialog({
 
   useEffect(() => {
     if (zone) {
-      setName(zone.name === 'New Zone' ? '' : zone.name);
+      setName(zone.name); // No longer checking for 'New Zone'
       setColor(zone.color);
     }
   }, [zone]);
@@ -41,11 +41,14 @@ export function EditZoneDialog({
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
     if (zone && name.trim()) {
-      onSave({ ...zone, name, color });
+      onSave({ ...zone, name: name.trim(), color });
     }
   };
 
   if (!zone) return null;
+
+  // Use the zone's initial name state to determine if it's a new creation
+  const isCreating = zone.name === '';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -53,11 +56,11 @@ export function EditZoneDialog({
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>
-              {zone.name === 'New Zone' ? 'Create New Zone' : 'Edit Zone'}
+              {isCreating ? 'Create New Zone' : 'Edit Zone'}
             </DialogTitle>
             <DialogDescription>
-              {zone.name === 'New Zone'
-                ? 'Set the name and color for the new zone.'
+              {isCreating
+                ? 'Set the name and color for the new zone you drew.'
                 : 'Change the name and color for this zone.'}
             </DialogDescription>
           </DialogHeader>
@@ -70,6 +73,7 @@ export function EditZoneDialog({
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g., Downtown"
                 autoFocus
+                required
               />
             </div>
             <div className="space-y-2">
@@ -86,6 +90,7 @@ export function EditZoneDialog({
                   value={color}
                   onChange={e => setColor(e.target.value)}
                   placeholder="#F44336"
+                  className="font-mono"
                 />
               </div>
             </div>
@@ -98,7 +103,7 @@ export function EditZoneDialog({
             >
               Cancel
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit">Save Zone</Button>
           </DialogFooter>
         </form>
       </DialogContent>

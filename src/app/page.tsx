@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -6,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Car, Users, Activity, DollarSign } from 'lucide-react';
-import { vehicles, operators, recentTrips, zones } from '@/lib/mock-data';
+import { vehicles, operators, recentTrips } from '@/lib/mock-data';
 import VehicleMap from '@/components/vehicle-map';
 import { NewTripForm } from '@/components/new-trip-form';
 
@@ -82,7 +83,7 @@ export default function DashboardPage() {
             <CardDescription>Real-time tracking of all available vehicles.</CardDescription>
           </CardHeader>
           <CardContent className="h-[480px] w-full p-0">
-             <VehicleMap vehicles={vehicles} zones={zones} />
+             <VehicleMap vehicles={vehicles} />
           </CardContent>
         </Card>
       </div>

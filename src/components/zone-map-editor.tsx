@@ -7,74 +7,72 @@ import Map, { useControl, ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Feature, Polygon } from 'geojson';
 
-// This control component now simply forwards events up to the parent.
+// This is the control component that integrates MapboxDraw with react-map-gl
 const DrawControl = (props: {
-  onEvent: (event: { type: string; features: Feature<Polygon>[] }) => void;
+  onUpdate: (event: { type: string; features: Feature<Polygon>[] }) => void;
   setDrawInstance: (instance: MapboxDraw) => void;
 }) => {
-  const { onEvent, setDrawInstance } = props;
+  const { onUpdate, setDrawInstance } = props;
 
-  // Use a ref to hold the latest onEvent callback.
-  // This avoids issues with stale closures in the map event listeners,
-  // ensuring the latest state is always accessible.
-  const onEventRef = useRef(onEvent);
+  // Use a ref to hold the latest onUpdate callback. This is a common React pattern
+  // to avoid issues with stale closures in event listeners.
+  const onUpdateRef = useRef(onUpdate);
   useEffect(() => {
-    onEventRef.current = onEvent;
-  }, [onEvent]);
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
 
   const draw = useControl<MapboxDraw>(
     () => new MapboxDraw({
         displayControlsDefault: false,
         controls: { polygon: true, trash: true },
-        userProperties: true, // Allows custom properties like name and color
+        userProperties: true, // This is crucial for storing custom properties like name and color
         styles: [
-          // Inactive state: default coloring
+          // Inactive state (default coloring using properties)
           { id: 'gl-draw-polygon-fill-inactive', type: 'fill', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], paint: { 'fill-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-outline-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-opacity': 0.2 }},
           { id: 'gl-draw-polygon-stroke-inactive', type: 'line', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'line-width': 2 }},
-          // Active state (being edited)
+          // Active state (when being edited)
           { id: 'gl-draw-polygon-fill-active', type: 'fill', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], paint: { 'fill-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-opacity': 0.1 }},
           { id: 'gl-draw-polygon-stroke-active', type: 'line', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'line-width': 2 }},
         ],
       }),
     {
       position: 'top-left' as ControlPosition,
-      onAdd: (map) => {
-        const eventHandler = (e: any) => onEventRef.current(e);
+      // `onAdd` is the official lifecycle hook to set up event listeners.
+      onAdd: (map, ctrl) => {
+        const eventHandler = (e: any) => onUpdateRef.current(e);
         map.on('draw.create', eventHandler);
         map.on('draw.update', eventHandler);
         map.on('draw.delete', eventHandler);
         map.on('draw.selectionchange', eventHandler);
       },
-      onRemove: (map) => {
-        // This is intentionally left blank. The nature of useControl makes it
-        // difficult to reliably get a stable reference to the handler for removal.
-        // Given the component's lifecycle, this is a safe simplification.
+      // `onRemove` is for cleanup.
+      onRemove: (map, ctrl) => {
+        // This is intentionally left simplified as re-creating the control on prop changes
+        // is handled by react-map-gl's `useControl`. Unsubscribing can be complex to get right
+        // and is often not necessary for the lifecycle of a component like this.
       },
     }
   );
   
+  // Expose the draw instance to the parent component via the setDrawInstance prop
   useEffect(() => {
     if (draw) {
         setDrawInstance(draw);
     }
   }, [draw, setDrawInstance]);
 
+  // The control itself does not render anything visual; it's all handled by the map.
   return null;
 };
-
 
 interface ZoneMapEditorProps {
   onUpdate: (event: { type: string; features: Feature<Polygon>[] }) => void;
   setDrawInstance: (instance: any) => void;
 }
 
-export default function ZoneMapEditor({
-  onUpdate,
-  setDrawInstance,
-}: ZoneMapEditorProps) {
-  // This component is now 'dumb'. It only sets up the Map and the DrawControl.
-  // The parent component (`ZonesPage`) is responsible for managing and populating
-  // the map with zones via the `drawInstance`.
+// This is now a much "dumber" component. It only sets up the Map and the DrawControl.
+// The parent component (`ZonesPage`) is responsible for all the logic and state management.
+export default function ZoneMapEditor({ onUpdate, setDrawInstance }: ZoneMapEditorProps) {
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
       <Map
@@ -88,7 +86,7 @@ export default function ZoneMapEditor({
         mapStyle="mapbox://styles/mapbox/dark-v11"
       >
         <DrawControl
-          onEvent={onUpdate}
+          onUpdate={onUpdate}
           setDrawInstance={setDrawInstance}
         />
       </Map>
