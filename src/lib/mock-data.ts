@@ -1,12 +1,12 @@
 import type { Vehicle, Operator, Trip, Customer } from '@/types';
 
 export const customers: Customer[] = [
-    { id: 'C001', name: 'Alice Williams', phone: '555-0101', isVip: true, pendingDebt: 0 },
-    { id: 'C002', name: 'Bob Brown', phone: '555-0102', isVip: false, pendingDebt: 25.50 },
-    { id: 'C003', name: 'Charlie Davis', phone: '555-0103', isVip: false, pendingDebt: 0 },
-    { id: 'C004', name: 'Diana Miller', phone: '555-0104', isVip: false, pendingDebt: 0 },
-    { id: 'C005', name: 'Ethan Wilson', phone: '555-0105', isVip: true, pendingDebt: 15.00 },
-    { id: 'C006', name: 'Fiona Garcia', phone: '555-0106', isVip: false, pendingDebt: 0 },
+    { id: 'C001', name: 'Alice Williams', phone: '555-0101', pendingDebt: 0 },
+    { id: 'C002', name: 'Bob Brown', phone: '555-0102', pendingDebt: 25.50 },
+    { id: 'C003', name: 'Charlie Davis', phone: '555-0103', pendingDebt: 0 },
+    { id: 'C004', name: 'Diana Miller', phone: '555-0104', pendingDebt: 0 },
+    { id: 'C005', name: 'Ethan Wilson', phone: '555-0105', pendingDebt: 15.00 },
+    { id: 'C006', name: 'Fiona Garcia', phone: '555-0106', pendingDebt: 0 },
 ];
 
 export const operators: Operator[] = [

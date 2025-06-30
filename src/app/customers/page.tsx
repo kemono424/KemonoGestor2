@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
 import { customers } from '@/lib/mock-data';
-import { MoreHorizontal, PlusCircle, Star } from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
@@ -52,10 +52,7 @@ export default function CustomersPage() {
               {customers.map(customer => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                       {customer.isVip && <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />}
-                       <span>{customer.name}</span>
-                    </div>
+                    {customer.name}
                   </TableCell>
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>

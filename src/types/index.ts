@@ -35,7 +35,6 @@ export interface Customer {
     id: string;
     name: string;
     phone: string;
-    isVip: boolean;
     pendingDebt: number; // in currency
 }
 

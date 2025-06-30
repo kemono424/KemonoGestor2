@@ -23,10 +23,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { customers, vehicles } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
-import { MapPin, User, Car, Star } from 'lucide-react';
+import { MapPin, User, Car } from 'lucide-react';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
 
 const formSchema = z.object({
@@ -152,12 +151,6 @@ export function NewTripForm() {
             <Card className="p-3 bg-muted/50">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{selectedCustomer.name}</p>
-                {selectedCustomer.isVip && (
-                  <Badge variant="secondary">
-                    <Star className="mr-1.5 h-3 w-3" />
-                    VIP
-                  </Badge>
-                )}
               </div>
               <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
             </Card>
