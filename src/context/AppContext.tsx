@@ -10,10 +10,18 @@ import React, {
 import type { Operator, UserRole } from '@/types';
 import { getOperators } from '@/lib/mock-data';
 import { updateOperator } from '@/lib/actions';
+import { auth } from '@/lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 interface AppContextType {
   currentUser: Operator | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
   setCurrentUserRole: (role: UserRole) => void;
@@ -22,80 +30,108 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const CURRENT_USER_STORAGE_KEY = 'fleet-manager-currentUser';
-
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<Operator | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const storedUser = sessionStorage.getItem(CURRENT_USER_STORAGE_KEY);
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          // Verify user still exists in the "database"
-          const allOperators = await getOperators();
-          const userExists = allOperators.some((op) => op.id === parsedUser.id);
-          
-          if (userExists) {
-            setCurrentUser(parsedUser);
-          } else {
-            // User was deleted, clear session
-            sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (firebaseUser: FirebaseUser | null) => {
+        setIsLoading(true);
+        if (firebaseUser) {
+          try {
+            const allOperators = await getOperators();
+            const userEmail = firebaseUser.email || '';
+            const [localPart] = userEmail.split('@');
+
+            const userProfile = allOperators.find(
+              (op) => op.username === userEmail || op.username === localPart
+            );
+
+            if (userProfile) {
+              setCurrentUser({ ...userProfile, avatarUrl: firebaseUser.photoURL || userProfile.avatarUrl });
+            } else {
+              toast({
+                variant: 'destructive',
+                title: 'Perfil no encontrado',
+                description: `No se encontró un perfil de operador para ${userEmail}. Contacta al administrador.`,
+              });
+              await signOut(auth);
+              setCurrentUser(null);
+            }
+          } catch (error) {
+            console.error('Failed to fetch operator profile', error);
+            toast({
+              variant: 'destructive',
+              title: 'Error al Cargar Perfil',
+              description: 'No se pudo cargar la información del operador.',
+            });
+            await signOut(auth);
+            setCurrentUser(null);
           }
+        } else {
+          setCurrentUser(null);
         }
-      } catch (error) {
-        console.error('Failed to load user from session storage', error);
-        sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }
-    checkUser();
-  }, []);
+    );
+
+    return () => unsubscribe();
+  }, [toast]);
 
   const updateCurrentUser = async (updatedData: Partial<Operator>) => {
     if (currentUser) {
       const updatedUser = { ...currentUser, ...updatedData };
-      
-      // Call server action to persist changes
-      await updateOperator(updatedUser);
-
-      // Update local state and session storage
-      setCurrentUser(updatedUser);
-      sessionStorage.setItem(
-        CURRENT_USER_STORAGE_KEY,
-        JSON.stringify(updatedUser)
-      );
+      const result = await updateOperator(updatedUser);
+      if (result.success) {
+        setCurrentUser(updatedUser);
+      }
     }
   };
 
-  const login = async (
-    username: string,
-    password: string
-  ): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    const allOperators = await getOperators();
-    const user = allOperators.find(
-      (op) => op.username === username && op.password === password
-    );
-    
-    setIsLoading(false);
-    if (user) {
-      setCurrentUser(user);
-      sessionStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged will handle setting the user and loading state
       return true;
+    } catch (error: any) {
+      let message = 'Ocurrió un error inesperado.';
+      if (
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password' ||
+        error.code === 'auth/invalid-credential'
+      ) {
+        message = 'Correo electrónico o contraseña incorrectos.';
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Error de Inicio de Sesión',
+        description: message,
+      });
+      setIsLoading(false);
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    sessionStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al Cerrar Sesión',
+        description: 'No se pudo cerrar la sesión. Por favor, inténtalo de nuevo.',
+      });
+    }
   };
 
   const setCurrentUserRole = (role: UserRole) => {
-    updateCurrentUser({ role });
+    if (currentUser?.role === 'Admin') {
+      updateCurrentUser({ role });
+    }
   };
 
   return (

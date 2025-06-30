@@ -16,6 +16,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 import { Upload } from 'lucide-react';
+import { getAuth, updateProfile } from 'firebase/auth';
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ export function ProfileDialog({
 }: ProfileDialogProps) {
   const { currentUser } = useAppContext();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -44,8 +47,7 @@ export function ProfileDialog({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        // 2MB limit
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
         toast({
           variant: 'destructive',
           title: 'Archivo demasiado grande',
@@ -61,18 +63,46 @@ export function ProfileDialog({
     }
   };
 
-  const handleSave = () => {
-    if (currentUser) {
-      const updatedUser: Operator = {
-        ...currentUser,
-        avatarUrl: previewImage || undefined,
-      };
-      onProfileUpdate(updatedUser);
-      toast({
-        title: 'Perfil Actualizado',
-        description: 'Tu foto de perfil ha sido actualizada.',
-      });
+  const handleSave = async () => {
+    const auth = getAuth();
+    const firebaseUser = auth.currentUser;
+
+    if (!currentUser || !firebaseUser) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No has iniciado sesión.' });
+      return;
     }
+
+    // Only upload if the image has changed
+    if (previewImage && previewImage !== currentUser.avatarUrl) {
+      setIsUploading(true);
+      try {
+        const storage = getStorage();
+        const storageRef = ref(storage, `avatars/${firebaseUser.uid}`);
+        
+        // uploadString handles data URLs (which is what FileReader gives us)
+        await uploadString(storageRef, previewImage, 'data_url');
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // Update Firebase Auth user profile
+        await updateProfile(firebaseUser, { photoURL: downloadURL });
+
+        // Update application state via context
+        onProfileUpdate({ ...currentUser, avatarUrl: downloadURL });
+        
+        toast({
+          title: 'Perfil Actualizado',
+          description: 'Tu foto de perfil ha sido actualizada.',
+        });
+
+      } catch (error) {
+        console.error("Error updating profile image: ", error);
+        toast({ variant: 'destructive', title: 'Error al subir', description: 'No se pudo guardar la imagen.' });
+      } finally {
+        setIsUploading(false);
+      }
+    }
+    
+    onOpenChange(false);
   };
 
   if (!isOpen || !currentUser) return null;
@@ -96,6 +126,7 @@ export function ProfileDialog({
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
           >
             <Upload className="mr-2 h-4 w-4" />
             Subir Imagen
@@ -116,8 +147,8 @@ export function ProfileDialog({
           >
             Cancelar
           </Button>
-          <Button type="button" onClick={handleSave}>
-            Guardar Cambios
+          <Button type="button" onClick={handleSave} disabled={isUploading}>
+            {isUploading ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
         </DialogFooter>
       </DialogContent>

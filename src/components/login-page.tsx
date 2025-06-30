@@ -17,25 +17,15 @@ import { useAppContext } from '@/context/AppContext';
 
 export function LoginPage() {
   const { login } = useAppContext();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
-    try {
-      const success = await login(username, password);
-      if (!success) {
-        setError('Usuario o contraseña inválidos. Por favor, inténtalo de nuevo.');
-      }
-    } catch (err) {
-      setError('Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.');
-    } finally {
-      setIsLoading(false);
-    }
+    await login(email, password);
+    setIsLoading(false);
   };
 
   return (
@@ -53,15 +43,16 @@ export function LoginPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Usuario</Label>
+              <Label htmlFor="email">Correo Electrónico</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="admin o johndoe"
+                id="email"
+                type="email"
+                placeholder="p. ej. admin@kemono.com"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -69,16 +60,13 @@ export function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password123"
+                placeholder="********"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
             </div>
-            {error && (
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            )}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
