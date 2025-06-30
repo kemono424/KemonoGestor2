@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/page-header';
-import { recentTrips, type Trip } from '@/lib/mock-data';
+import { recentTrips, type Trip, type TripStatus } from '@/lib/mock-data';
 import { MoreHorizontal, PlusCircle, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,16 +29,16 @@ import { EditTripDialog } from '@/components/edit-trip-dialog';
 
 const getStatusVariant = (status: TripStatus) => {
   switch (status) {
-    case 'Completed':
+    case 'Completado':
       return 'default';
-    case 'In Progress':
-    case 'Assigned':
+    case 'En Progreso':
+    case 'Asignado':
       return 'secondary';
-    case 'Cancelled':
+    case 'Cancelado':
       return 'destructive';
-    case 'Scheduled':
-      return 'outline'; // A different color for scheduled
-    default: // In Tray
+    case 'Programado':
+      return 'outline';
+    default: // En Bandeja
       return 'outline';
   }
 };
@@ -61,14 +60,14 @@ const TripsTable = ({
   <Table>
     <TableHeader>
       <TableRow>
-        <TableHead>Customer</TableHead>
-        <TableHead>Origin / Destination</TableHead>
-        <TableHead>Vehicle</TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead>Time</TableHead>
-        <TableHead className="text-right">Amount</TableHead>
+        <TableHead>Cliente</TableHead>
+        <TableHead>Origen / Destino</TableHead>
+        <TableHead>Vehículo</TableHead>
+        <TableHead>Estado</TableHead>
+        <TableHead>Hora</TableHead>
+        <TableHead className="text-right">Monto</TableHead>
         <TableHead>
-          <span className="sr-only">Actions</span>
+          <span className="sr-only">Acciones</span>
         </TableHead>
       </TableRow>
     </TableHeader>
@@ -93,7 +92,7 @@ const TripsTable = ({
           <TableCell>
             {trip.vehicle
               ? `${trip.vehicle.name} (${trip.vehicle.licensePlate})`
-              : 'Unassigned'}
+              : 'Sin asignar'}
           </TableCell>
           <TableCell>
             <Badge
@@ -109,7 +108,7 @@ const TripsTable = ({
                   {trip.scheduledTime
                     ? format(new Date(trip.scheduledTime), 'MMM d, h:mm a')
                     : format(new Date(trip.requestTime), 'MMM d, h:mm a')}
-                  {trip.scheduledTime && <div className="text-xs text-muted-foreground">(Scheduled)</div>}
+                  {trip.scheduledTime && <div className="text-xs text-muted-foreground">(Programado)</div>}
                 </>
               ) : null}
           </TableCell>
@@ -125,18 +124,18 @@ const TripsTable = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Details</DropdownMenuItem>
+                <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(trip)}>
-                  Edit Trip
+                  Editar Viaje
                 </DropdownMenuItem>
-                {trip.status === 'In Tray' && (
-                  <DropdownMenuItem>Assign Manually</DropdownMenuItem>
+                {trip.status === 'En Bandeja' && (
+                  <DropdownMenuItem>Asignar Manualmente</DropdownMenuItem>
                 )}
-                 {trip.status !== 'Completed' && trip.status !== 'Cancelled' && (
+                 {trip.status !== 'Completado' && trip.status !== 'Cancelado' && (
                    <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive">
-                      Cancel Trip
+                      Cancelar Viaje
                     </DropdownMenuItem>
                    </>
                  )}
@@ -161,27 +160,27 @@ export default function TripsPage() {
     setEditingTrip(null);
   };
 
-  const tripsInTray = trips.filter(trip => trip.status === 'In Tray');
-  const activeServices = trips.filter(trip => ['Assigned', 'In Progress', 'Scheduled'].includes(trip.status));
+  const tripsInTray = trips.filter(trip => trip.status === 'En Bandeja');
+  const activeServices = trips.filter(trip => ['Asignado', 'En Progreso', 'Programado'].includes(trip.status));
 
   return (
     <>
       <PageHeader
-        title="Trip Manager"
-        description="Facilitate trip creation and track existing journeys."
+        title="Gestor de Viajes"
+        description="Facilita la creación de viajes y sigue los trayectos existentes."
       >
         <Button asChild>
           <Link href="/">
             <PlusCircle className="mr-2 h-4 w-4" />
-            New Trip
+            Nuevo Viaje
           </Link>
         </Button>
       </PageHeader>
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="active">Active Services</TabsTrigger>
+          <TabsTrigger value="active">Servicios Activos</TabsTrigger>
           <TabsTrigger value="tray">
-            In Tray
+            En Bandeja
             {tripsInTray.length > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {tripsInTray.length}
@@ -204,7 +203,7 @@ export default function TripsPage() {
               ) : (
                 <div className="flex items-center justify-center h-48 rounded-lg border-2 border-dashed border-muted">
                   <p className="text-center text-muted-foreground">
-                    The assignment tray is empty.
+                    La bandeja de asignación está vacía.
                   </p>
                 </div>
               )}

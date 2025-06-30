@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import {
@@ -74,15 +73,15 @@ export default function OperatorsPage() {
     setOperatorsData((prev) => prev.filter((op) => op.id !== operatorToDelete.id));
 
     toast({
-      title: 'Operator Deleted',
-      description: `Operator "${operatorToDelete.name}" has been permanently removed.`,
+      title: 'Operador Eliminado',
+      description: `El operador "${operatorToDelete.name}" ha sido eliminado permanentemente.`,
     });
 
     if (currentUser.id === operatorToDelete.id) {
       toast({
         variant: 'destructive',
-        title: 'Self-Destruct!',
-        description: 'You have deleted your own account and will be logged out.',
+        title: '¡Autodestrucción!',
+        description: 'Has eliminado tu propia cuenta y serás desconectado.',
       });
       setTimeout(() => {
         logout();
@@ -99,15 +98,15 @@ export default function OperatorsPage() {
       if (operators.some((op) => op.id === savedOperator.id)) {
         toast({
           variant: 'destructive',
-          title: 'ID already exists',
-          description: `An operator with ID "${savedOperator.id}" already exists.`,
+          title: 'El ID ya existe',
+          description: `Ya existe un operador con el ID "${savedOperator.id}".`,
         });
         return;
       }
       const newOperator: Operator = {
-        role: 'Dispatcher',
-        shift: 'Day',
-        status: 'Inactive',
+        role: 'Operador',
+        shift: 'Día',
+        status: 'Inactivo',
         servicesToday: 0,
         avgAssignmentTime: 0,
         maxIdleTime: 0,
@@ -122,8 +121,8 @@ export default function OperatorsPage() {
       setOperatorsData([...operators]);
 
       toast({
-        title: 'Operator Added',
-        description: `Operator "${newOperator.name}" has been added.`,
+        title: 'Operador Añadido',
+        description: `El operador "${newOperator.name}" ha sido añadido.`,
       });
     } else {
       const index = operators.findIndex((o) => o.id === savedOperator.id);
@@ -134,8 +133,8 @@ export default function OperatorsPage() {
         } as Operator;
         setOperatorsData([...operators]);
         toast({
-          title: 'Operator Updated',
-          description: `Details for ${savedOperator.name} have been updated.`,
+          title: 'Operador Actualizado',
+          description: `Los detalles de ${savedOperator.name} han sido actualizados.`,
         });
       }
     }
@@ -149,12 +148,12 @@ export default function OperatorsPage() {
       <div className="flex items-center justify-center h-full">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Access Denied</CardTitle>
+            <CardTitle className="text-center">Acceso Denegado</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-center text-muted-foreground">
-              You do not have permission to view this page. Please contact an
-              administrator if you believe this is an error.
+              No tienes permiso para ver esta página. Por favor, contacta a un
+              administrador si crees que esto es un error.
             </p>
           </CardContent>
         </Card>
@@ -165,12 +164,12 @@ export default function OperatorsPage() {
   return (
     <>
       <PageHeader
-        title="Operator Management"
-        description="Register, edit, and manage operators."
+        title="Gestión de Operadores"
+        description="Registrar, editar y gestionar operadores."
       >
         <Button onClick={handleAddOperator}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Operator
+          Añadir Operador
         </Button>
       </PageHeader>
       <Card>
@@ -178,13 +177,13 @@ export default function OperatorsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Services (Today)</TableHead>
-                <TableHead>Active Services</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Servicios (Hoy)</TableHead>
+                <TableHead>Servicios Activos</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -196,7 +195,7 @@ export default function OperatorsPage() {
                   <TableCell>
                     <Badge
                       variant={
-                        operator.status === 'Active' ? 'secondary' : 'outline'
+                        operator.status === 'Activo' ? 'secondary' : 'outline'
                       }
                     >
                       {operator.status}
@@ -213,18 +212,18 @@ export default function OperatorsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Stats</DropdownMenuItem>
+                        <DropdownMenuItem>Ver Estadísticas</DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleEditOperator(operator)}
                         >
-                          Edit
+                          Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>View Action History</DropdownMenuItem>
+                        <DropdownMenuItem>Ver Historial de Acciones</DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive focus:bg-destructive/10"
                           onClick={() => handleDeleteOperator(operator)}
                         >
-                          Delete
+                          Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -250,20 +249,19 @@ export default function OperatorsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action is permanent. This will delete operator "
-              {operatorToDelete?.name}" and they will no longer be able to log
-              in.
+              Esta acción es permanente. Esto eliminará al operador "
+              {operatorToDelete?.name}" y ya no podrá iniciar sesión.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={confirmDelete}
             >
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

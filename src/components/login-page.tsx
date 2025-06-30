@@ -29,10 +29,10 @@ export function LoginPage() {
     try {
       const success = await login(username, password);
       if (!success) {
-        setError('Invalid username or password. Please try again.');
+        setError('Usuario o contraseña inválidos. Por favor, inténtalo de nuevo.');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again later.');
+      setError('Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       setIsLoading(false);
     }
@@ -47,17 +47,17 @@ export function LoginPage() {
             <CardTitle>KemonoGestor</CardTitle>
           </div>
           <CardDescription>
-            Enter your credentials to access the platform.
+            Introduce tus credenciales para acceder a la plataforma.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Usuario</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="admin or johndoe"
+                placeholder="admin o johndoe"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -65,7 +65,7 @@ export function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
@@ -82,7 +82,7 @@ export function LoginPage() {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </CardFooter>
         </form>

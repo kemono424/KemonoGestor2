@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -54,25 +53,25 @@ export function EditZoneDialog({
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSave}>
           <DialogHeader>
-            <DialogTitle>{zone?.id ? 'Edit Zone' : 'Create New Zone'}</DialogTitle>
+            <DialogTitle>{zone?.id ? 'Editar Zona' : 'Crear Nueva Zona'}</DialogTitle>
             <DialogDescription>
-              Set the display name and color for this operational zone.
+              Establece el nombre y el color para esta zona operativa.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="zone-name">Zone Name</Label>
+              <Label htmlFor="zone-name">Nombre de la Zona</Label>
               <Input
                 id="zone-name"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="e.g., Downtown High-Traffic"
+                placeholder="p. ej., Centro de Alto Tráfico"
                 autoFocus
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="zone-color">Zone Color</Label>
+              <Label htmlFor="zone-color">Color de la Zona</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="zone-color"
@@ -96,9 +95,9 @@ export function EditZoneDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type="submit">Save Zone</Button>
+            <Button type="submit">Guardar Zona</Button>
           </DialogFooter>
         </form>
       </DialogContent>

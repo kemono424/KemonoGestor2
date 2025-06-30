@@ -1,4 +1,3 @@
-
 import type { Polygon } from 'geojson';
 
 export type VehicleStatus = 'Libre' | 'En descanso' | 'Ocupado' | 'En camino' | 'En espera' | 'Fuera de servicio';
@@ -19,8 +18,8 @@ export interface Vehicle {
   longitude?: number;
 }
 
-export type OperatorStatus = 'Active' | 'On Leave' | 'Inactive';
-export type UserRole = 'Admin' | 'Supervisor' | 'Dispatcher';
+export type OperatorStatus = 'Activo' | 'De Licencia' | 'Inactivo';
+export type UserRole = 'Admin' | 'Supervisor' | 'Operador';
 
 export interface Operator {
   id: string;
@@ -28,7 +27,7 @@ export interface Operator {
   role: UserRole;
   username: string;
   password: string;
-  shift: 'Day' | 'Night' | 'Admin';
+  shift: 'Día' | 'Noche' | 'Admin';
   status: OperatorStatus;
   // stats
   servicesToday: number;
@@ -45,7 +44,7 @@ export interface Customer {
     notes?: string;
 }
 
-export type TripStatus = 'In Tray' | 'Scheduled' | 'Assigned' | 'In Progress' | 'Completed' | 'Cancelled';
+export type TripStatus = 'En Bandeja' | 'Programado' | 'Asignado' | 'En Progreso' | 'Completado' | 'Cancelado';
 
 export interface Trip {
   id: string;

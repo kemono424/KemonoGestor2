@@ -32,16 +32,16 @@ interface CustomerHistoryDialogProps {
 
 const getStatusVariant = (status: TripStatus) => {
   switch (status) {
-    case 'Completed':
+    case 'Completado':
       return 'default';
-    case 'In Progress':
-    case 'Assigned':
+    case 'En Progreso':
+    case 'Asignado':
       return 'secondary';
-    case 'Cancelled':
+    case 'Cancelado':
       return 'destructive';
-    case 'Scheduled':
+    case 'Programado':
       return 'outline';
-    default: // In Tray
+    default: // En Bandeja
       return 'outline';
   }
 };
@@ -72,9 +72,9 @@ export function CustomerHistoryDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[70vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Trip History for {customer.name}</DialogTitle>
+          <DialogTitle>Historial de Viajes de {customer.name}</DialogTitle>
           <DialogDescription>
-            Showing all past and current trips for this customer.
+            Mostrando todos los viajes pasados y actuales de este cliente.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-hidden">
@@ -83,10 +83,10 @@ export function CustomerHistoryDialog({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Origin / Destination</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Vehicle</TableHead>
+                    <TableHead>Origen / Destino</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Vehículo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -119,7 +119,7 @@ export function CustomerHistoryDialog({
             ) : (
               <div className="flex items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
                 <p className="text-muted-foreground">
-                  No trip history found for this customer.
+                  No se encontró historial de viajes para este cliente.
                 </p>
               </div>
             )}
@@ -127,7 +127,7 @@ export function CustomerHistoryDialog({
         </div>
         <DialogFooter className="pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Cerrar
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -101,8 +101,8 @@ export default function CustomersPage() {
     recentTrips.push(...tripsToKeep);
 
     toast({
-      title: 'Customer Deleted',
-      description: `Customer "${customerToDelete.name}" has been permanently removed.`,
+      title: 'Cliente Eliminado',
+      description: `El cliente "${customerToDelete.name}" ha sido eliminado permanentemente.`,
     });
 
     setCustomerToDelete(null);
@@ -111,14 +111,14 @@ export default function CustomersPage() {
   return (
     <>
       <PageHeader
-        title="Customer Management"
-        description="View and manage customer information."
+        title="Gestión de Clientes"
+        description="Ver y gestionar la información de los clientes."
       >
         <div className="flex items-center space-x-2">
-          <Input placeholder="Filter by name or ID..." className="w-64" />
+          <Input placeholder="Filtrar por nombre o ID..." className="w-64" />
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Customer
+            Añadir Cliente
           </Button>
         </div>
       </PageHeader>
@@ -127,11 +127,11 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Debt</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Contacto</TableHead>
+                <TableHead>Deuda</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -161,18 +161,18 @@ export default function CustomersPage() {
                         <DropdownMenuItem
                           onClick={() => handleViewHistory(customer)}
                         >
-                          View Trip History
+                          Ver Historial de Viajes
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleEditCustomer(customer)}
                         >
-                          Edit Customer
+                          Editar Cliente
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive focus:bg-destructive/10"
                           onClick={() => handleDeleteCustomer(customer)}
                         >
-                          Delete Customer
+                          Eliminar Cliente
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -209,19 +209,19 @@ export default function CustomersPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              customer "{customerToDelete?.name}" and all of their associated data.
+              Esta acción no se puede deshacer. Esto eliminará permanentemente al
+              cliente "{customerToDelete?.name}" y todos sus datos asociados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={confirmDelete}
             >
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

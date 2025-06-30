@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -49,8 +48,8 @@ export function EditOperatorDialog({
     ) {
       toast({
         variant: 'destructive',
-        title: 'Missing Information',
-        description: 'Please fill out all fields.',
+        title: 'Información Faltante',
+        description: 'Por favor, completa todos los campos.',
       });
       return;
     }
@@ -74,17 +73,17 @@ export function EditOperatorDialog({
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>
-              {operator ? 'Edit Operator' : 'Add New Operator'}
+              {operator ? 'Editar Operador' : 'Añadir Nuevo Operador'}
             </DialogTitle>
             <DialogDescription>
               {operator
-                ? 'Update the operator details below.'
-                : 'Enter the details for the new operator.'}
+                ? 'Actualiza los detalles del operador a continuación.'
+                : 'Introduce los detalles del nuevo operador.'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="operator-id">Operator #</Label>
+              <Label htmlFor="operator-id">Nº de Operador</Label>
               <Input
                 id="operator-id"
                 value={editableOperator.id || ''}
@@ -95,7 +94,7 @@ export function EditOperatorDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Nombre</Label>
               <Input
                 id="name"
                 value={editableOperator.name || ''}
@@ -103,7 +102,7 @@ export function EditOperatorDialog({
               />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Usuario</Label>
                 <Input
                     id="username"
                     value={editableOperator.username || ''}
@@ -111,7 +110,7 @@ export function EditOperatorDialog({
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Contraseña</Label>
                 <Input
                     id="password"
                     type="password"
@@ -126,9 +125,9 @@ export function EditOperatorDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type="submit">Save Operator</Button>
+            <Button type="submit">Guardar Operador</Button>
           </DialogFooter>
         </form>
       </DialogContent>

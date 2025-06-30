@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -109,8 +108,8 @@ export function CustomerTripHistoryDialog({
       setActiveCustomer(editableCustomer);
 
       toast({
-        title: 'Customer Updated',
-        description: `The information for ${editableCustomer.name} has been saved.`,
+        title: 'Cliente Actualizado',
+        description: `La información de ${editableCustomer.name} ha sido guardada.`,
       });
       setIsEditing(false);
     }
@@ -126,17 +125,16 @@ export function CustomerTripHistoryDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Customer & Trip History</DialogTitle>
+          <DialogTitle>Cliente e Historial de Viajes</DialogTitle>
           <DialogDescription>
-            Search for a customer by phone to view their past trips. Select one
-            to auto-fill the form.
+            Busca un cliente por teléfono para ver sus viajes pasados. Selecciona uno para autocompletar el formulario.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
           {/* Left Panel: Trip List */}
           <div className="h-full flex flex-col gap-2">
             <h3 className="text-lg font-semibold shrink-0">
-              Matching Trips ({filteredTrips.length})
+              Viajes Coincidentes ({filteredTrips.length})
             </h3>
             <ScrollArea className="h-full pr-4 -mr-4">
               <div className="space-y-2">
@@ -176,7 +174,7 @@ export function CustomerTripHistoryDialog({
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
                     <p className="text-muted-foreground">
-                      No past trips found for "{phoneQuery}".
+                      No se encontraron viajes pasados para "{phoneQuery}".
                     </p>
                   </div>
                 )}
@@ -190,11 +188,11 @@ export function CustomerTripHistoryDialog({
                 <CardHeader className="flex-row justify-between items-start">
                   <div>
                     <CardTitle>
-                      {isEditing ? 'Edit Customer' : activeCustomer.name}
+                      {isEditing ? 'Editar Cliente' : activeCustomer.name}
                     </CardTitle>
                     <CardDescription>
                       {isEditing
-                        ? 'Update the details below.'
+                        ? 'Actualiza los detalles a continuación.'
                         : activeCustomer.phone}
                     </CardDescription>
                   </div>
@@ -205,7 +203,7 @@ export function CustomerTripHistoryDialog({
                       onClick={() => setIsEditing(true)}
                     >
                       <Pencil className="mr-2 h-3 w-3" />
-                      Edit
+                      Editar
                     </Button>
                   )}
                 </CardHeader>
@@ -213,7 +211,7 @@ export function CustomerTripHistoryDialog({
                   {isEditing ? (
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
-                        <Label htmlFor="customer-name">Name</Label>
+                        <Label htmlFor="customer-name">Nombre</Label>
                         <Input
                           id="customer-name"
                           value={editableCustomer?.name || ''}
@@ -226,7 +224,7 @@ export function CustomerTripHistoryDialog({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customer-phone">Phone</Label>
+                        <Label htmlFor="customer-phone">Teléfono</Label>
                         <Input
                           id="customer-phone"
                           value={editableCustomer?.phone || ''}
@@ -238,7 +236,7 @@ export function CustomerTripHistoryDialog({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customer-notes">Notes for Driver</Label>
+                        <Label htmlFor="customer-notes">Notas para el Conductor</Label>
                         <Textarea
                           id="customer-notes"
                           value={editableCustomer?.notes || ''}
@@ -247,7 +245,7 @@ export function CustomerTripHistoryDialog({
                               c ? { ...c, notes: e.target.value } : null
                             )
                           }
-                          placeholder="e.g., Prefers quiet rides, has a pet..."
+                          placeholder="p. ej., Prefiere viajes tranquilos, tiene una mascota..."
                           className="min-h-[100px]"
                         />
                       </div>
@@ -257,11 +255,11 @@ export function CustomerTripHistoryDialog({
                       <Separator />
                       <div className="space-y-2">
                         <h4 className="font-semibold text-sm">
-                          Financial Status
+                          Estado Financiero
                         </h4>
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">
-                            Pending Debt
+                            Deuda Pendiente
                           </span>
                           <Badge
                             variant={
@@ -276,10 +274,10 @@ export function CustomerTripHistoryDialog({
                       </div>
                       <Separator />
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-sm">Notes</h4>
+                        <h4 className="font-semibold text-sm">Notas</h4>
                         <p className="text-sm text-muted-foreground italic">
                           {activeCustomer.notes ||
-                            'No notes available for this customer.'}
+                            'No hay notas disponibles para este cliente.'}
                         </p>
                       </div>
                     </>
@@ -289,10 +287,9 @@ export function CustomerTripHistoryDialog({
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
                 <History className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">Select a Past Trip</h3>
+                <h3 className="text-lg font-semibold">Selecciona un Viaje Pasado</h3>
                 <p className="text-muted-foreground max-w-sm">
-                  Click on a trip from the list to view customer details and
-                  reuse the trip information for a new service.
+                  Haz clic en un viaje de la lista para ver los detalles del cliente y reutilizar la información del viaje para un nuevo servicio.
                 </p>
               </div>
             )}
@@ -302,15 +299,15 @@ export function CustomerTripHistoryDialog({
           {isEditing ? (
             <div className="flex justify-end w-full gap-2">
               <Button variant="ghost" onClick={handleCancelEdit}>
-                Cancel
+                Cancelar
               </Button>
-              <Button onClick={handleSaveCustomer}>Save Changes</Button>
+              <Button onClick={handleSaveCustomer}>Guardar Cambios</Button>
             </div>
           ) : (
             <>
               {activeCustomer && (
                 <Button variant="ghost" onClick={handleBack}>
-                  Back
+                  Atrás
                 </Button>
               )}
               <Button
@@ -318,7 +315,7 @@ export function CustomerTripHistoryDialog({
                 onClick={() => onOpenChange(false)}
                 className="ml-auto"
               >
-                Close
+                Cerrar
               </Button>
             </>
           )}

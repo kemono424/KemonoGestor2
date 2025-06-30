@@ -22,7 +22,7 @@ export default function Header() {
   if (!currentUser) return null;
 
   const { role, name } = currentUser;
-  const canCreateTrips = ['Admin', 'Supervisor', 'Dispatcher'].includes(role);
+  const canCreateTrips = ['Admin', 'Supervisor', 'Operador'].includes(role);
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -37,7 +37,7 @@ export default function Header() {
           <Button asChild>
             <Link href="/">
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Trip
+              Nuevo Viaje
             </Link>
           </Button>
         )}
@@ -65,18 +65,18 @@ export default function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+              <span>Perfil</span>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
                 <Link href="/settings">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>Ajustes</span>
                 </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>Cerrar Sesión</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

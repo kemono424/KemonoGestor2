@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, type ChangeEvent, type KeyboardEvent, useEffect, useRef } from 'react';
@@ -30,8 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Textarea } from './ui/textarea';
 
 const formSchema = z.object({
-  customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
-  origin: z.string().min(1, { message: 'Origin is required.' }),
+  customerPhone: z.string().min(1, { message: 'El teléfono del cliente es requerido.' }),
+  origin: z.string().min(1, { message: 'El origen es requerido.' }),
   destination: z.string().optional(),
   notes: z.string().optional(),
   inTray: z.boolean().default(false).optional(),
@@ -195,19 +194,19 @@ export function NewTripForm({
     if (!selectedCustomer && values.customerPhone) {
         toast({
             variant: "destructive",
-            title: "Customer Not Selected",
-            description: "Please search and select a customer or a past trip from history before creating a trip.",
+            title: "Cliente no Seleccionado",
+            description: "Por favor, busca y selecciona un cliente o un viaje pasado del historial antes de crear un viaje.",
         });
         form.setError('customerPhone', {
             type: 'manual',
-            message: 'Please select a customer by searching trip history.',
+            message: 'Por favor, selecciona un cliente buscando en el historial de viajes.',
         });
         return;
     }
 
     toast({
-        title: "Trip Created",
-        description: `Trip for ${selectedCustomer?.name || 'a new customer'} has been successfully created.`
+        title: "Viaje Creado",
+        description: `El viaje para ${selectedCustomer?.name || 'un nuevo cliente'} ha sido creado exitosamente.`
     });
 
     form.reset();
@@ -230,12 +229,12 @@ export function NewTripForm({
             name="customerPhone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Customer Phone</FormLabel>
+                <FormLabel>Teléfono del Cliente</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <History className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search phone and press Enter for history..."
+                      placeholder="Busca teléfono y presiona Enter para ver historial..."
                       {...field}
                       onKeyDown={handlePhoneKeyDown}
                       autoComplete="off"
@@ -258,7 +257,7 @@ export function NewTripForm({
                 </div>
                 {selectedCustomer.pendingDebt > 0 && (
                   <Badge variant="destructive">
-                    Debt: ${selectedCustomer.pendingDebt.toFixed(2)}
+                    Deuda: ${selectedCustomer.pendingDebt.toFixed(2)}
                   </Badge>
                 )}
               </div>
@@ -271,12 +270,12 @@ export function NewTripForm({
             name="origin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Origin</FormLabel>
+                <FormLabel>Origen</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Enter pickup location"
+                      placeholder="Introduce la ubicación de recogida"
                       {...field}
                       value={originQuery}
                       onChange={e => {
@@ -314,12 +313,12 @@ export function NewTripForm({
             name="destination"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Destination (Optional)</FormLabel>
+                <FormLabel>Destino (Opcional)</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Enter drop-off location"
+                      placeholder="Introduce la ubicación de destino"
                       {...field}
                       value={destinationQuery}
                       onChange={e => {
@@ -358,19 +357,19 @@ export function NewTripForm({
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Additional Information (for driver)</FormLabel>
+                <FormLabel>Información Adicional (para el conductor)</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Textarea
-                      placeholder="e.g., green gate, call upon arrival..."
+                      placeholder="p. ej., portón verde, llamar al llegar..."
                       {...field}
                       className="pl-10"
                     />
                   </div>
                 </FormControl>
                 <FormDescription>
-                    This information will be visible to the assigned driver.
+                    Esta información será visible para el conductor asignado.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -383,7 +382,7 @@ export function NewTripForm({
               name="isScheduled"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between">
-                  <FormLabel>Schedule for later?</FormLabel>
+                  <FormLabel>¿Programar para más tarde?</FormLabel>
                   <FormControl>
                     <Switch
                       checked={field.value}
@@ -400,7 +399,7 @@ export function NewTripForm({
                   name="scheduledTime"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Scheduled Date & Time</FormLabel>
+                      <FormLabel>Fecha y Hora Programada</FormLabel>
                       <DateTimePicker
                         date={field.value}
                         setDate={field.onChange}
@@ -413,7 +412,7 @@ export function NewTripForm({
                   name="isRecurring"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between">
-                      <FormLabel>Repeat this trip?</FormLabel>
+                      <FormLabel>¿Repetir este viaje?</FormLabel>
                       <FormControl>
                         <Switch
                           checked={field.value}
@@ -429,7 +428,7 @@ export function NewTripForm({
                     name="recurringDays"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Repeat for how many days?</FormLabel>
+                        <FormLabel>¿Repetir por cuántos días?</FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
@@ -455,10 +454,10 @@ export function NewTripForm({
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel htmlFor="in-tray">
-                    Send to Manual Assignment Tray
+                    Enviar a Bandeja de Asignación Manual
                   </FormLabel>
                   <FormDescription>
-                    If unchecked, the system will try to auto-assign a vehicle.
+                    Si no está marcado, el sistema intentará auto-asignar un vehículo.
                   </FormDescription>
                 </div>
               </FormItem>
@@ -466,7 +465,7 @@ export function NewTripForm({
           />
           <div className="flex justify-end gap-2 pt-4">
             <Button type="submit" className="w-full">
-              Create Trip
+              Crear Viaje
             </Button>
           </div>
         </form>

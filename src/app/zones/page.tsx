@@ -91,9 +91,9 @@ export default function ZonesPage() {
       if (cellAssignments[cellId]) {
         toast({
           variant: 'destructive',
-          title: 'Cell Already Assigned',
+          title: 'Celda Ya Asignada',
           description:
-            'This cell belongs to another zone. You must unassign it first.',
+            'Esta celda pertenece a otra zona. Debes desasignarla primero.',
         });
         return;
       }
@@ -115,17 +115,17 @@ export default function ZonesPage() {
     if (selectedCells.size === 0) {
       toast({
         variant: 'destructive',
-        title: 'No Cells Selected',
-        description: 'Please select one or more cells to form a zone.',
+        title: 'No hay Celdas Seleccionadas',
+        description: 'Por favor, selecciona una o más celdas para formar una zona.',
       });
       return;
     }
     if (!areCellsConnected(Array.from(selectedCells))) {
       toast({
         variant: 'destructive',
-        title: 'Selection Not Connected',
+        title: 'Selección no Conectada',
         description:
-          'All selected cells must be adjacent to form a single zone.',
+          'Todas las celdas seleccionadas deben ser adyacentes para formar una única zona.',
       });
       return;
     }
@@ -153,8 +153,8 @@ export default function ZonesPage() {
     setSelectedCells(new Set());
     setIsDialogOpen(false);
     toast({
-      title: 'Zone Created',
-      description: `Zone "${name}" has been successfully created.`,
+      title: 'Zona Creada',
+      description: `La zona "${name}" ha sido creada exitosamente.`,
     });
   };
 
@@ -172,28 +172,28 @@ export default function ZonesPage() {
       }
       return newAssignments;
     });
-    toast({ title: 'Zone Deleted' });
+    toast({ title: 'Zona Eliminada' });
   };
 
   return (
     <>
       <PageHeader
-        title="Zone Management"
-        description="Define operational areas for your fleet using a grid system."
+        title="Gestión de Zonas"
+        description="Define áreas operativas para tu flota usando un sistema de cuadrícula."
       />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Zone Controls</CardTitle>
+              <CardTitle>Controles de Zona</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Select cells on the grid to create a new operational zone.
+                Selecciona celdas en la cuadrícula para crear una nueva zona operativa.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="rows">Rows</Label>
+                  <Label htmlFor="rows">Filas</Label>
                   <Input
                     id="rows"
                     type="number"
@@ -205,7 +205,7 @@ export default function ZonesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cols">Columns</Label>
+                  <Label htmlFor="cols">Columnas</Label>
                   <Input
                     id="cols"
                     type="number"
@@ -222,14 +222,14 @@ export default function ZonesPage() {
                 className="w-full"
                 disabled={selectedCells.size === 0}
               >
-                Create Zone from Selection ({selectedCells.size})
+                Crear Zona desde Selección ({selectedCells.size})
               </Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Active Zones</CardTitle>
+              <CardTitle>Zonas Activas</CardTitle>
             </CardHeader>
             <CardContent>
               {zones.length > 0 ? (
@@ -259,7 +259,7 @@ export default function ZonesPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No zones created yet.
+                  Aún no hay zonas creadas.
                 </p>
               )}
             </CardContent>
@@ -273,7 +273,7 @@ export default function ZonesPage() {
             />
           ) : (
             <div className="h-[600px] w-full bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Loading Map...</p>
+              <p className="text-muted-foreground">Cargando Mapa...</p>
             </div>
           )}
         </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,8 +75,8 @@ export default function VehiclesPage() {
       vehicles.unshift(newVehicle); // Mutate mock data
       setVehiclesData([...vehicles]); // Update local state
       toast({
-        title: 'Vehicle Added',
-        description: `Vehicle "${newVehicle.name}" has been successfully added.`,
+        title: 'Vehículo Añadido',
+        description: `El vehículo "${newVehicle.name}" ha sido añadido exitosamente.`,
       });
     } else {
       const index = vehicles.findIndex((v) => v.id === savedVehicle.id);
@@ -85,8 +84,8 @@ export default function VehiclesPage() {
         vehicles[index] = { ...vehicles[index], ...savedVehicle } as Vehicle;
         setVehiclesData([...vehicles]); // Update local state
         toast({
-          title: 'Vehicle Updated',
-          description: `Vehicle "${savedVehicle.name}" has been successfully updated.`,
+          title: 'Vehículo Actualizado',
+          description: `El vehículo "${savedVehicle.name}" ha sido actualizado exitosamente.`,
         });
       }
     }
@@ -136,19 +135,19 @@ export default function VehiclesPage() {
   return (
     <>
       <PageHeader
-        title="Vehicle Manager"
-        description="Register, track, and manage all vehicles in your fleet."
+        title="Gestor de Vehículos"
+        description="Registra, sigue y gestiona todos los vehículos de tu flota."
       >
         <div className="flex items-center space-x-2">
           <Input
-            placeholder="Filter by unit, name, plate..."
+            placeholder="Filtrar por unidad, nombre, matrícula..."
             className="w-64"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Button onClick={handleAddVehicle}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Vehicle
+            Añadir Vehículo
           </Button>
         </div>
       </PageHeader>
@@ -157,13 +156,13 @@ export default function VehiclesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Unit</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>License Plate</TableHead>
-                <TableHead>Operator</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Unidad</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Matrícula</TableHead>
+                <TableHead>Operador</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -189,14 +188,14 @@ export default function VehiclesPage() {
                         <DropdownMenuItem
                           onClick={() => handleEditVehicle(vehicle)}
                         >
-                          Edit
+                          Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>View on Map</DropdownMenuItem>
+                        <DropdownMenuItem>Ver en Mapa</DropdownMenuItem>
                         <DropdownMenuItem>
-                          Schedule Maintenance
+                          Programar Mantenimiento
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
-                          Delete
+                          Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

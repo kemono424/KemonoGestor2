@@ -1,4 +1,3 @@
-
 'use client';
 import {
   SidebarHeader,
@@ -27,44 +26,44 @@ const links = [
   {
     href: '/',
     icon: LayoutDashboard,
-    label: 'Dashboard',
-    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+    label: 'Panel',
+    roles: ['Admin', 'Supervisor', 'Operador'],
   },
   {
     href: '/trips',
     icon: Map,
-    label: 'Trips',
-    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+    label: 'Viajes',
+    roles: ['Admin', 'Supervisor', 'Operador'],
   },
   {
     href: '/vehicles',
     icon: Car,
-    label: 'Vehicles',
+    label: 'Vehículos',
     roles: ['Admin', 'Supervisor'],
   },
   {
     href: '/operators',
     icon: Users,
-    label: 'Operators',
+    label: 'Operadores',
     roles: ['Admin', 'Supervisor'],
   },
   {
     href: '/customers',
     icon: UserCheck,
-    label: 'Customers',
-    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+    label: 'Clientes',
+    roles: ['Admin', 'Supervisor', 'Operador'],
   },
   {
     href: '/zones',
     icon: Shapes,
-    label: 'Zones',
+    label: 'Zonas',
     roles: ['Admin', 'Supervisor'],
   },
   {
     href: '/messages',
     icon: MessageSquare,
-    label: 'Messages',
-    roles: ['Admin', 'Supervisor', 'Dispatcher'],
+    label: 'Mensajes',
+    roles: ['Admin', 'Supervisor', 'Operador'],
   },
 ];
 
@@ -85,7 +84,7 @@ export default function SidebarNav() {
   const settingsLink = {
     href: '/settings',
     icon: Settings,
-    label: 'Settings',
+    label: 'Ajustes',
     roles: ['Admin'],
   }
 
@@ -117,18 +116,18 @@ export default function SidebarNav() {
         <SidebarMenu>
           {settingsLink.roles.includes(role) && (
             <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Settings" isActive={mounted ? pathname === settingsLink.href : false}>
+                <SidebarMenuButton asChild tooltip="Ajustes" isActive={mounted ? pathname === settingsLink.href : false}>
                     <Link href={settingsLink.href}>
                         <Settings />
-                        <span>Settings</span>
+                        <span>Ajustes</span>
                     </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           )}
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Logout" onClick={logout}>
+            <SidebarMenuButton tooltip="Cerrar Sesión" onClick={logout}>
               <LogOut />
-              <span>Logout</span>
+              <span>Cerrar Sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -24,9 +24,9 @@ import type { UserRole } from '@/types';
 const PRICING_CONFIG_KEY = 'fleet-pricing-config';
 
 const pricingFormSchema = z.object({
-  baseFare: z.coerce.number().min(0, 'Base fare must be non-negative.'),
-  perKilometer: z.coerce.number().min(0, 'Price per km must be non-negative.'),
-  perStop: z.coerce.number().min(0, 'Price per stop must be non-negative.'),
+  baseFare: z.coerce.number().min(0, 'La tarifa base debe ser no negativa.'),
+  perKilometer: z.coerce.number().min(0, 'El precio por km debe ser no negativo.'),
+  perStop: z.coerce.number().min(0, 'El precio por parada debe ser no negativo.'),
 });
 
 type PricingFormValues = z.infer<typeof pricingFormSchema>;
@@ -65,15 +65,15 @@ export default function SettingsPage() {
     try {
         localStorage.setItem(PRICING_CONFIG_KEY, JSON.stringify(data));
         toast({
-            title: 'Settings Saved',
-            description: 'Your new pricing configuration has been saved successfully.',
+            title: 'Ajustes Guardados',
+            description: 'Tu nueva configuración de precios ha sido guardada exitosamente.',
         });
     } catch (error) {
         console.error('Failed to save pricing config to localStorage', error);
         toast({
             variant: 'destructive',
-            title: 'Save Failed',
-            description: 'Could not save the pricing configuration.',
+            title: 'Error al Guardar',
+            description: 'No se pudo guardar la configuración de precios.',
         });
     }
   }
@@ -87,10 +87,10 @@ export default function SettingsPage() {
         <div className="flex items-center justify-center h-full">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-center">Access Denied</CardTitle>
+                    <CardTitle className="text-center">Acceso Denegado</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-muted-foreground">You must be an administrator to access this page.</p>
+                    <p className="text-center text-muted-foreground">Debes ser un administrador to access this page.</p>
                 </CardContent>
             </Card>
         </div>
@@ -100,14 +100,14 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Manage application-wide settings and configurations."
+        title="Ajustes"
+        description="Gestionar ajustes y configuraciones de toda la aplicación."
       />
       <Card>
         <CardHeader>
-          <CardTitle>Trip Pricing</CardTitle>
+          <CardTitle>Precios de Viajes</CardTitle>
           <CardDescription>
-            Define the pricing model for all trips managed by the system.
+            Define el modelo de precios para todos los viajes gestionados por el sistema.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -118,12 +118,12 @@ export default function SettingsPage() {
                 name="baseFare"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base Fare (Flag-Drop)</FormLabel>
+                    <FormLabel>Tarifa Base (Bajada de Bandera)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="e.g., 3.50" {...field} />
                     </FormControl>
                     <FormDescription>
-                      The initial charge when a trip starts.
+                      El cargo inicial cuando comienza un viaje.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -134,12 +134,12 @@ export default function SettingsPage() {
                 name="perKilometer"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price per Kilometer</FormLabel>
+                    <FormLabel>Precio por Kilómetro</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="e.g., 1.75" {...field} />
                     </FormControl>
                     <FormDescription>
-                      The charge for each kilometer traveled.
+                      El cargo por cada kilómetro recorrido.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -150,18 +150,18 @@ export default function SettingsPage() {
                 name="perStop"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price per Stop</FormLabel>
+                    <FormLabel>Precio por Parada</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="e.g., 2.00" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Additional charge for each requested stop during the trip.
+                      Cargo adicional por cada parada solicitada durante el viaje.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit">Save Settings</Button>
+              <Button type="submit">Guardar Ajustes</Button>
             </form>
           </Form>
         </CardContent>

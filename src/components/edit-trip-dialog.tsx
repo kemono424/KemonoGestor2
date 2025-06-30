@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -44,8 +43,8 @@ export function EditTripDialog({
     if (currentTrip) {
       onSave(currentTrip);
       toast({
-        title: 'Trip Updated',
-        description: `Trip #${currentTrip.id} has been successfully updated.`,
+        title: 'Viaje Actualizado',
+        description: `El viaje #${currentTrip.id} ha sido actualizado exitosamente.`,
       });
     }
   };
@@ -57,67 +56,67 @@ export function EditTripDialog({
       if (!prev) return null;
       let status: TripStatus = prev.status;
       if (newStatus === 'manual') {
-        status = 'In Tray';
+        status = 'En Bandeja';
       } else {
         // Revert to a sensible automatic status
-        status = prev.scheduledTime ? 'Scheduled' : 'Assigned';
+        status = prev.scheduledTime ? 'Programado' : 'Asignado';
       }
       return { ...prev, status };
     });
   };
 
-  const isManual = currentTrip.status === 'In Tray';
+  const isManual = currentTrip.status === 'En Bandeja';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSave}>
           <DialogHeader>
-            <DialogTitle>Edit Trip #{trip?.id}</DialogTitle>
+            <DialogTitle>Editar Viaje #{trip?.id}</DialogTitle>
             <DialogDescription>
-              Update trip details and assignment status.
+              Actualiza los detalles del viaje y el estado de asignación.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label>Assignment Mode</Label>
+              <Label>Modo de Asignación</Label>
               <RadioGroup
                 value={isManual ? 'manual' : 'automatic'}
                 onValueChange={handleStatusChange as (value: string) => void}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="automatic" id="r1" />
-                  <Label htmlFor="r1">Automatic Assignment</Label>
+                  <Label htmlFor="r1">Asignación Automática</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="manual" id="r2" />
-                  <Label htmlFor="r2">Manual (Send to Tray)</Label>
+                  <Label htmlFor="r2">Manual (Enviar a Bandeja)</Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="origin">Origin</Label>
+                <Label htmlFor="origin">Origen</Label>
                 <Input id="origin" value={currentTrip.origin} onChange={(e) => setCurrentTrip({...currentTrip, origin: e.target.value})} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
+                <Label htmlFor="destination">Destino</Label>
                 <Input id="destination" value={currentTrip.destination} onChange={(e) => setCurrentTrip({...currentTrip, destination: e.target.value})} />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="notes">Additional Information</Label>
+                <Label htmlFor="notes">Información Adicional</Label>
                 <Textarea 
                     id="notes" 
                     value={currentTrip.notes || ''} 
                     onChange={(e) => setCurrentTrip({...currentTrip, notes: e.target.value})}
-                    placeholder="e.g., green gate, call upon arrival..."
+                    placeholder="p. ej., portón verde, llamar al llegar..."
                 />
             </div>
 
-             {currentTrip.status === 'Scheduled' && (
+             {currentTrip.status === 'Programado' && (
                 <div className="space-y-2">
-                    <Label>Scheduled Time</Label>
+                    <Label>Hora Programada</Label>
                     <DateTimePicker 
                         date={currentTrip.scheduledTime ? new Date(currentTrip.scheduledTime) : new Date()}
                         setDate={(newDate) => setCurrentTrip({...currentTrip, scheduledTime: newDate?.toISOString() || null})}
@@ -131,9 +130,9 @@ export function EditTripDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Guardar Cambios</Button>
           </DialogFooter>
         </form>
       </DialogContent>

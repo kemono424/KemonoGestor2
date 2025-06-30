@@ -12,11 +12,11 @@ export default function MessagesPage() {
   const activeOperator = operators[0];
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
-      <PageHeader title="Internal Messaging" description="Communicate with operators in real-time." />
+      <PageHeader title="Mensajería Interna" description="Comunícate con los operadores en tiempo real." />
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 border rounded-lg overflow-hidden">
         <div className="md:col-span-1 lg:col-span-1 border-r">
           <div className="p-4">
-            <Input placeholder="Search operators..." />
+            <Input placeholder="Buscar operadores..." />
           </div>
           <Separator />
           <ScrollArea className="h-[calc(100vh-16rem)]">
@@ -35,7 +35,7 @@ export default function MessagesPage() {
                   <div className="flex-1">
                     <p className="font-semibold">{op.name}</p>
                     <p className="text-sm text-muted-foreground truncate">
-                      Okay, on my way to the pickup...
+                      De acuerdo, en camino a la recogida...
                     </p>
                   </div>
                 </button>
@@ -51,7 +51,7 @@ export default function MessagesPage() {
               </Avatar>
               <div>
                 <p className="font-semibold">{activeOperator.name}</p>
-                <Badge variant="secondary">Online</Badge>
+                <Badge variant="secondary">En línea</Badge>
               </div>
           </div>
           <ScrollArea className="flex-1 p-4">
@@ -63,12 +63,12 @@ export default function MessagesPage() {
                   <AvatarFallback>D</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">
-                  <p className="text-sm">John, new trip assigned. Pickup at 123 Main St.</p>
+                  <p className="text-sm">John, nuevo viaje asignado. Recoger en 123 Main St.</p>
                 </div>
               </div>
               <div className="flex justify-end items-start gap-3">
                  <div className="rounded-lg bg-primary text-primary-foreground p-3 max-w-xs">
-                  <p className="text-sm">Copy that. On my way.</p>
+                  <p className="text-sm">Entendido. En camino.</p>
                 </div>
                  <Avatar className="h-8 w-8">
                   <AvatarImage src="https://placehold.co/100x100.png" data-ai-hint="person user" />
@@ -81,14 +81,14 @@ export default function MessagesPage() {
                   <AvatarFallback>D</AvatarFallback>
                 </Avatar>
                 <div className="rounded-lg bg-muted p-3 max-w-xs">
-                  <p className="text-sm">Customer name is Alice. Destination: 456 Oak Ave.</p>
+                  <p className="text-sm">El nombre del cliente es Alice. Destino: 456 Oak Ave.</p>
                 </div>
               </div>
             </div>
           </ScrollArea>
           <div className="p-4 border-t">
             <div className="relative">
-              <Input placeholder="Type a message..." className="pr-12" />
+              <Input placeholder="Escribe un mensaje..." className="pr-12" />
               <Button size="icon" variant="ghost" className="absolute top-1/2 right-2 -translate-y-1/2">
                 <SendHorizonal className="h-5 w-5" />
               </Button>

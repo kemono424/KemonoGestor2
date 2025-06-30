@@ -43,8 +43,8 @@ export function EditCustomerDialog({
     if (editableCustomer) {
       onSave(editableCustomer);
       toast({
-        title: 'Customer Updated',
-        description: `Information for ${editableCustomer.name} has been saved.`,
+        title: 'Cliente Actualizado',
+        description: `La información de ${editableCustomer.name} ha sido guardada.`,
       });
       onOpenChange(false);
     }
@@ -57,14 +57,14 @@ export function EditCustomerDialog({
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSave}>
           <DialogHeader>
-            <DialogTitle>Edit Customer: {customer?.name}</DialogTitle>
+            <DialogTitle>Editar Cliente: {customer?.name}</DialogTitle>
             <DialogDescription>
-              Update the customer's information below.
+              Actualiza la información del cliente a continuación.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="customer-name">Name</Label>
+              <Label htmlFor="customer-name">Nombre</Label>
               <Input
                 id="customer-name"
                 value={editableCustomer.name}
@@ -75,7 +75,7 @@ export function EditCustomerDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customer-phone">Phone</Label>
+              <Label htmlFor="customer-phone">Teléfono</Label>
               <Input
                 id="customer-phone"
                 value={editableCustomer.phone}
@@ -85,7 +85,7 @@ export function EditCustomerDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customer-debt">Pending Debt ($)</Label>
+              <Label htmlFor="customer-debt">Deuda Pendiente ($)</Label>
               <Input
                 id="customer-debt"
                 type="number"
@@ -100,14 +100,14 @@ export function EditCustomerDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customer-notes">Notes for Driver</Label>
+              <Label htmlFor="customer-notes">Notas para el Conductor</Label>
               <Textarea
                 id="customer-notes"
                 value={editableCustomer.notes || ''}
                 onChange={(e) =>
                   setEditableCustomer({ ...editableCustomer, notes: e.target.value })
                 }
-                placeholder="e.g., Prefers quiet rides, has a pet..."
+                placeholder="p. ej., Prefiere viajes tranquilos, tiene una mascota..."
               />
             </div>
           </div>
@@ -117,9 +117,9 @@ export function EditCustomerDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Guardar Cambios</Button>
           </DialogFooter>
         </form>
       </DialogContent>

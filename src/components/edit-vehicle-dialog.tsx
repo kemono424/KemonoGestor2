@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -70,8 +69,8 @@ export function EditVehicleDialog({
       ) {
         toast({
           variant: 'destructive',
-          title: 'Missing Information',
-          description: 'Please fill out all required fields.',
+          title: 'Información Faltante',
+          description: 'Por favor, completa todos los campos requeridos.',
         });
         return;
       }
@@ -103,17 +102,17 @@ export function EditVehicleDialog({
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>
-              {vehicle ? 'Edit Vehicle' : 'Add New Vehicle'}
+              {vehicle ? 'Editar Vehículo' : 'Añadir Nuevo Vehículo'}
             </DialogTitle>
             <DialogDescription>
               {vehicle
-                ? 'Update the vehicle details below.'
-                : 'Enter the details for the new vehicle.'}
+                ? 'Actualiza los detalles del vehículo a continuación.'
+                : 'Introduce los detalles del nuevo vehículo.'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="space-y-2">
-              <Label htmlFor="unitNumber">Unit Number</Label>
+              <Label htmlFor="unitNumber">Número de Unidad</Label>
               <Input
                 id="unitNumber"
                 value={editableVehicle.unitNumber || ''}
@@ -122,7 +121,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Vehicle Name</Label>
+              <Label htmlFor="name">Nombre del Vehículo</Label>
               <Input
                 id="name"
                 value={editableVehicle.name || ''}
@@ -130,7 +129,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="licensePlate">License Plate</Label>
+              <Label htmlFor="licensePlate">Matrícula</Label>
               <Input
                 id="licensePlate"
                 value={editableVehicle.licensePlate || ''}
@@ -140,7 +139,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="operator">Operator</Label>
+              <Label htmlFor="operator">Operador</Label>
               <Input
                 id="operator"
                 value={editableVehicle.operator || ''}
@@ -148,7 +147,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="model">Model</Label>
+              <Label htmlFor="model">Modelo</Label>
               <Input
                 id="model"
                 value={editableVehicle.model || ''}
@@ -164,7 +163,7 @@ export function EditVehicleDialog({
               />
             </div>
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Estado</Label>
               <Select
                 value={selectValue}
                 onValueChange={(value: VehicleStatus) =>
@@ -172,7 +171,7 @@ export function EditVehicleDialog({
                 }
               >
                 <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>
                   {adminSelectableStatuses.map((status) => (
@@ -184,7 +183,7 @@ export function EditVehicleDialog({
               </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Usuario</Label>
                 <Input
                     id="username"
                     value={editableVehicle.username || ''}
@@ -192,7 +191,7 @@ export function EditVehicleDialog({
                 />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Contraseña</Label>
                 <Input
                     id="password"
                     type="password"
@@ -207,9 +206,9 @@ export function EditVehicleDialog({
               variant="secondary"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type="submit">Save Vehicle</Button>
+            <Button type="submit">Guardar Vehículo</Button>
           </DialogFooter>
         </form>
       </DialogContent>

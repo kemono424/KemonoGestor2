@@ -19,12 +19,12 @@ export default function RoleSwitcher() {
   return (
     <Select value={currentUser.role} onValueChange={value => setCurrentUserRole(value as UserRole)}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Impersonate Role" />
+        <SelectValue placeholder="Impersonar Rol" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="Admin">Admin</SelectItem>
-        <SelectItem value="Supervisor">Impersonate Supervisor</SelectItem>
-        <SelectItem value="Dispatcher">Impersonate Dispatcher</SelectItem>
+        <SelectItem value="Supervisor">Impersonar Supervisor</SelectItem>
+        <SelectItem value="Operador">Impersonar Operador</SelectItem>
       </SelectContent>
     </Select>
   );

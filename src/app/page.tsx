@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -32,9 +31,9 @@ export default function DashboardPage() {
     ['En camino', 'Ocupado', 'En espera'].includes(v.status)
   ).length;
   const totalRevenue = recentTrips
-    .filter(t => t.status === 'Completed')
+    .filter(t => t.status === 'Completado')
     .reduce((sum, trip) => sum + 25, 0); // Mock revenue
-  const availableOperators = operators.filter(o => o.status === 'Active').length;
+  const availableOperators = operators.filter(o => o.status === 'Activo').length;
 
   const reverseGeocode = React.useCallback(async (coords: [number, number]) => {
     try {
@@ -50,8 +49,8 @@ export default function DashboardPage() {
       console.error('Error reverse geocoding:', error);
       toast({
         variant: 'destructive',
-        title: 'Reverse Geocoding Failed',
-        description: 'Could not fetch address for the selected location.',
+        title: 'Falló la Geocodificación Inversa',
+        description: 'No se pudo obtener la dirección para la ubicación seleccionada.',
       });
       return `${coords[1]}, ${coords[0]}`;
     }
@@ -100,52 +99,52 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Vehicles Available
+              Vehículos Disponibles
             </CardTitle>
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{onlineVehicles}</div>
             <p className="text-xs text-muted-foreground">
-              out of {vehicles.length} total vehicles
+              de {vehicles.length} vehículos totales
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Trips</CardTitle>
+            <CardTitle className="text-sm font-medium">Viajes Activos</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{activeTrips}</div>
             <p className="text-xs text-muted-foreground">
-              currently in progress
+              actualmente en progreso
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Available Operators
+              Operadores Disponibles
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{availableOperators}</div>
-            <p className="text-xs text-muted-foreground">ready for assignment</p>
+            <p className="text-xs text-muted-foreground">listos para asignación</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Today's Revenue
+              Ingresos de Hoy
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              based on completed trips
+              basado en viajes completados
             </p>
           </CardContent>
         </Card>
@@ -154,9 +153,9 @@ export default function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Create a New Trip</CardTitle>
+            <CardTitle>Crear un Nuevo Viaje</CardTitle>
             <CardDescription>
-              The system can auto-assign the nearest vehicle.
+              El sistema puede auto-asignar el vehículo más cercano.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -173,9 +172,9 @@ export default function DashboardPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Live Vehicle Locations</CardTitle>
+            <CardTitle>Ubicaciones de Vehículos en Vivo</CardTitle>
             <CardDescription>
-              Real-time tracking of all available vehicles.
+              Seguimiento en tiempo real de todos los vehículos disponibles.
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[480px] w-full p-0">
