@@ -12,14 +12,17 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { recentTrips } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
-import { ArrowRight, History, MapPin } from 'lucide-react';
+import { ArrowRight, History, MapPin, Pencil } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Separator } from './ui/separator';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface CustomerTripHistoryDialogProps {
@@ -39,6 +42,9 @@ export function CustomerTripHistoryDialog({
 }: CustomerTripHistoryDialogProps) {
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableCustomer, setEditableCustomer] = useState<Customer | null>(null);
+  const { toast } = useToast();
 
   const filteredTrips = useMemo(() => {
     const sanitizedQuery = phoneQuery.replace(/[^0-9]/g, '');
@@ -52,20 +58,39 @@ export function CustomerTripHistoryDialog({
     setSelectedTripId(trip.id);
     onTripSelect(trip);
     setActiveCustomer(trip.customer);
+    setEditableCustomer(trip.customer);
+    setIsEditing(false);
   };
 
   const handleBack = () => {
     setSelectedTripId(null);
-    onBackClick();
     setActiveCustomer(null);
+    setEditableCustomer(null);
+    setIsEditing(false);
+    onBackClick();
   };
   
   useEffect(() => {
     if (!isOpen) {
       setActiveCustomer(null);
       setSelectedTripId(null);
+      setIsEditing(false);
+      setEditableCustomer(null);
     }
   }, [isOpen]);
+
+  const handleSaveCustomer = () => {
+    if (editableCustomer) {
+      // In a real app, you'd call a service here to persist the changes.
+      // For this demo, we'll update the local state.
+      setActiveCustomer(editableCustomer);
+      toast({
+        title: 'Customer Updated',
+        description: `The information for ${editableCustomer.name} has been saved.`,
+      });
+      setIsEditing(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -125,29 +150,67 @@ export function CustomerTripHistoryDialog({
           <div className="h-full flex flex-col">
             {activeCustomer ? (
                 <Card className="h-full flex flex-col">
-                    <CardHeader>
-                        <CardTitle>{activeCustomer.name}</CardTitle>
-                        <CardDescription>{activeCustomer.phone}</CardDescription>
+                    <CardHeader className="flex-row justify-between items-start">
+                        <div>
+                          <CardTitle>{isEditing ? 'Edit Customer' : activeCustomer.name}</CardTitle>
+                          <CardDescription>{isEditing ? 'Update the details below.' : activeCustomer.phone}</CardDescription>
+                        </div>
+                        {!isEditing && (
+                          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                            <Pencil className="mr-2 h-3 w-3" />
+                            Edit
+                          </Button>
+                        )}
                     </CardHeader>
                     <CardContent className="flex-grow space-y-4">
-                        <Separator />
-                        <div className="space-y-2">
-                            <h4 className="font-semibold text-sm">Financial Status</h4>
-                            <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Pending Debt</span>
-                                <Badge variant={activeCustomer.pendingDebt > 0 ? 'destructive' : 'secondary'}>
-                                    ${activeCustomer.pendingDebt.toFixed(2)}
-                                </Badge>
+                        {isEditing ? (
+                          <div className="space-y-4 pt-2">
+                            <div className="space-y-2">
+                              <Label htmlFor="customer-name">Name</Label>
+                              <Input
+                                id="customer-name"
+                                value={editableCustomer?.name || ''}
+                                onChange={(e) => setEditableCustomer(c => c ? {...c, name: e.target.value} : null)}
+                                autoFocus
+                              />
                             </div>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                            <h4 className="font-semibold text-sm">Notes</h4>
-                            <p className="text-sm text-muted-foreground">
-                                Customer-specific notes, preferences, or alerts would appear here.
-                            </p>
-                        </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="customer-phone">Phone</Label>
+                              <Input
+                                id="customer-phone"
+                                value={editableCustomer?.phone || ''}
+                                onChange={(e) => setEditableCustomer(c => c ? {...c, phone: e.target.value} : null)}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Separator />
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-sm">Financial Status</h4>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground">Pending Debt</span>
+                                    <Badge variant={activeCustomer.pendingDebt > 0 ? 'destructive' : 'secondary'}>
+                                        ${activeCustomer.pendingDebt.toFixed(2)}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-sm">Notes</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    Customer-specific notes, preferences, or alerts would appear here.
+                                </p>
+                            </div>
+                          </>
+                        )}
                     </CardContent>
+                    {isEditing && (
+                        <CardFooter className="justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                            <Button onClick={handleSaveCustomer}>Save Changes</Button>
+                        </CardFooter>
+                    )}
                 </Card>
             ) : (
                  <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-muted/30 rounded-lg">
@@ -174,4 +237,3 @@ export function CustomerTripHistoryDialog({
     </Dialog>
   );
 }
-
