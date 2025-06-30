@@ -35,9 +35,12 @@ export function EditZoneDialog({ zone, isOpen, onOpenChange, onSave }: EditZoneD
   const handleSave = () => {
     if (zone && name.trim()) {
       onSave({ ...zone, name, color });
-      onOpenChange(false);
     }
   };
+  
+  const handleCancel = () => {
+    onOpenChange(false);
+  }
 
   if (!zone) return null;
 
@@ -45,9 +48,9 @@ export function EditZoneDialog({ zone, isOpen, onOpenChange, onSave }: EditZoneD
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Zone</DialogTitle>
+          <DialogTitle>{zone.name === 'New Zone' ? 'Create New Zone' : 'Edit Zone'}</DialogTitle>
           <DialogDescription>
-            Change the name and color for this zone.
+            {zone.name === 'New Zone' ? 'Set the name and color for the new zone.' : 'Change the name and color for this zone.'}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
@@ -82,12 +85,12 @@ export function EditZoneDialog({ zone, isOpen, onOpenChange, onSave }: EditZoneD
           <Button
             type="button"
             variant="secondary"
-            onClick={() => onOpenChange(false)}
+            onClick={handleCancel}
           >
             Cancel
           </Button>
           <Button type="button" onClick={handleSave}>
-            Save Changes
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

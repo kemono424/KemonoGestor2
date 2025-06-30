@@ -35,39 +35,45 @@ export default function ZonesPage() {
 
   const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
-  const handleFeaturesUpdate = useCallback(
-    (updatedFeatures: Feature<Polygon>[]) => {
-      const isCreating = updatedFeatures.length > zones.length;
-      let zoneToEdit: Zone | null = null;
+  const handleMapUpdate = useCallback(
+    (event: { type: string; features: Feature<Polygon>[] }) => {
+      const { type, features } = event;
 
-      const newZones = updatedFeatures.map((feature): Zone => {
-        const existingZone = zones.find(z => z.id === feature.id);
-        if (existingZone) {
-          return { ...existingZone, geometry: feature.geometry };
-        }
-        // This must be the new zone
+      if (type === 'draw.create') {
+        const newFeature = features[0];
         const newZone: Zone = {
-          id: feature.id as string,
-          name: 'New Zone', // Temporary name
+          id: newFeature.id as string,
+          name: 'New Zone',
           color: getRandomColor(),
-          geometry: feature.geometry,
+          geometry: newFeature.geometry,
         };
-        if (isCreating) {
-          zoneToEdit = newZone;
-        }
-        return newZone;
-      });
-      
-      const updatedIds = new Set(updatedFeatures.map(f => f.id));
-      const finalZones = newZones.filter(z => updatedIds.has(z.id));
-
-      setZones(finalZones);
-
-      if (zoneToEdit) {
-        setTimeout(() => setEditingZone(zoneToEdit), 0);
+        setZones((currentZones) => [...currentZones, newZone]);
+        setEditingZone(newZone);
+      } else if (type === 'draw.update') {
+        setZones((currentZones) =>
+          currentZones.map((zone) => {
+            const updatedFeature = features.find((f) => f.id === zone.id);
+            if (updatedFeature) {
+              return { ...zone, geometry: updatedFeature.geometry };
+            }
+            return zone;
+          })
+        );
+      } else if (type === 'draw.delete') {
+        const deletedIds = new Set(features.map((f) => f.id));
+        setZones((currentZones) =>
+          currentZones.filter((z) => !deletedIds.has(z.id))
+        );
+      } else if (type === 'draw.selectionchange') {
+         const selectedIds = drawInstance.getSelectedIds();
+         if (selectedIds.length > 0) {
+            setSelectedZoneId(selectedIds[0]);
+         } else {
+            setSelectedZoneId(null);
+         }
       }
     },
-    [zones]
+    [drawInstance]
   );
 
   const handleCreateZone = () => {
@@ -80,14 +86,9 @@ export default function ZonesPage() {
     if (drawInstance) {
       drawInstance.delete([zoneId]);
     }
-    // The onUpdate event will fire from the map, which will then update the state
   };
 
   const handleSaveZone = (updatedZone: Zone) => {
-    if (drawInstance) {
-      drawInstance.setFeatureProperty(updatedZone.id, 'name', updatedZone.name);
-      drawInstance.setFeatureProperty(updatedZone.id, 'color', updatedZone.color);
-    }
     setZones(currentZones =>
       currentZones.map(z => (z.id === updatedZone.id ? updatedZone : z))
     );
@@ -141,7 +142,12 @@ export default function ZonesPage() {
                       ? 'bg-muted'
                       : 'hover:bg-muted/50'
                   }`}
-                  onClick={() => setSelectedZoneId(zone.id)}
+                  onClick={() => {
+                    setSelectedZoneId(zone.id)
+                    if (drawInstance) {
+                      drawInstance.changeMode('simple_select', { featureIds: [zone.id] });
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -182,9 +188,7 @@ export default function ZonesPage() {
         <div className="lg:col-span-2">
           <ZoneMapEditor
             zones={zones}
-            onUpdate={handleFeaturesUpdate}
-            onSelect={setSelectedZoneId}
-            selectedZoneId={selectedZoneId}
+            onUpdate={handleMapUpdate}
             setDrawInstance={setDrawInstance}
           />
         </div>
@@ -192,7 +196,15 @@ export default function ZonesPage() {
       <EditZoneDialog
         zone={editingZone}
         isOpen={!!editingZone}
-        onOpenChange={isOpen => !isOpen && setEditingZone(null)}
+        onOpenChange={isOpen => {
+          if (!isOpen) {
+            const isNewUnsaved = editingZone?.name === 'New Zone';
+            if (isNewUnsaved) {
+              handleDeleteZone(editingZone.id);
+            }
+            setEditingZone(null);
+          }
+        }}
         onSave={handleSaveZone}
       />
     </>

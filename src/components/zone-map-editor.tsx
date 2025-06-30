@@ -4,30 +4,15 @@ import * as React from 'react';
 import Map, { useControl, ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Zone } from '@/types';
-import type { Feature, Polygon } from 'geojson';
+import type { Feature, Polygon, FeatureCollection } from 'geojson';
 
+// This is the control component that manages MapboxDraw
 const DrawControl = (props: {
-  onUpdate: (features: Feature[]) => void;
-  onSelect: (id: string | null) => void;
-  setDrawInstance: (instance: any) => void;
+  onEvent: (event: { type: string; features: Feature[] }) => void;
+  setDrawInstance: (instance: MapboxDraw) => void;
 }) => {
-  const { onUpdate, onSelect, setDrawInstance } = props;
-  const drawRef = React.useRef<MapboxDraw | null>(null);
 
-  const handleDrawEvent = React.useCallback(
-    (e: { type: string; features: Feature[] }) => {
-      const draw = drawRef.current;
-      if (!draw) return;
-      if (e.type === 'draw.selectionchange') {
-        const selection = draw.getSelectedIds();
-        onSelect(selection.length > 0 ? selection[0] : null);
-      } else {
-        // For create, update, delete, pass all features up
-        onUpdate(draw.getAll().features);
-      }
-    },
-    [onUpdate, onSelect]
-  );
+  const drawInstanceRef = React.useRef<MapboxDraw | null>(null);
 
   useControl<MapboxDraw>(
     () => {
@@ -36,59 +21,30 @@ const DrawControl = (props: {
         controls: { polygon: true, trash: true },
         userProperties: true,
         styles: [
-          // Active state styles
-          {
-            id: 'gl-draw-polygon-fill-active',
-            type: 'fill',
-            filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
-            paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 },
-          },
-          {
-            id: 'gl-draw-polygon-stroke-active',
-            type: 'line',
-            filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#3b82f6', 'line-width': 2 },
-          },
-          // Inactive state styles (user properties for color)
-          {
-            id: 'gl-draw-polygon-fill-inactive',
-            type: 'fill',
-            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
-            paint: {
-              'fill-color': ['get', 'color'],
-              'fill-outline-color': ['get', 'color'],
-              'fill-opacity': 0.2,
-            },
-          },
-          {
-            id: 'gl-draw-polygon-stroke-inactive',
-            type: 'line',
-            filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']],
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': ['get', 'color'], 'line-width': 2 },
-          },
+          { id: 'gl-draw-polygon-fill-inactive', type: 'fill', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], paint: { 'fill-color': ['get', 'color'], 'fill-outline-color': ['get', 'color'], 'fill-opacity': 0.2 }},
+          { id: 'gl-draw-polygon-stroke-inactive', type: 'line', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 2 }},
+          { id: 'gl-draw-polygon-fill-active', type: 'fill', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 }},
+          { id: 'gl-draw-polygon-stroke-active', type: 'line', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#3b82f6', 'line-width': 2 }},
         ],
       });
-      drawRef.current = draw;
-      setDrawInstance(draw);
+      drawInstanceRef.current = draw;
+      props.setDrawInstance(draw);
       return draw;
     },
     {
       position: 'top-left' as ControlPosition,
-      onAdd: map => {
-        map.on('draw.create', handleDrawEvent);
-        map.on('draw.update', handleDrawEvent);
-        map.on('draw.delete', handleDrawEvent);
-        map.on('draw.selectionchange', handleDrawEvent);
+      onAdd: (map) => {
+        map.on('draw.create', props.onEvent);
+        map.on('draw.update', props.onEvent);
+        map.on('draw.delete', props.onEvent);
+        map.on('draw.selectionchange', props.onEvent);
       },
-      onRemove: map => {
-        map.off('draw.create', handleDrawEvent);
-        map.off('draw.update', handleDrawEvent);
-        map.off('draw.delete', handleDrawEvent);
-        map.off('draw.selectionchange', handleDrawEvent);
-        drawRef.current = null;
-        setDrawInstance(null);
+      onRemove: (map) => {
+        map.off('draw.create', props.onEvent);
+        map.off('draw.update', props.onEvent);
+        map.off('draw.delete', props.onEvent);
+        map.off('draw.selectionchange', props.onEvent);
+        drawInstanceRef.current = null;
       },
     }
   );
@@ -96,52 +52,49 @@ const DrawControl = (props: {
   return null;
 };
 
+
 interface ZoneMapEditorProps {
   zones: Zone[];
-  onUpdate: (features: Feature<Polygon>[]) => void;
-  onSelect: (zoneId: string | null) => void;
-  selectedZoneId: string | null;
+  onUpdate: (event: { type: string; features: Feature<Polygon>[] }) => void;
   setDrawInstance: (instance: any) => void;
 }
 
 export default function ZoneMapEditor({
   zones,
   onUpdate,
-  onSelect,
   setDrawInstance,
 }: ZoneMapEditorProps) {
   const mapRef = React.useRef<any>();
+  const [isMapLoaded, setIsMapLoaded] = React.useState(false);
 
-  // Effect to load initial zones into the editor
-  React.useEffect(() => {
-    if (mapRef.current) {
-      const map = mapRef.current.getMap();
-      const draw = new (MapboxDraw as any)();
-      map.addControl(draw);
-
-      const features = zones.map(z => ({
-        id: z.id,
-        type: 'Feature' as const,
-        properties: { name: z.name, color: z.color, id: z.id },
-        geometry: z.geometry,
-      }));
-
-      // This event ensures we add features only when draw is ready
-      map.on('load', () => {
-         // This seems to be the part of the code that needs to be fixed.
-         // the draw instance is created inside useControl, so I can't access it here.
-         // the previous implementation was better, but had a bug.
-         // Let's defer to the DrawControl to handle this.
-      });
-    }
-  }, []);
-
-  const features = zones.map(z => ({
+  const features = React.useMemo(() => zones.map(z => ({
     id: z.id,
     type: 'Feature' as const,
     properties: { name: z.name, color: z.color },
     geometry: z.geometry,
-  }));
+  })), [zones]);
+
+  const featureCollection: FeatureCollection = {
+    type: 'FeatureCollection',
+    features,
+  }
+
+  React.useEffect(() => {
+    const draw = (mapRef.current?.getMap()._controls as any[])?.find(c => c instanceof MapboxDraw);
+    if (draw && isMapLoaded) {
+      const existingIds = new Set(draw.getAll().features.map(f => f.id));
+      const newIds = new Set(features.map(f => f.id));
+      
+      const idsToDelete = [...existingIds].filter(id => !newIds.has(id));
+      if (idsToDelete.length > 0) {
+        draw.delete(idsToDelete);
+      }
+
+      for (const feature of features) {
+        draw.add(feature); 
+      }
+    }
+  }, [features, isMapLoaded]);
 
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
@@ -155,17 +108,10 @@ export default function ZoneMapEditor({
         }}
         style={{ width: '100%', height: '100%' }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
-        onLoad={e => {
-          const map = e.target;
-          const draw = (map._controls as any[]).find(c => c.hasOwnProperty('_modes')) as MapboxDraw | undefined;
-          if (draw) {
-            draw.set({ type: 'FeatureCollection', features: features });
-          }
-        }}
+        onLoad={() => setIsMapLoaded(true)}
       >
         <DrawControl
-          onUpdate={onUpdate}
-          onSelect={onSelect}
+          onEvent={onUpdate}
           setDrawInstance={setDrawInstance}
         />
       </Map>
