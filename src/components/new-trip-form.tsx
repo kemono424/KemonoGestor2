@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
-import { customers, vehicles, zones as mockZones } from '@/lib/mock-data';
+import { customers, vehicles } from '@/lib/mock-data';
 import type { Customer, Trip, Zone, Vehicle } from '@/types';
 import { MapPin, User } from 'lucide-react';
 import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
@@ -105,8 +106,8 @@ export function NewTripForm() {
     // We'll use a point that falls inside the "Centro" mock zone for demonstration.
     const originCoords: [number, number] = [-65.41, -24.79];
 
-    // 2. Load zones (from localStorage or fall back to mock data)
-    let allZones: Zone[] = mockZones;
+    // 2. Load active zones from localStorage.
+    let allZones: Zone[] = [];
     if (typeof window !== 'undefined') {
       try {
         const savedZones = localStorage.getItem('fleet-manager-zones');
@@ -115,7 +116,7 @@ export function NewTripForm() {
         }
       } catch (error) {
         console.error(
-          'Could not load zones from localStorage, using mock data.',
+          'Could not load zones from localStorage.',
           error
         );
       }
@@ -128,7 +129,7 @@ export function NewTripForm() {
 
     if (!targetZone) {
       alert(
-        'Could not find a zone for the trip origin. Please create a zone that covers the area or send the trip to the manual assignment tray.'
+        'Could not find an active zone for the trip origin. Please ask an administrator to configure zones, or send the trip to the manual assignment tray.'
       );
       return;
     }

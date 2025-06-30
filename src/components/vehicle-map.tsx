@@ -6,7 +6,6 @@ import Map, { Marker, Source, Layer } from 'react-map-gl';
 import type { Vehicle, Zone } from '@/types';
 import { MapPin } from 'lucide-react';
 import type { FeatureCollection } from 'geojson';
-import { zones as mockZones } from '@/lib/mock-data';
 
 interface VehicleMapProps {
   vehicles: Vehicle[];
@@ -24,12 +23,9 @@ export default function VehicleMap({ vehicles }: VehicleMapProps) {
       const savedZones = localStorage.getItem('fleet-manager-zones');
       if (savedZones) {
         setZones(JSON.parse(savedZones));
-      } else {
-        setZones(mockZones); // Fallback to mocks if nothing is in storage
       }
     } catch (error) {
       console.error("Failed to load zones from localStorage for map display.", error);
-      setZones(mockZones);
     }
   }, []);
 
