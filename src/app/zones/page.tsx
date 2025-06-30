@@ -28,26 +28,66 @@ const getRandomColor = () => {
 
 export default function ZonesPage() {
   const { role } = useAppContext();
-  const [zones, setZones] = useState<Zone[]>(mockZones);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [drawInstance, setDrawInstance] = useState<any>(null);
 
   const canEditZones = ['Admin', 'Supervisor'].includes(role);
 
-  // Effect to load initial zones onto the map once the draw instance is ready
+  // Load zones from localStorage on mount, or initialize with mock data
   useEffect(() => {
-    if (drawInstance && zones.length > 0) {
-      const features = zones.map(z => ({
-        id: z.id,
-        type: 'Feature' as const,
-        properties: { name: z.name, color: z.color },
-        geometry: z.geometry,
-      }));
-      drawInstance.add({ type: 'FeatureCollection', features });
+    setIsMounted(true);
+    try {
+      const savedZones = localStorage.getItem('fleet-manager-zones');
+      if (savedZones) {
+        setZones(JSON.parse(savedZones));
+      } else {
+        setZones(mockZones);
+      }
+    } catch (error) {
+      console.error("Failed to access localStorage. Using mock data.", error);
+      setZones(mockZones);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawInstance]);
+  }, []);
+
+  // Save zones to localStorage whenever they change, after initial mount
+  useEffect(() => {
+    if (isMounted) {
+      try {
+        localStorage.setItem('fleet-manager-zones', JSON.stringify(zones));
+      } catch (error) {
+        console.error("Failed to save zones to localStorage.", error);
+      }
+    }
+  }, [zones, isMounted]);
+
+  // Effect to sync zones state with the map features
+  useEffect(() => {
+    if (drawInstance && isMounted) {
+      const featureIdsOnMap = drawInstance.getAll().features.map((f: Feature) => f.id);
+      
+      // Don't resync if a new feature was just drawn and is being edited
+      if (featureIdsOnMap.includes(editingZone?.id ?? '')) {
+         const unsavedFeature = drawInstance.get(editingZone!.id);
+         if(unsavedFeature && unsavedFeature.properties.name === undefined) {
+            return;
+         }
+      }
+
+      drawInstance.deleteAll();
+      if (zones.length > 0) {
+        const features = zones.map(z => ({
+          id: z.id,
+          type: 'Feature' as const,
+          properties: { name: z.name, color: z.color },
+          geometry: z.geometry,
+        }));
+        drawInstance.add({ type: 'FeatureCollection', features });
+      }
+    }
+  }, [zones, drawInstance, isMounted, editingZone]);
 
 
   const handleMapUpdate = useCallback(
@@ -64,7 +104,6 @@ export default function ZonesPage() {
           color: getRandomColor(),
           geometry: newFeature.geometry,
         };
-        drawInstance.setFeatureProperty(newZone.id, 'color', newZone.color);
         setEditingZone(newZone);
       } else if (type === 'draw.update') {
         setZones((currentZones) =>
@@ -94,9 +133,9 @@ export default function ZonesPage() {
   );
 
   const handleCreateZone = () => {
-    alert(
-      'To create a new zone, use the polygon drawing tool on the map. After drawing, you will be prompted to name it.'
-    );
+    if (drawInstance) {
+      drawInstance.changeMode('draw_polygon');
+    }
   };
 
   const handleDeleteZone = (zoneId: string) => {
