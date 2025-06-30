@@ -28,8 +28,8 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   const onlineVehicles = vehicles.filter(v => v.status === 'Libre').length;
-  const activeTrips = recentTrips.filter(
-    t => t.status === 'In Progress'
+  const activeTrips = vehicles.filter(v =>
+    ['En camino', 'Ocupado', 'En espera'].includes(v.status)
   ).length;
   const totalRevenue = recentTrips
     .filter(t => t.status === 'Completed')

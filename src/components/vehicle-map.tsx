@@ -30,7 +30,7 @@ const getVehicleColorClass = (status: VehicleStatus) => {
     case 'En camino':
       return 'text-blue-500'; // Blue
     case 'En espera':
-      return 'text-orange-400'; // Orange
+      return 'text-orange-500'; // Orange
     default:
       return 'text-gray-400';
   }
@@ -149,7 +149,7 @@ export default function VehicleMap({
             <div className="relative">
                 <Car className={`h-8 w-8 ${getVehicleColorClass(vehicle.status)} drop-shadow-md`} />
                 <div className="absolute inset-0 flex items-center justify-center -mt-1">
-                    <span className="text-[10px] font-bold text-black">
+                    <span className="text-[10px] font-bold text-white [text-shadow:0_1px_2px_rgb(0_0_0_/_0.8)]">
                         {vehicle.unitNumber}
                     </span>
                 </div>
