@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -32,7 +33,7 @@ export function EditZoneDialog({
 
   useEffect(() => {
     if (zone) {
-      setName(zone.name);
+      setName(zone.name === 'New Zone' ? '' : zone.name);
       setColor(zone.color);
     }
   }, [zone]);

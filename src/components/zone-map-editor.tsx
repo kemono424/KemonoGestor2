@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -6,7 +7,7 @@ import Map, { useControl, ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import type { Feature, Polygon } from 'geojson';
 
-// This is the control component that manages MapboxDraw
+// This control component now simply forwards events up to the parent.
 const DrawControl = (props: {
   onEvent: (event: { type: string; features: Feature<Polygon>[] }) => void;
   setDrawInstance: (instance: MapboxDraw) => void;
@@ -17,10 +18,12 @@ const DrawControl = (props: {
     () => new MapboxDraw({
         displayControlsDefault: false,
         controls: { polygon: true, trash: true },
-        userProperties: true,
+        userProperties: true, // Allows custom properties like name and color
         styles: [
+          // Inactive state: default coloring
           { id: 'gl-draw-polygon-fill-inactive', type: 'fill', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], paint: { 'fill-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-outline-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-opacity': 0.2 }},
           { id: 'gl-draw-polygon-stroke-inactive', type: 'line', filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'line-width': 2 }},
+          // Active state (being edited)
           { id: 'gl-draw-polygon-fill-active', type: 'fill', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], paint: { 'fill-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'fill-opacity': 0.1 }},
           { id: 'gl-draw-polygon-stroke-active', type: 'line', filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['coalesce', ['get', 'color'], '#3b82f6'], 'line-width': 2 }},
         ],
@@ -28,12 +31,14 @@ const DrawControl = (props: {
     {
       position: 'top-left' as ControlPosition,
       onAdd: (map) => {
+        // Register event listeners when the control is added to the map
         map.on('draw.create', onEvent);
         map.on('draw.update', onEvent);
         map.on('draw.delete', onEvent);
         map.on('draw.selectionchange', onEvent);
       },
       onRemove: (map) => {
+        // Unregister event listeners when the control is removed
         map.off('draw.create', onEvent);
         map.off('draw.update', onEvent);
         map.off('draw.delete', onEvent);
@@ -42,7 +47,8 @@ const DrawControl = (props: {
     }
   );
   
-  // Set the draw instance in a useEffect to avoid setting state during render
+  // Set the draw instance in the parent component's state once it's available.
+  // This is done in a useEffect to avoid setting state during render.
   useEffect(() => {
     if (draw) {
         setDrawInstance(draw);
@@ -62,8 +68,8 @@ export default function ZoneMapEditor({
   onUpdate,
   setDrawInstance,
 }: ZoneMapEditorProps) {
-  // This component now only sets up the Map and the DrawControl.
-  // The parent component (`ZonesPage`) is responsible for populating
+  // This component is now 'dumb'. It only sets up the Map and the DrawControl.
+  // The parent component (`ZonesPage`) is responsible for managing and populating
   // the map with zones via the `drawInstance`.
   return (
     <div className="h-[calc(100vh-14rem)] min-h-[500px] w-full rounded-lg overflow-hidden border">
