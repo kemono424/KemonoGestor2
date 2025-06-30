@@ -25,8 +25,9 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { customers, vehicles } from '@/lib/mock-data';
-import type { Customer } from '@/types';
+import type { Customer, Trip } from '@/types';
 import { MapPin, User, Car, Star } from 'lucide-react';
+import { CustomerTripHistoryDialog } from './customer-trip-history-dialog';
 
 const formSchema = z.object({
   customerPhone: z.string().min(1, { message: 'Customer phone is required.' }),
@@ -38,6 +39,7 @@ const formSchema = z.object({
 export function NewTripForm() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,7 +76,13 @@ export function NewTripForm() {
     form.setValue('customerPhone', customer.phone);
     form.clearErrors('customerPhone');
     setSearchResults([]);
-    alert(`Customer Selected: ${customer.name}. From here we could open their trip history.`);
+    setIsHistoryOpen(true);
+  };
+
+  const handleTripSelect = (trip: Trip) => {
+    form.setValue('origin', trip.origin);
+    form.setValue('destination', trip.destination);
+    setIsHistoryOpen(false);
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -97,130 +105,140 @@ export function NewTripForm() {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="customerPhone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Customer Phone</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by phone (3+ digits)..."
-                    {...field}
-                    onChange={handlePhoneSearch}
-                    autoComplete="off"
-                    className="pl-10"
-                  />
-                   {searchResults.length > 0 && (
-                    <Card className="absolute z-10 w-full mt-1 border shadow-lg">
-                      <ul className="py-1">
-                        {searchResults.map((customer) => (
-                          <li
-                            key={customer.id}
-                            className="px-3 py-2 cursor-pointer hover:bg-muted"
-                            onClick={() => handleCustomerSelect(customer)}
-                            role="button"
-                          >
-                            <p className="font-semibold">{customer.name}</p>
-                            <p className="text-sm text-muted-foreground">{customer.phone}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    </Card>
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {selectedCustomer && (
-          <Card className="p-3 bg-muted/50">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold">{selectedCustomer.name}</p>
-              {selectedCustomer.isVip && (
-                <Badge variant="secondary">
-                  <Star className="mr-1.5 h-3 w-3" />
-                  VIP
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
-          </Card>
-        )}
-
-        <FormField
-          control={form.control}
-          name="origin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Origin</FormLabel>
-              <FormControl>
-                <div className="relative">
-                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                   <Input placeholder="Enter pickup location" {...field} className="pl-10" />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="destination"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Destination</FormLabel>
-              <FormControl>
-                 <div className="relative">
-                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                   <Input placeholder="Enter drop-off location" {...field} className="pl-10" />
-                 </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="vehicleId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Assign Vehicle (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="customerPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Customer Phone</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <Car className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Auto-assign nearest vehicle" />
-                  </SelectTrigger>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by phone (e.g. 555-0101)"
+                      {...field}
+                      onChange={handlePhoneSearch}
+                      autoComplete="off"
+                      className="pl-10"
+                    />
+                     {searchResults.length > 0 && (
+                      <Card className="absolute z-10 w-full mt-1 border shadow-lg">
+                        <ul className="py-1">
+                          {searchResults.map((customer) => (
+                            <li
+                              key={customer.id}
+                              className="px-3 py-2 cursor-pointer hover:bg-muted"
+                              onClick={() => handleCustomerSelect(customer)}
+                              role="button"
+                            >
+                              <p className="font-semibold">{customer.name}</p>
+                              <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      </Card>
+                    )}
+                  </div>
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="auto">Auto-assign nearest vehicle</SelectItem>
-                  {vehicles
-                    .filter((v) => v.status === 'Available')
-                    .map((vehicle) => (
-                      <SelectItem key={vehicle.id} value={vehicle.id}>
-                        {vehicle.name} ({vehicle.licensePlate})
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {selectedCustomer && (
+            <Card className="p-3 bg-muted/50">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold">{selectedCustomer.name}</p>
+                {selectedCustomer.isVip && (
+                  <Badge variant="secondary">
+                    <Star className="mr-1.5 h-3 w-3" />
+                    VIP
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{selectedCustomer.phone}</p>
+            </Card>
           )}
-        />
 
-        <div className="flex justify-end gap-2 pt-4">
-            <Button type="submit" className="w-full">Create Trip</Button>
-        </div>
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="origin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Origin</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input placeholder="Enter pickup location" {...field} className="pl-10" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="destination"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Destination</FormLabel>
+                <FormControl>
+                   <div className="relative">
+                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input placeholder="Enter drop-off location" {...field} className="pl-10" />
+                   </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicleId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assign Vehicle (Optional)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <Car className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="Auto-assign nearest vehicle" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto-assign nearest vehicle</SelectItem>
+                    {vehicles
+                      .filter((v) => v.status === 'Available')
+                      .map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.name} ({vehicle.licensePlate})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end gap-2 pt-4">
+              <Button type="submit" className="w-full">Create Trip</Button>
+          </div>
+        </form>
+      </Form>
+      {selectedCustomer && (
+        <CustomerTripHistoryDialog
+          customer={selectedCustomer}
+          isOpen={isHistoryOpen}
+          onOpenChange={setIsHistoryOpen}
+          onTripSelect={handleTripSelect}
+        />
+      )}
+    </>
   );
 }
