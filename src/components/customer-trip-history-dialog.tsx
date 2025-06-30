@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { recentTrips } from '@/lib/mock-data';
 import type { Customer, Trip } from '@/types';
 import { ArrowRight, MapPin } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -33,8 +33,10 @@ export function CustomerTripHistoryDialog({
   onTripSelect,
   onBackClick,
 }: CustomerTripHistoryDialogProps) {
+  // This state is internal to the dialog and controls the right-side panel
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
 
+  // Filter trips based on the phone number query from the parent form
   const filteredTrips = useMemo(() => {
     const sanitizedQuery = phoneQuery.replace(/[^0-9]/g, '');
     if (!sanitizedQuery) return [];
@@ -43,21 +45,34 @@ export function CustomerTripHistoryDialog({
     );
   }, [phoneQuery]);
 
+  // When a trip is selected from the list
   const handleSelectTrip = (trip: Trip) => {
-    setActiveCustomer(trip.customer);
-    onTripSelect(trip);
+    setActiveCustomer(trip.customer); // Show this customer's details in the right panel
+    onTripSelect(trip); // Tell the parent form to clone the trip data
   };
 
+  // When the "Back" button is clicked
   const handleBack = () => {
-    setActiveCustomer(null);
-    onBackClick();
+    setActiveCustomer(null); // Clear the customer details panel
+    onBackClick(); // Tell the parent form to clear the cloned data
   };
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
+  
+  // When the dialog is opened, we should reset its internal state
+  // to ensure it doesn't show stale data from a previous interaction.
+  useEffect(() => {
+    if (isOpen) {
       setActiveCustomer(null);
     }
-    onOpenChange(open);
+  }, [isOpen]);
+
+  // When the dialog's open state changes (e.g., closed via 'X', ESC or 'Close' button)
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // When closing, reset the dialog's internal state to be clean for next time.
+      // We don't call onBackClick() here, because the user might want to keep the cloned data in the form.
+      setActiveCustomer(null);
+    }
+    onOpenChange(open); // Inform the parent component of the state change
   };
 
   return (
@@ -66,14 +81,14 @@ export function CustomerTripHistoryDialog({
         <DialogHeader>
           <DialogTitle>Customer & Trip History</DialogTitle>
           <DialogDescription>
-            Select a past trip to auto-fill the form. Customer details will
-            appear on the right.
+            Select a past trip to auto-fill the form. Customer details will appear on the right.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(70vh-120px)]">
-          <div className="md:col-span-1 h-full">
-            <h3 className="text-lg font-semibold mb-2">Matching Trips</h3>
-            <ScrollArea className="h-full pr-4 border rounded-lg">
+          {/* Left Panel: Trip List */}
+          <div className="md:col-span-1 h-full flex flex-col">
+            <h3 className="text-lg font-semibold mb-2 shrink-0">Matching Trips</h3>
+            <ScrollArea className="h-full pr-4 border rounded-lg grow">
               <div className="p-2 space-y-2">
                 {filteredTrips.length > 0 ? (
                   filteredTrips.map(trip => (
@@ -103,9 +118,10 @@ export function CustomerTripHistoryDialog({
               </div>
             </ScrollArea>
           </div>
-          <div className="md:col-span-2 h-full">
-             <h3 className="text-lg font-semibold mb-2">Customer Details</h3>
-            <Card className="h-full">
+          {/* Right Panel: Customer Details */}
+          <div className="md:col-span-2 h-full flex flex-col">
+             <h3 className="text-lg font-semibold mb-2 shrink-0">Customer Details</h3>
+            <Card className="h-full grow">
               {activeCustomer ? (
                 <>
                   <CardHeader>
@@ -128,14 +144,14 @@ export function CustomerTripHistoryDialog({
               ) : (
                  <div className="flex items-center justify-center h-full">
                     <p className="text-center text-muted-foreground p-4">
-                        Select a trip from the list to view customer details.
+                        Select a trip from the list to view customer details and clone the trip.
                     </p>
                 </div>
               )}
             </Card>
           </div>
         </div>
-        <DialogFooter className="sm:justify-between">
+        <DialogFooter className="sm:justify-between pt-4">
           <div>
             {activeCustomer && (
               <Button variant="ghost" onClick={handleBack}>
@@ -143,7 +159,7 @@ export function CustomerTripHistoryDialog({
               </Button>
             )}
           </div>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>
