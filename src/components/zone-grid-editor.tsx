@@ -4,6 +4,8 @@
 import * as React from 'react';
 import Map, { Source, Layer, MapRef, MapLayerMouseEvent } from 'react-map-gl';
 import type { FeatureCollection } from 'geojson';
+import type { GridConfig, ZoneDefinition } from '@/types';
+import { generateGridLayer } from '@/lib/grid-utils';
 
 interface ZoneGridEditorProps {
   gridConfig: GridConfig;
@@ -12,70 +14,6 @@ interface ZoneGridEditorProps {
   selectedCells: Set<string>;
   onCellClick: (cellId: string) => void;
 }
-
-// NOTE: This utility is being moved into the component to avoid import issues.
-function generateGridLayer(
-  gridConfig: GridConfig,
-  zones: ZoneDefinition[],
-  cellAssignments: Record<string, string | null>,
-  selectedCells: Set<string>
-): FeatureCollection {
-  const { rows, cols, center, cellSize } = gridConfig;
-  const features: any[] = [];
-
-  const startLat = center.lat + (rows / 2) * cellSize;
-  const startLng = center.lng - (cols / 2) * cellSize;
-
-  const zoneColorMap = zones.reduce((acc, zone) => {
-    acc[zone.id] = zone.color;
-    return acc;
-  }, {} as Record<string, string>);
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const cellId = `${r}-${c}`;
-      const lat = startLat - r * cellSize;
-      const lng = startLng + c * cellSize;
-
-      const coordinates: [number, number][] = [
-        [lng, lat],
-        [lng + cellSize, lat],
-        [lng + cellSize, lat - cellSize],
-        [lng, lat - cellSize],
-        [lng, lat],
-      ];
-
-      const assignedZoneId = cellAssignments[cellId];
-      let color = '#555555'; // Default mid-grey for unassigned cells
-
-      if (assignedZoneId && zoneColorMap[assignedZoneId]) {
-        color = zoneColorMap[assignedZoneId];
-      }
-      
-      if (selectedCells.has(cellId)) {
-        color = '#3b82f6'; // A distinct blue for selection
-      }
-
-      features.push({
-        type: 'Feature',
-        properties: {
-          id: cellId,
-          color: color,
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [coordinates],
-        },
-      });
-    }
-  }
-
-  return {
-    type: 'FeatureCollection',
-    features,
-  };
-}
-
 
 export default function ZoneGridEditor({
   gridConfig,
@@ -86,8 +24,17 @@ export default function ZoneGridEditor({
 }: ZoneGridEditorProps) {
   const mapRef = React.useRef<MapRef>(null);
 
-  const gridLayer = React.useMemo(() => {
-    return generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
+  // This effect handles updating the grid data imperatively without re-rendering the Source component.
+  // This is a more stable and performant pattern for dynamic map data.
+  React.useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+
+    const source = map.getSource('grid-source') as mapboxgl.GeoJSONSource | undefined;
+    if (source) {
+      const gridLayerData = generateGridLayer(gridConfig, zones, cellAssignments, selectedCells);
+      source.setData(gridLayerData);
+    }
   }, [gridConfig, zones, cellAssignments, selectedCells]);
 
 
@@ -102,6 +49,12 @@ export default function ZoneGridEditor({
         onCellClick(clickedCellId);
       }
     }
+  };
+
+  // The source is initialized with empty data. Updates will be pushed imperatively.
+  const initialGridData: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: [],
   };
 
   return (
@@ -119,7 +72,7 @@ export default function ZoneGridEditor({
         onClick={handleMapClick}
         interactiveLayerIds={['grid-fill']}
       >
-        <Source id="grid-source" type="geojson" data={gridLayer}>
+        <Source id="grid-source" type="geojson" data={initialGridData}>
           <Layer
             id="grid-fill"
             type="fill"
@@ -134,7 +87,7 @@ export default function ZoneGridEditor({
             paint={{
               'line-color': '#FFFFFF',
               'line-width': 1,
-              'line-opacity': 0.5,
+              'line-opacity': 0.8,
             }}
           />
         </Source>
