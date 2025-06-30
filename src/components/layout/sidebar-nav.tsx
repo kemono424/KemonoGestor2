@@ -20,7 +20,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const links = [
   {
@@ -70,6 +70,11 @@ const links = [
 export default function SidebarNav() {
   const pathname = usePathname();
   const { role } = useAppContext();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredLinks = links.filter(link => link.roles.includes(role));
 
@@ -86,7 +91,7 @@ export default function SidebarNav() {
           <SidebarMenuItem key={link.href}>
             <SidebarMenuButton
               asChild
-              isActive={pathname === link.href}
+              isActive={isClient ? pathname === link.href : false}
               tooltip={link.label}
             >
               <Link href={link.href}>
