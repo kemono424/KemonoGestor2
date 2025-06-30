@@ -37,19 +37,21 @@ export function EditOperatorDialog({
       setEditableOperator(operator || {});
     }
   }, [isOpen, operator]);
+  
+  const isNew = !operator;
 
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
-    if (
-      !editableOperator.id ||
-      !editableOperator.name ||
-      !editableOperator.username ||
-      !editableOperator.password
-    ) {
+    let isInvalid = !editableOperator.name || !editableOperator.username;
+    if (isNew) {
+      isInvalid = isInvalid || !editableOperator.password;
+    }
+
+    if (isInvalid) {
       toast({
         variant: 'destructive',
         title: 'Información Faltante',
-        description: 'Por favor, completa todos los campos.',
+        description: 'Por favor, completa nombre, usuario y contraseña (si es nuevo).',
       });
       return;
     }
@@ -65,48 +67,38 @@ export function EditOperatorDialog({
 
   if (!isOpen) return null;
 
-  const isNew = !operator;
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>
-              {operator ? 'Editar Operador' : 'Añadir Nuevo Operador'}
+              {isNew ? 'Añadir Nuevo Operador' : 'Editar Operador'}
             </DialogTitle>
             <DialogDescription>
-              {operator
-                ? 'Actualiza los detalles del operador a continuación.'
-                : 'Introduce los detalles del nuevo operador.'}
+              {isNew
+                ? 'Introduce los detalles del nuevo operador.'
+                : 'Actualiza los detalles del operador a continuación.'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="operator-id">Nº de Operador</Label>
-              <Input
-                id="operator-id"
-                value={editableOperator.id || ''}
-                onChange={(e) => handleValueChange('id', e.target.value)}
-                autoFocus
-                disabled={!isNew}
-                placeholder="e.g., O006"
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="name">Nombre</Label>
               <Input
                 id="name"
                 value={editableOperator.name || ''}
                 onChange={(e) => handleValueChange('name', e.target.value)}
+                autoFocus
               />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="username">Usuario</Label>
+                <Label htmlFor="username">Usuario (Correo Electrónico)</Label>
                 <Input
                     id="username"
+                    type="email"
                     value={editableOperator.username || ''}
                     onChange={(e) => handleValueChange('username', e.target.value)}
+                    autoComplete="off"
                 />
             </div>
             <div className="space-y-2">
@@ -114,8 +106,10 @@ export function EditOperatorDialog({
                 <Input
                     id="password"
                     type="password"
+                    placeholder={isNew ? '' : 'Dejar en blanco para no cambiar'}
                     value={editableOperator.password || ''}
                     onChange={(e) => handleValueChange('password', e.target.value)}
+                    autoComplete="new-password"
                 />
             </div>
           </div>
