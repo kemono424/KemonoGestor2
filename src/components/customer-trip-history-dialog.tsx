@@ -23,6 +23,7 @@ interface CustomerTripHistoryDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onTripSelect: (trip: Trip) => void;
+  onBackClick: () => void;
 }
 
 export function CustomerTripHistoryDialog({
@@ -30,6 +31,7 @@ export function CustomerTripHistoryDialog({
   isOpen,
   onOpenChange,
   onTripSelect,
+  onBackClick,
 }: CustomerTripHistoryDialogProps) {
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
 
@@ -46,8 +48,20 @@ export function CustomerTripHistoryDialog({
     onTripSelect(trip);
   };
 
+  const handleBack = () => {
+    setActiveCustomer(null);
+    onBackClick();
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setActiveCustomer(null);
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl h-[70vh]">
         <DialogHeader>
           <DialogTitle>Customer & Trip History</DialogTitle>
@@ -124,12 +138,12 @@ export function CustomerTripHistoryDialog({
         <DialogFooter className="sm:justify-between">
           <div>
             {activeCustomer && (
-              <Button variant="ghost" onClick={() => setActiveCustomer(null)}>
+              <Button variant="ghost" onClick={handleBack}>
                 Back
               </Button>
             )}
           </div>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>

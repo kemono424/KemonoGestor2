@@ -178,6 +178,16 @@ export function NewTripForm({
     // We don't close the dialog here, user can select another one.
   };
 
+  const handleBackFromHistory = () => {
+    setSelectedCustomer(null);
+    setOriginQuery('');
+    setDestinationQuery('');
+    onOriginSelect(null);
+    onDestinationSelect(null);
+    form.setValue('origin', '');
+    form.setValue('destination', '');
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!selectedCustomer && values.customerPhone) {
         toast({
@@ -441,6 +451,7 @@ export function NewTripForm({
           onOpenChange={setHistoryDialogOpen}
           phoneQuery={form.getValues('customerPhone')}
           onTripSelect={handleTripSelectFromHistory}
+          onBackClick={handleBackFromHistory}
         />
       )}
     </>
